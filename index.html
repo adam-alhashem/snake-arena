@@ -3199,6 +3199,8 @@
     let deathMessage = '';
     let explosions = [];
     let thrusterParticles = [];
+    let arrows = [];
+    let playerArrowCooldown = 0;
 
     const POPULATION_PRESETS = [59, 39, 24, 9, 2, 0];
     let botCount = 59; // 60 Players Server Max by default (59 bots + 1 player)
@@ -3984,6 +3986,8 @@
       isBoosting = false;
       explosions = [];
       thrusterParticles = [];
+      arrows = [];
+      playerArrowCooldown = 0;
       laserSparks = [];
       floatingTexts = [];
 
@@ -4288,7 +4292,14 @@
         if (!botAte) {
           bot.snake.pop();
         }
+
+        // Bots occasionally shoot arrows when another snake is lined up ahead!
+        tryBotShootArrow(bot, bIndex);
       });
+
+      // 3. UPDATE FLYING ARROWS & HIT DETECTION
+      if (playerArrowCooldown > 0) playerArrowCooldown--;
+      updateArrows();
 
       const king = getCurrentKing();
       updateLeaderboard(king.id);
@@ -5465,6 +5476,8 @@
         }
 
         // Render Floating Food Gain (+10 🍎) Indicators
+        drawArrows(vMinX, vMaxX, vMinY, vMaxY);
+
         for (let i = floatingTexts.length - 1; i >= 0; i--) {
           const ft = floatingTexts[i];
           ctx.save();
@@ -5571,6 +5584,220 @@
       }
     }
 
+    // =========================================================================
+    // SNAKE ARROW SHOOTING SYSTEM (PLAYER + RIVAL BOTS)
+    // =========================================================================
+    function shootPlayerArrow() {
+      if (!isPlayerAlive || !isRunning || isPaused || isGameOver || snake.length === 0) return;
+      if (playerArrowCooldown > 0) return;
+
+      const head = snake[0];
+      const startX = head.x + dx;
+      const startY = head.y + dy;
+      if (startX <= 0 || startX >= COLS - 1 || startY <= 0 || startY >= ROWS - 1) return;
+
+      const pSkin = SKINS[currentSkin] || SKINS['blue_wolf'] || SKINS_LIST[0];
+      arrows.push({
+        x: startX,
+        y: startY,
+        dx: dx,
+        dy: dy,
+        ownerId: 'player',
+        ownerName: 'You',
+        color: (pSkin && pSkin.bodyColor) ? pSkin.bodyColor : '#f59e0b',
+        isPlayer: true,
+        life: 24
+      });
+      playerArrowCooldown = 5;
+
+      // Launch sparks
+      const px = startX * GRID_SIZE + GRID_SIZE / 2;
+      const py = startY * GRID_SIZE + GRID_SIZE / 2;
+      for (let i = 0; i < 4; i++) {
+        thrusterParticles.push({
+          x: px,
+          y: py,
+          vx: dx * (2 + Math.random() * 2) + (Math.random() - 0.5) * 2,
+          vy: dy * (2 + Math.random() * 2) + (Math.random() - 0.5) * 2,
+          size: 2.5,
+          color: '#facc15',
+          alpha: 0.9
+        });
+      }
+    }
+
+    function tryBotShootArrow(bot, bIndex) {
+      if (arrows.length >= 40) return;
+      if (bot.arrowCooldown === undefined) {
+        bot.arrowCooldown = 18 + Math.floor(Math.random() * 35);
+      }
+      if (bot.arrowCooldown > 0) {
+        bot.arrowCooldown--;
+        return;
+      }
+
+      const head = bot.snake[0];
+      const selfOcc = bIndex + 2;
+      // Check if another snake is lined up 2..12 tiles directly ahead
+      let targetInSight = false;
+      for (let step = 2; step <= 12; step++) {
+        const tx = head.x + bot.dx * step;
+        const ty = head.y + bot.dy * step;
+        if (tx <= 0 || tx >= COLS - 1 || ty <= 0 || ty >= ROWS - 1) break;
+        const occ = occupiedGrid[ty * COLS + tx];
+        if (occ > 0 && occ !== selfOcc) {
+          targetInSight = true;
+          break;
+        }
+      }
+
+      if (targetInSight) {
+        const sx = head.x + bot.dx;
+        const sy = head.y + bot.dy;
+        if (sx > 0 && sx < COLS - 1 && sy > 0 && sy < ROWS - 1) {
+          arrows.push({
+            x: sx,
+            y: sy,
+            dx: bot.dx,
+            dy: bot.dy,
+            ownerId: 'bot_' + bot.id,
+            ownerName: bot.config.name || 'Rival Snake',
+            color: bot.config.bodyColor || '#ef4444',
+            isPlayer: false,
+            life: 20
+          });
+          bot.arrowCooldown = 28 + Math.floor(Math.random() * 35);
+        }
+      }
+    }
+
+    function updateArrows() {
+      for (let i = arrows.length - 1; i >= 0; i--) {
+        const a = arrows[i];
+        let destroyed = false;
+
+        // Advance 2 cells per tick (1 cell at a time so arrows never skip over snakes)
+        for (let step = 0; step < 2; step++) {
+          a.x += a.dx;
+          a.y += a.dy;
+          a.life--;
+
+          if (a.life <= 0 || a.x <= 0 || a.x >= COLS - 1 || a.y <= 0 || a.y >= ROWS - 1) {
+            if (a.x <= 0 || a.x >= COLS - 1 || a.y <= 0 || a.y >= ROWS - 1) {
+              spawnLaserSparks(a.x * GRID_SIZE + GRID_SIZE / 2, a.y * GRID_SIZE + GRID_SIZE / 2);
+            }
+            destroyed = true;
+            break;
+          }
+
+          const occ = occupiedGrid[a.y * COLS + a.x];
+          if (occ === 1 && !a.isPlayer && isPlayerAlive) {
+            // Arrow hit the player!
+            if (spawnShieldTimer > 0) {
+              floatingTexts.push({
+                x: a.x * GRID_SIZE + GRID_SIZE / 2,
+                y: a.y * GRID_SIZE + GRID_SIZE / 2,
+                text: '🛡️ BLOCKED!',
+                color: '#0ea5e9',
+                life: 24,
+                maxLife: 24
+              });
+            } else if (deadlyCollisions) {
+              triggerPlayerDeath(`🏹 Shot by ${a.ownerName}!`);
+            }
+            destroyed = true;
+            break;
+          } else if (occ >= 2) {
+            const hitBot = bots[occ - 2];
+            if (hitBot && a.ownerId !== 'bot_' + hitBot.id) {
+              const hitX = a.x * GRID_SIZE + GRID_SIZE / 2;
+              const hitY = a.y * GRID_SIZE + GRID_SIZE / 2;
+              killBot(hitBot, 'shot by an arrow');
+              if (a.isPlayer && isPlayerAlive) {
+                score += 50;
+                if (scoreEl) scoreEl.textContent = score;
+                addFoodBank(50);
+                recordRewardProgress('bestScore', score);
+                floatingTexts.push({
+                  x: hitX,
+                  y: hitY,
+                  text: '🏹 +50 ELIMINATED!',
+                  color: '#f59e0b',
+                  life: 36,
+                  maxLife: 36
+                });
+              }
+              destroyed = true;
+              break;
+            }
+          }
+        }
+
+        if (destroyed) {
+          arrows.splice(i, 1);
+        }
+      }
+    }
+
+    function drawArrows(vMinX, vMaxX, vMinY, vMaxY) {
+      for (let i = 0; i < arrows.length; i++) {
+        const a = arrows[i];
+        const ax = a.x * GRID_SIZE + GRID_SIZE / 2;
+        const ay = a.y * GRID_SIZE + GRID_SIZE / 2;
+        if (ax < vMinX || ax > vMaxX || ay < vMinY || ay > vMaxY) continue;
+
+        const angle = Math.atan2(a.dy, a.dx);
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.rotate(angle);
+
+        // Motion trail
+        const trailGrad = ctx.createLinearGradient(-22, 0, 8, 0);
+        trailGrad.addColorStop(0, 'rgba(245, 158, 11, 0)');
+        trailGrad.addColorStop(1, a.isPlayer ? 'rgba(245, 158, 11, 0.7)' : 'rgba(239, 68, 68, 0.6)');
+        ctx.strokeStyle = trailGrad;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-22, 0);
+        ctx.lineTo(4, 0);
+        ctx.stroke();
+
+        // Arrow shaft
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(-12, 0);
+        ctx.lineTo(8, 0);
+        ctx.stroke();
+
+        // Tail fletching feathers
+        ctx.strokeStyle = a.isPlayer ? '#f59e0b' : (a.color || '#ef4444');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(-14, -4);
+        ctx.moveTo(-10, 0);
+        ctx.lineTo(-14, 4);
+        ctx.stroke();
+
+        // Sharp glowing arrowhead
+        ctx.fillStyle = a.isPlayer ? '#facc15' : '#ef4444';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(13, 0);
+        ctx.lineTo(5, -4.8);
+        ctx.lineTo(7, 0);
+        ctx.lineTo(5, 4.8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.restore();
+      }
+    }
+
     // 360-DEGREE CIRCLE TRICK: Automatically bend into a complete circle loop!
     function performCircleLoop() {
       if (!isPlayerAlive || isPaused || !isRunning) return;
@@ -5655,6 +5882,13 @@
         }
       }
 
+      // Shoot Arrow hotkey [F]
+      if (k === 'f') {
+        e.preventDefault();
+        shootPlayerArrow();
+        return;
+      }
+
       // 360-Degree Circle Loop Trick
       if (k === 'c') {
         e.preventDefault();
@@ -5714,6 +5948,8 @@
     canvas.addEventListener('click', () => {
       if (isPaused) {
         togglePause();
+      } else {
+        shootPlayerArrow();
       }
     });
 
@@ -5736,9 +5972,10 @@
     bindTapAction(document.getElementById('btnRight'), () => handleDirection(1, 0));
     bindTapAction(btnTouchCircle, performCircleLoop);
 
-    // Continuous Mobile Swipe-to-Steer anywhere on the game canvas
+    // Continuous Mobile Swipe-to-Steer + Tap-to-Shoot anywhere on the game canvas
     let touchStartX = null;
     let touchStartY = null;
+    let touchDidSwipe = false;
     const SWIPE_THRESHOLD = 22;
 
     canvas.addEventListener('touchstart', (e) => {
@@ -5749,6 +5986,7 @@
       }
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
+      touchDidSwipe = false;
     }, { passive: false });
 
     canvas.addEventListener('touchmove', (e) => {
@@ -5760,6 +5998,7 @@
       const diffY = curY - touchStartY;
 
       if (Math.abs(diffX) >= SWIPE_THRESHOLD || Math.abs(diffY) >= SWIPE_THRESHOLD) {
+        touchDidSwipe = true;
         if (Math.abs(diffX) > Math.abs(diffY)) {
           handleDirection(diffX > 0 ? 1 : -1, 0);
         } else {
@@ -5772,8 +6011,12 @@
     }, { passive: false });
 
     canvas.addEventListener('touchend', () => {
+      if (!touchDidSwipe && touchStartX !== null) {
+        shootPlayerArrow();
+      }
       touchStartX = null;
       touchStartY = null;
+      touchDidSwipe = false;
     });
 
     canvas.addEventListener('touchcancel', () => {
