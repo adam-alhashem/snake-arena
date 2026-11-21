@@ -5424,10 +5424,7 @@
       // RESTORE FROM CAMERA COORDINATES (Now drawing screen-space HUD & Overlays)
       ctx.restore();
 
-      // Draw Radar Minimap on screen
-      if (isRunning || isPaused) {
-        drawMinimap();
-      }
+      // Radar Minimap removed per user request for 100% pure clean arena
 
       // Draw Arrival Toast Announcement Banner in screen coordinates
       if (arrivalAlert) {
