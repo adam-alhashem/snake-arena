@@ -288,7 +288,7 @@
         <div class="w-14 h-14 rounded-2xl bg-red-100 border border-red-200 text-red-600 flex items-center justify-center text-3xl shadow-sm">
           💥
         </div>
-        <h2 class="text-xl font-black text-slate-800">You Were Eliminated!</h2>
+        <h2 data-i18n="eliminatedTitle" class="text-xl font-black text-slate-800">You Were Eliminated!</h2>
         <p id="deathReasonText" class="text-xs text-slate-600 font-medium max-w-xs">
           Crashed into enemy snake!
         </p>
@@ -298,14 +298,14 @@
       <div class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between text-xs">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="font-bold text-slate-700">Live Server:</span>
+          <span data-i18n="liveServerLabel" class="font-bold text-slate-700">Live Server:</span>
           <span id="deathCurrentServer" class="font-mono font-bold text-indigo-600">Server #1 (35 Players)</span>
         </div>
         <div class="font-mono font-semibold text-slate-500">
-          Score: <strong id="deathFinalScore" class="text-slate-800 text-sm">0</strong>
+          <span data-i18n="scoreLabel">Score:</span> <strong id="deathFinalScore" class="text-slate-800 text-sm">0</strong>
         </div>
       </div>
-      <p class="text-[11px] text-emerald-600 font-semibold -mt-2">
+      <p data-i18n="deathMatchLiveHint" class="text-[11px] text-emerald-600 font-semibold -mt-2">
         ⚡ The 35-player match is still live in the background! Choose where to play:
       </p>
 
@@ -317,7 +317,7 @@
             <span>🔁</span>
             <span id="btnRespawnSameServerText">Back to Server #1 (35 Max)</span>
           </div>
-          <span class="text-[10px] text-emerald-100 font-medium">Rejoin live 35-player room! All bots & food stay preserved.</span>
+          <span data-i18n="rejoinLiveDesc" class="text-[10px] text-emerald-100 font-medium">Rejoin live 35-player room! All bots & food stay preserved.</span>
           <span class="mt-1 px-2 py-0.5 rounded bg-emerald-700/60 font-mono text-[9px] font-bold text-emerald-200">Press [Space] or [1]</span>
         </button>
 
@@ -327,7 +327,7 @@
             <span>🌐</span>
             <span id="btnJoinNewServerText">Join New Server #2</span>
           </div>
-          <span class="text-[10px] text-indigo-100 font-medium">Connect to fresh 35-player room with new rivals.</span>
+          <span data-i18n="joinNewDesc" class="text-[10px] text-indigo-100 font-medium">Connect to fresh 35-player room with new rivals.</span>
           <span class="mt-1 px-2 py-0.5 rounded bg-indigo-700/60 font-mono text-[9px] font-bold text-indigo-200">Press [2] or [N]</span>
         </button>
       </div>
@@ -336,9 +336,9 @@
       <div class="flex items-center justify-between w-full pt-2 border-t border-slate-100 text-xs">
         <button id="btnDeathSkinModal" class="px-3 py-1.5 rounded-lg font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 shadow-2xs active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
           <span>🎨</span>
-          <span>Change Character Skin [S]</span>
+          <span data-i18n="changeSkinBtn">Change Character Skin [S]</span>
         </button>
-        <span class="text-[10px] text-slate-400">Server stays active • No rush</span>
+        <span data-i18n="serverActiveNoRush" class="text-[10px] text-slate-400">Server stays active • No rush</span>
       </div>
 
     </div>
@@ -351,17 +351,27 @@
     <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full">
       <div class="flex flex-col items-center gap-2">
         <div class="text-5xl">🐍</div>
-        <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
+        <h1 data-i18n="gameTitle" class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
+      </div>
+
+      <!-- Language Selector (English / العربية) right on the blank start page -->
+      <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1" dir="ltr">
+        <button id="btnLangEn" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs">
+          🇬🇧 English
+        </button>
+        <button id="btnLangAr" class="px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800">
+          🇸🇦 العربية
+        </button>
       </div>
 
       <div class="flex items-center gap-2.5">
         <button id="btnWelcomeSkin" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 hover:bg-purple-50 text-purple-700 border border-purple-200 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
           <span>🎨</span>
-          <span>Choose Skin</span>
+          <span data-i18n="chooseSkin">Choose Skin</span>
         </button>
         <button id="btnWelcomeRewards" class="relative px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
           <span>🏆</span>
-          <span>Rewards</span>
+          <span data-i18n="rewards">Rewards</span>
           <span id="welcomeRewardsBadge" class="hidden -top-1.5 -right-1.5 absolute min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center shadow-sm">0</span>
         </button>
       </div>
@@ -369,7 +379,7 @@
 
     <button id="btnWelcomePlay" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 py-3.5 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-extrabold shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
       <span>▶</span>
-      <span>Play</span>
+      <span data-i18n="play">Play</span>
     </button>
   </div>
 
@@ -380,7 +390,7 @@
     <div class="w-full max-w-3xl flex flex-col items-center text-center gap-6">
       <div class="flex flex-col items-center gap-1.5">
         <div class="text-4xl">🐍</div>
-        <h1 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Snake Arena</h1>
+        <h1 data-i18n="gameTitle" class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Snake Arena</h1>
         <p id="startChoiceServerLabel" class="text-sm text-slate-500 font-medium">
           Joining <strong class="text-indigo-600">Server #1</strong> — Choose how you want to join:
         </p>
@@ -393,11 +403,11 @@
           <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">
             👥
           </div>
-          <div class="text-base font-extrabold text-slate-800">With Players (35)</div>
-          <p class="text-xs text-slate-500 leading-relaxed flex-1">
+          <div data-i18n="choiceFullTitle" class="text-base font-extrabold text-slate-800">With Players (35)</div>
+          <p data-i18n="choiceFullDesc" class="text-xs text-slate-500 leading-relaxed flex-1">
             Join a full live server with 34 other snakes already in the arena.
           </p>
-          <span class="mt-1 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">Join Full Server →</span>
+          <span data-i18n="choiceFullBtn" class="mt-1 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">Join Full Server →</span>
         </button>
 
         <!-- Choice 2: Empty Free Server (Fills Up to 35) -->
@@ -405,11 +415,11 @@
           <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">
             🌐
           </div>
-          <div class="text-base font-extrabold text-slate-800">Empty Free Server</div>
-          <p class="text-xs text-slate-500 leading-relaxed flex-1">
+          <div data-i18n="choiceFreeTitle" class="text-base font-extrabold text-slate-800">Empty Free Server</div>
+          <p data-i18n="choiceFreeDesc" class="text-xs text-slate-500 leading-relaxed flex-1">
             Starts empty (1 / 35), and new players automatically join until it reaches 35.
           </p>
-          <span class="mt-1 px-3 py-1 rounded-full bg-sky-600 text-white text-xs font-bold">Join Free Server →</span>
+          <span data-i18n="choiceFreeBtn" class="mt-1 px-3 py-1 rounded-full bg-sky-600 text-white text-xs font-bold">Join Free Server →</span>
         </button>
 
         <!-- Choice 3: Solo Server (No Other Players) -->
@@ -417,22 +427,22 @@
           <div class="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-2xl">
             👤
           </div>
-          <div class="text-base font-extrabold text-slate-800">Solo Server</div>
-          <p class="text-xs text-slate-500 leading-relaxed flex-1">
+          <div data-i18n="choiceSoloTitle" class="text-base font-extrabold text-slate-800">Solo Server</div>
+          <p data-i18n="choiceSoloDesc" class="text-xs text-slate-500 leading-relaxed flex-1">
             Join an empty server by yourself — no other players will join.
           </p>
-          <span class="mt-1 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">Play Solo →</span>
+          <span data-i18n="choiceSoloBtn" class="mt-1 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">Play Solo →</span>
         </button>
       </div>
 
       <!-- Bottom actions: Back + Choose Skin -->
       <div class="flex items-center gap-3">
-        <button id="btnBackToWelcome" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
+        <button id="btnBackToWelcome" data-i18n="backBtn" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
           ← Back
         </button>
         <button id="btnStartChooseSkin" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
           <span>🎨</span>
-          <span>Choose Skin Before Joining</span>
+          <span data-i18n="chooseSkinBefore">Choose Skin Before Joining</span>
         </button>
       </div>
     </div>
@@ -448,9 +458,9 @@
         <div>
           <h2 class="text-lg sm:text-xl font-black text-slate-800 flex items-center gap-2">
             <span>🏆</span>
-            <span>Challenges & Rewards</span>
+            <span data-i18n="rewardsModalTitle">Challenges & Rewards</span>
           </h2>
-          <p class="text-xs text-slate-600 mt-0.5">Complete tough Easy, Medium & Hard missions to unlock skins, shields, fuel & magnet!</p>
+          <p data-i18n="rewardsModalSub" class="text-xs text-slate-600 mt-0.5">Complete tough Easy, Medium & Hard missions to unlock skins, shields, fuel & magnet!</p>
         </div>
         <button id="btnCloseRewardsModal" class="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 font-bold flex items-center justify-center cursor-pointer active:scale-95 shrink-0">✕</button>
       </div>
@@ -460,10 +470,10 @@
 
       <!-- Difficulty Filter Tabs -->
       <div class="px-4 sm:px-6 py-2.5 border-b border-slate-100 flex items-center gap-2 overflow-x-auto no-scrollbar">
-        <button data-reward-filter="all" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-white cursor-pointer">All (9)</button>
-        <button data-reward-filter="easy" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer">🟢 Easy</button>
-        <button data-reward-filter="medium" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer">🟡 Medium</button>
-        <button data-reward-filter="hard" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 cursor-pointer">🔴 Hard</button>
+        <button data-reward-filter="all" data-i18n="filterAll" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-white cursor-pointer">All (9)</button>
+        <button data-reward-filter="easy" data-i18n="filterEasy" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer">🟢 Easy</button>
+        <button data-reward-filter="medium" data-i18n="filterMedium" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 cursor-pointer">🟡 Medium</button>
+        <button data-reward-filter="hard" data-i18n="filterHard" class="reward-filter-btn px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 cursor-pointer">🔴 Hard</button>
       </div>
 
       <!-- Challenges List -->
@@ -522,6 +532,8 @@
     const btnWelcomePlay = document.getElementById('btnWelcomePlay');
     const btnWelcomeSkin = document.getElementById('btnWelcomeSkin');
     const btnBackToWelcome = document.getElementById('btnBackToWelcome');
+    const btnLangEn = document.getElementById('btnLangEn');
+    const btnLangAr = document.getElementById('btnLangAr');
     const startChoicePage = document.getElementById('startChoicePage');
     const startChoiceServerLabel = document.getElementById('startChoiceServerLabel');
     const btnJoinWithPlayers = document.getElementById('btnJoinWithPlayers');
@@ -4483,11 +4495,23 @@
     }
 
     function showDeathModal(reason, finalScore) {
-      if (deathReasonText) deathReasonText.textContent = reason || 'You Crashed!';
-      if (deathCurrentServer) deathCurrentServer.textContent = `Server #${serverNumber} (${MAX_SERVER_PLAYERS} Players Room)`;
+      if (deathReasonText) deathReasonText.textContent = reason || (currentLang === 'ar' ? 'لقد اصطدمت!' : 'You Crashed!');
+      if (deathCurrentServer) {
+        deathCurrentServer.textContent = currentLang === 'ar'
+          ? `سيرفر #${serverNumber} (${MAX_SERVER_PLAYERS} لاعب)`
+          : `Server #${serverNumber} (${MAX_SERVER_PLAYERS} Players Room)`;
+      }
       if (deathFinalScore) deathFinalScore.textContent = finalScore != null ? finalScore : score;
-      if (btnRespawnSameServerText) btnRespawnSameServerText.textContent = `Back to Server #${serverNumber}`;
-      if (btnJoinNewServerText) btnJoinNewServerText.textContent = `Join New Server #${serverNumber + 1}`;
+      if (btnRespawnSameServerText) {
+        btnRespawnSameServerText.textContent = currentLang === 'ar'
+          ? `العودة إلى سيرفر #${serverNumber}`
+          : `Back to Server #${serverNumber}`;
+      }
+      if (btnJoinNewServerText) {
+        btnJoinNewServerText.textContent = currentLang === 'ar'
+          ? `دخول سيرفر جديد #${serverNumber + 1}`
+          : `Join New Server #${serverNumber + 1}`;
+      }
       if (deathModal) deathModal.classList.remove('hidden');
     }
 
@@ -4583,7 +4607,9 @@
       updateSkinLockUI();
       if (welcomeBlankPage) welcomeBlankPage.classList.add('hidden');
       if (startChoiceServerLabel) {
-        startChoiceServerLabel.innerHTML = `Joining <strong class="text-indigo-600">Server #${serverNumber}</strong> — Choose how you want to join:`;
+        startChoiceServerLabel.innerHTML = (typeof currentLang !== 'undefined' && currentLang === 'ar')
+          ? `الدخول إلى <strong class="text-indigo-600">سيرفر #${serverNumber}</strong> — اختر طريقة الدخول:`
+          : `Joining <strong class="text-indigo-600">Server #${serverNumber}</strong> — Choose how you want to join:`;
       }
       if (startChoicePage) startChoicePage.classList.remove('hidden');
     }
@@ -5749,7 +5775,7 @@
         floatingTexts.push({
           x: head.x * GRID_SIZE + GRID_SIZE / 2,
           y: head.y * GRID_SIZE + GRID_SIZE / 2,
-          text: '🏹 No Arrows!',
+          text: currentLang === 'ar' ? '🏹 لا توجد أسهم!' : '🏹 No Arrows!',
           color: '#ef4444',
           life: 24,
           maxLife: 24
@@ -6521,12 +6547,17 @@
         const pct = Math.round((cur / ch.target) * 100);
         const isDone = cur >= ch.target;
         const isClaimed = !!rewardsState.claimed[ch.id];
+        const isAr = (currentLang === 'ar');
+        const tr = isAr && REWARD_AR[ch.id] ? REWARD_AR[ch.id] : null;
+        const chTitle = tr ? tr.title : ch.title;
+        const chDesc = tr ? tr.desc : ch.desc;
+        const chReward = tr ? tr.reward : ch.rewardLabel;
 
         const diffBadge = ch.difficulty === 'easy'
-          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">🟢 EASY</span>'
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700">${isAr ? '🟢 سهل' : '🟢 EASY'}</span>`
           : ch.difficulty === 'medium'
-          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700">🟡 MEDIUM</span>'
-          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">🔴 HARD</span>';
+          ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700">${isAr ? '🟡 متوسط' : '🟡 MEDIUM'}</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">${isAr ? '🔴 صعب' : '🔴 HARD'}</span>`;
 
         const card = document.createElement('div');
         card.className = `p-3.5 rounded-xl border-2 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
@@ -6539,23 +6570,23 @@
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1">
               ${diffBadge}
-              <span class="font-extrabold text-sm text-slate-800">${ch.title}</span>
+              <span class="font-extrabold text-sm text-slate-800">${chTitle}</span>
             </div>
-            <p class="text-xs text-slate-600 mb-2">${ch.desc}</p>
+            <p class="text-xs text-slate-600 mb-2">${chDesc}</p>
             <div class="flex items-center gap-2">
               <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div class="h-full rounded-full transition-all ${isDone ? 'bg-emerald-500' : 'bg-indigo-500'}" style="width:${pct}%"></div>
               </div>
               <span class="font-mono text-[11px] font-bold text-slate-600 shrink-0">${cur} / ${ch.target}</span>
             </div>
-            <div class="mt-2 text-xs font-bold text-purple-700">Prize: ${ch.rewardLabel}</div>
+            <div class="mt-2 text-xs font-bold text-purple-700">${isAr ? 'الجائزة:' : 'Prize:'} ${chReward}</div>
           </div>
           <div class="shrink-0">
             ${isClaimed
-              ? '<span class="inline-block px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-extrabold">✅ Claimed</span>'
+              ? `<span class="inline-block px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-extrabold">${isAr ? '✅ تم الاستلام' : '✅ Claimed'}</span>`
               : isDone
-              ? `<button data-claim-id="${ch.id}" class="claim-reward-btn px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-md active:scale-95 transition-all cursor-pointer animate-pulse">🎁 Claim Prize!</button>`
-              : '<span class="inline-block px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold">In Progress</span>'
+              ? `<button data-claim-id="${ch.id}" class="claim-reward-btn px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-md active:scale-95 transition-all cursor-pointer animate-pulse">${isAr ? '🎁 استلام الجائزة!' : '🎁 Claim Prize!'}</button>`
+              : `<span class="inline-block px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold">${isAr ? 'قيد التقدم' : 'In Progress'}</span>`
             }
           </div>
         `;
@@ -6602,7 +6633,127 @@
       });
     }
 
+    // =========================================================================
+    // LANGUAGE SYSTEM (ENGLISH / ARABIC)
+    // =========================================================================
+    let currentLang = localStorage.getItem('snakeGameLang') || 'en';
+
+    const I18N = {
+      en: {
+        gameTitle: 'Snake Arena',
+        play: 'Play',
+        chooseSkin: 'Choose Skin',
+        rewards: 'Rewards',
+        choiceFullTitle: 'With Players (35)',
+        choiceFullDesc: 'Join a full live server with 34 other snakes already in the arena.',
+        choiceFullBtn: 'Join Full Server →',
+        choiceFreeTitle: 'Empty Free Server',
+        choiceFreeDesc: 'Starts empty (1 / 35), and new players automatically join until it reaches 35.',
+        choiceFreeBtn: 'Join Free Server →',
+        choiceSoloTitle: 'Solo Server',
+        choiceSoloDesc: 'Join an empty server by yourself — no other players will join.',
+        choiceSoloBtn: 'Play Solo →',
+        backBtn: '← Back',
+        chooseSkinBefore: 'Choose Skin Before Joining',
+        eliminatedTitle: 'You Were Eliminated!',
+        liveServerLabel: 'Live Server:',
+        scoreLabel: 'Score:',
+        deathMatchLiveHint: '⚡ The 35-player match is still live in the background! Choose where to play:',
+        rejoinLiveDesc: 'Rejoin live 35-player room! All bots & food stay preserved.',
+        joinNewDesc: 'Connect to fresh 35-player room with new rivals.',
+        changeSkinBtn: 'Change Character Skin [S]',
+        serverActiveNoRush: 'Server stays active • No rush',
+        rewardsModalTitle: 'Challenges & Rewards',
+        rewardsModalSub: 'Complete tough Easy, Medium & Hard missions to unlock skins, shields, fuel & magnet!',
+        filterAll: 'All (9)',
+        filterEasy: '🟢 Easy',
+        filterMedium: '🟡 Medium',
+        filterHard: '🔴 Hard'
+      },
+      ar: {
+        gameTitle: 'حلبة الثعابين',
+        play: 'العب',
+        chooseSkin: 'اختر الشكل',
+        rewards: 'المكافآت',
+        choiceFullTitle: 'مع لاعبين (35)',
+        choiceFullDesc: 'ادخل سيرفر مباشر وممتلئ مع 34 ثعباناً آخر في الحلبة.',
+        choiceFullBtn: '← دخول السيرفر الممتلئ',
+        choiceFreeTitle: 'سيرفر فارغ مجاني',
+        choiceFreeDesc: 'يبدأ فارغاً (1 / 35) ويدخل اللاعبون تلقائياً حتى يصل إلى 35 لاعباً.',
+        choiceFreeBtn: '← دخول السيرفر المجاني',
+        choiceSoloTitle: 'لعب فردي',
+        choiceSoloDesc: 'ادخل سيرفر فارغ وحدك — لن يدخل أي لاعبين آخرين.',
+        choiceSoloBtn: '← العب وحدك',
+        backBtn: 'رجوع →',
+        chooseSkinBefore: 'اختر الشكل قبل الدخول',
+        eliminatedTitle: 'لقد تم إقصاؤك!',
+        liveServerLabel: 'السيرفر المباشر:',
+        scoreLabel: 'النقاط:',
+        deathMatchLiveHint: '⚡ المباراة ما زالت مستمرة في الخلفية! اختر أين تريد اللعب:',
+        rejoinLiveDesc: 'ارجع إلى نفس السيرفر المباشر مع بقاء كل اللاعبين والطعام.',
+        joinNewDesc: 'ادخل إلى سيرفر جديد بمنافسين جدد.',
+        changeSkinBtn: 'تغيير الشكل [S]',
+        serverActiveNoRush: 'السيرفر يعمل • خذ وقتك',
+        rewardsModalTitle: 'التحديات والمكافآت',
+        rewardsModalSub: 'أكمل التحديات السهلة والمتوسطة والصعبة لفتح الأشكال والدروع والوقود والمغناطيس!',
+        filterAll: 'الكل (9)',
+        filterEasy: '🟢 سهل',
+        filterMedium: '🟡 متوسط',
+        filterHard: '🔴 صعب'
+      }
+    };
+
+    const REWARD_AR = {
+      easy_score_300: { title: 'الصياد الجائع', desc: 'اجمع 300 نقطة في حياة واحدة', reward: '🛡️ ترقية درع الحماية +4 ثواني' },
+      easy_circles_15: { title: 'سيد الدوران', desc: 'قم بـ 15 حركة دائرية [C] في حياة واحدة', reward: '⚡ +30 سعة وقود إضافية دائمة' },
+      easy_survive_90: { title: 'الناجي القوي', desc: 'ابقَ على قيد الحياة لمدة 90 ثانية', reward: '🎁 فتح شكل مجاني عشوائي' },
+      med_score_1000: { title: 'المفترس الأعلى', desc: 'اجمع 1,000 نقطة في حياة واحدة', reward: '🧲 فتح قدرة مغناطيس الطعام [M]' },
+      med_top3: { title: 'من الأوائل', desc: 'اوصل لأفضل 3 في سيرفر به 20+ لاعب', reward: '🎁 فتح شكل نادر مجاني' },
+      med_survive_180: { title: 'إرادة حديدية', desc: 'ابقَ حياً لمدة 3 دقائق (180 ثانية)', reward: '🔥 +60 وقود دائم + 2,500 طعام' },
+      hard_king_60: { title: 'الملك الحقيقي', desc: 'احتفظ بتاج المركز #1 لمدة 60 ثانية', reward: '🎁 شكل أسطوري مجاني + 👑 شارة البطل' },
+      hard_score_2500: { title: 'العملاق الذي لا يُقهر', desc: 'اجمع 2,500 نقطة في حياة واحدة', reward: '🛡️ درع مضاعف + 🧲 مغناطيس خارق' },
+      hard_survive_360: { title: 'الأسطورة الخالدة', desc: 'ابقَ حياً لمدة 6 دقائق (360 ثانية)', reward: '🎁 شكل خرافي مجاني + 10,000 طعام' }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = (lang === 'ar') ? 'ar' : 'en';
+      try { localStorage.setItem('snakeGameLang', currentLang); } catch (e) {}
+
+      const dict = I18N[currentLang] || I18N.en;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+
+      const dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      [welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
+        if (el) el.setAttribute('dir', dir);
+      });
+
+      if (btnLangEn && btnLangAr) {
+        if (currentLang === 'ar') {
+          btnLangAr.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs';
+          btnLangEn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800';
+        } else {
+          btnLangEn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs';
+          btnLangAr.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800';
+        }
+      }
+
+      if (startChoiceServerLabel) {
+        startChoiceServerLabel.innerHTML = currentLang === 'ar'
+          ? `الدخول إلى <strong class="text-indigo-600">سيرفر #${serverNumber}</strong> — اختر طريقة الدخول:`
+          : `Joining <strong class="text-indigo-600">Server #${serverNumber}</strong> — Choose how you want to join:`;
+      }
+
+      if (rewardsModal && !rewardsModal.classList.contains('hidden')) {
+        renderRewardsModal();
+      }
+    }
+
     // Wire White Welcome Page & Start Choice Page buttons
+    if (btnLangEn) btnLangEn.addEventListener('click', () => applyLanguage('en'));
+    if (btnLangAr) btnLangAr.addEventListener('click', () => applyLanguage('ar'));
     if (btnWelcomePlay) btnWelcomePlay.addEventListener('click', showStartChoicePage);
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
@@ -6611,8 +6762,9 @@
     if (btnJoinSoloServer) btnJoinSoloServer.addEventListener('click', () => enterServerFromChoice('solo'));
     if (btnStartChooseSkin) btnStartChooseSkin.addEventListener('click', openSkinModal);
 
-    // Initialize rewards & apply equipped skin perks immediately on load
+    // Initialize rewards, language & apply equipped skin perks immediately on load
     initRewardsUI();
+    applyLanguage(currentLang);
     setSkin(currentSkin, true);
     updateFoodBankUI();
 
