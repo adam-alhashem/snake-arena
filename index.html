@@ -98,16 +98,16 @@
         <span id="fuelText" class="font-mono text-xs font-bold text-slate-700 min-w-[28px]">100%</span>
       </div>
 
-      <!-- 30-Second Snake Arrival Countdown Badge (60 Players Server) -->
+      <!-- 30-Second Snake Arrival Countdown Badge (35 Players Server) -->
       <div id="spawnTimerWrap" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-xs">
-        <span class="text-purple-600 font-bold flex items-center gap-1"><span>👥</span> <span id="snakeCountBadge">60 / 60 Players</span></span>
+        <span class="text-purple-600 font-bold flex items-center gap-1"><span>👥</span> <span id="snakeCountBadge">35 / 35 Players</span></span>
         <span class="text-slate-300">|</span>
         <span class="text-slate-500 font-medium flex items-center gap-1">⏱️ <strong id="nextSnakeCountdown" class="text-emerald-600 font-extrabold">FULL</strong></span>
       </div>
 
       <!-- Server Room Badge & Switcher Button -->
-      <button id="btnSwitchServer" title="Click to switch to a new server room (60 players max)" class="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs font-mono text-xs font-bold transition-all cursor-pointer active:scale-95">
-        <span>🌐</span> <strong id="serverNameText">Server #1 (60 Max)</strong> <span class="text-[10px] text-indigo-500 font-sans font-normal">[New Room ▾]</span>
+      <button id="btnSwitchServer" title="Click to switch to a new server room (35 players max)" class="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-2.5 py-1 rounded-lg shadow-2xs font-mono text-xs font-bold transition-all cursor-pointer active:scale-95">
+        <span>🌐</span> <strong id="serverNameText">Server #1 (35 Max)</strong> <span class="text-[10px] text-indigo-500 font-sans font-normal">[New Room ▾]</span>
       </button>
 
       <!-- Food Bank Counter (Skin Currency) -->
@@ -142,8 +142,8 @@
         <span>🔄 Circle</span>
         <span class="text-[10px] font-mono opacity-80">[C]</span>
       </button>
-      <button id="btnBots" title="Server Population (Click to cycle: 60, 40, 25, 10, 3, Solo)" class="px-2 py-1 text-xs font-semibold rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 active:scale-95 transition-all">
-        🤖 60 Players (Max 🔥)
+      <button id="btnBots" title="Server Population (Click to cycle: 35, 25, 15, 10, 3, Solo)" class="px-2 py-1 text-xs font-semibold rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 active:scale-95 transition-all">
+        🤖 35 Players (Max 🔥)
       </button>
       <!-- Deadly Collision / Ghost Toggle -->
       <button id="btnGhost" title="Toggle snake collision rule" class="px-2 py-1 text-xs font-semibold rounded border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 active:scale-95 transition-all">
@@ -299,14 +299,14 @@
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span class="font-bold text-slate-700">Live Server:</span>
-          <span id="deathCurrentServer" class="font-mono font-bold text-indigo-600">Server #1 (60 Players)</span>
+          <span id="deathCurrentServer" class="font-mono font-bold text-indigo-600">Server #1 (35 Players)</span>
         </div>
         <div class="font-mono font-semibold text-slate-500">
           Score: <strong id="deathFinalScore" class="text-slate-800 text-sm">0</strong>
         </div>
       </div>
       <p class="text-[11px] text-emerald-600 font-semibold -mt-2">
-        ⚡ The 60-player match is still live in the background! Choose where to play:
+        ⚡ The 35-player match is still live in the background! Choose where to play:
       </p>
 
       <!-- The Two Main Choices (Same Server vs New Server) -->
@@ -315,9 +315,9 @@
         <button id="btnRespawnSameServer" class="p-3.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md active:scale-95 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center group border border-emerald-400">
           <div class="flex items-center gap-1.5 text-sm sm:text-base font-extrabold">
             <span>🔁</span>
-            <span id="btnRespawnSameServerText">Back to Server #1 (60 Max)</span>
+            <span id="btnRespawnSameServerText">Back to Server #1 (35 Max)</span>
           </div>
-          <span class="text-[10px] text-emerald-100 font-medium">Rejoin live 60-player room! All bots & food stay preserved.</span>
+          <span class="text-[10px] text-emerald-100 font-medium">Rejoin live 35-player room! All bots & food stay preserved.</span>
           <span class="mt-1 px-2 py-0.5 rounded bg-emerald-700/60 font-mono text-[9px] font-bold text-emerald-200">Press [Space] or [1]</span>
         </button>
 
@@ -327,7 +327,7 @@
             <span>🌐</span>
             <span id="btnJoinNewServerText">Join New Server #2</span>
           </div>
-          <span class="text-[10px] text-indigo-100 font-medium">Connect to fresh 60-player room with new rivals.</span>
+          <span class="text-[10px] text-indigo-100 font-medium">Connect to fresh 35-player room with new rivals.</span>
           <span class="mt-1 px-2 py-0.5 rounded bg-indigo-700/60 font-mono text-[9px] font-bold text-indigo-200">Press [2] or [N]</span>
         </button>
       </div>
@@ -388,26 +388,26 @@
 
       <!-- Three Clear Choices -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-        <!-- Choice 1: With Players (60) -->
+        <!-- Choice 1: With Players (35) -->
         <button id="btnJoinWithPlayers" class="p-5 rounded-2xl bg-white hover:bg-emerald-50 border-2 border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow-md active:scale-95 transition-all flex flex-col items-center gap-2.5 cursor-pointer text-center">
           <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">
             👥
           </div>
-          <div class="text-base font-extrabold text-slate-800">With Players (60)</div>
+          <div class="text-base font-extrabold text-slate-800">With Players (35)</div>
           <p class="text-xs text-slate-500 leading-relaxed flex-1">
-            Join a full live server with 59 other snakes already in the arena.
+            Join a full live server with 34 other snakes already in the arena.
           </p>
           <span class="mt-1 px-3 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold">Join Full Server →</span>
         </button>
 
-        <!-- Choice 2: Empty Free Server (Fills Up to 60) -->
+        <!-- Choice 2: Empty Free Server (Fills Up to 35) -->
         <button id="btnJoinEmptyFreeServer" class="p-5 rounded-2xl bg-white hover:bg-sky-50 border-2 border-slate-200 hover:border-sky-400 shadow-sm hover:shadow-md active:scale-95 transition-all flex flex-col items-center gap-2.5 cursor-pointer text-center">
           <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl">
             🌐
           </div>
           <div class="text-base font-extrabold text-slate-800">Empty Free Server</div>
           <p class="text-xs text-slate-500 leading-relaxed flex-1">
-            Starts empty (1 / 60), and new players automatically join until it reaches 60.
+            Starts empty (1 / 35), and new players automatically join until it reaches 35.
           </p>
           <span class="mt-1 px-3 py-1 rounded-full bg-sky-600 text-white text-xs font-bold">Join Free Server →</span>
         </button>
@@ -542,7 +542,7 @@
     const btnMagnetText = document.getElementById('btnMagnetText');
 
     const GRID_SIZE = 20;
-    const MAX_SERVER_PLAYERS = 60;
+    const MAX_SERVER_PLAYERS = 35;
     const WORLD_COLS = 160;
     const WORLD_ROWS = 100;
     const WORLD_WIDTH = WORLD_COLS * GRID_SIZE;  // 3200px arena
@@ -3202,8 +3202,8 @@
     let arrows = [];
     let playerArrowCooldown = 0;
 
-    const POPULATION_PRESETS = [59, 39, 24, 9, 2, 0];
-    let botCount = 59; // 60 Players Server Max by default (59 bots + 1 player)
+    const POPULATION_PRESETS = [34, 24, 14, 9, 2, 0];
+    let botCount = 34; // 35 Players Server Max by default (34 bots + 1 player)
     let bots = [];
     let foods = [];
 
@@ -3246,10 +3246,10 @@
 
     function updateBotUI() {
       const total = botCount + 1;
-      btnBots.textContent = (botCount === 59) ? '🤖 60 Players (Max 🔥)' :
+      btnBots.textContent = (botCount === 34) ? '🤖 35 Players (Max 🔥)' :
                             (botCount === 0) ? '👤 Solo (1 Player)' :
                             `🤖 ${total} Players`;
-      btnBots.title = `Server Population: ${total}/60 Players (Click to cycle population: 60, 40, 25, 10, 3, Solo)`;
+      btnBots.title = `Server Population: ${total}/35 Players (Click to cycle population: 35, 25, 15, 10, 3, Solo)`;
     }
 
     // Deadly collision toggle
