@@ -5241,6 +5241,77 @@
       ctx.restore();
     }
 
+    // DRAW GOLDEN POINTER ARROW TO THE #1 KING'S HEAD (when King is off-screen)
+    function drawKingPointerArrow() {
+      const king = getCurrentKing();
+      if (!king || king.id === 'player' || king.x === undefined || king.y === undefined) return;
+
+      const kx = king.x - Math.round(cameraX);
+      const ky = king.y - Math.round(cameraY);
+
+      // Hide arrow when the King's head is already visible on screen
+      const onScreenPad = 24;
+      if (kx >= onScreenPad && kx <= canvas.width - onScreenPad &&
+          ky >= onScreenPad && ky <= canvas.height - onScreenPad) {
+        return;
+      }
+
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const vx = kx - cx;
+      const vy = ky - cy;
+      const angle = Math.atan2(vy, vx);
+
+      // Clamp indicator smoothly to padded screen edges
+      const edgePad = 38;
+      const halfW = Math.max(10, cx - edgePad);
+      const halfH = Math.max(10, cy - edgePad);
+      const scaleX = Math.abs(vx) > 0.001 ? halfW / Math.abs(vx) : Infinity;
+      const scaleY = Math.abs(vy) > 0.001 ? halfH / Math.abs(vy) : Infinity;
+      const t = Math.min(scaleX, scaleY);
+      const ax = cx + vx * t;
+      const ay = cy + vy * t;
+
+      const pulse = Math.sin(Date.now() / 180) * 2;
+
+      ctx.save();
+      ctx.translate(ax, ay);
+
+      // 1. Rotated Golden Pointer Arrow pointing directly at the King's head
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.fillStyle = '#f59e0b';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(245, 158, 11, 0.55)';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(24 + pulse, 0);   // Sharp arrow tip
+      ctx.lineTo(11 + pulse, -9);  // Top wing
+      ctx.lineTo(14 + pulse, 0);   // Inner notch
+      ctx.lineTo(11 + pulse, 9);   // Bottom wing
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      // 2. Upright Golden Crown Medallion
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '14px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('👑', 0, 1);
+
+      ctx.restore();
+    }
+
     function draw() {
       // 1. UPDATE CAMERA (Screen follows player as you head towards edges)
       updateCamera();
@@ -5424,7 +5495,10 @@
       // RESTORE FROM CAMERA COORDINATES (Now drawing screen-space HUD & Overlays)
       ctx.restore();
 
-      // Radar Minimap removed per user request for 100% pure clean arena
+      // Draw Golden Pointer Arrow toward the #1 King's head when off-screen
+      if (isRunning && !isPaused) {
+        drawKingPointerArrow();
+      }
 
       // Draw Arrival Toast Announcement Banner in screen coordinates
       if (arrivalAlert) {
