@@ -7365,7 +7365,7 @@
 
     const LANG_GREETINGS = {
       en: { text: "English! Let's play Snake Arena, my friend!", fallback: "English, let's play Snake Arena, my friend", bcp47: 'en-US', pitch: 1.15, rate: 1.06 },
-      ar: { text: 'أَهْلاً يَا بَطَل، هَيَّا نَلْعَبُ مَعاً', fallback: 'Ahlan ya batal, yalla nal ab Snake Arena', bcp47: 'ar-001', pitch: 1.08, rate: 1.0 },
+      ar: { text: 'خلينا نحكي عربي', fallback: 'Khallina nehki Arabi', bcp47: 'ar-SA', pitch: 1.08, rate: 0.98 },
       es: { text: '¡Español! ¡Vamos a jugar, amigo!', fallback: 'Espanol, vamos a jugar amigo', bcp47: 'es-ES', pitch: 1.15, rate: 1.06 },
       fr: { text: "Français ! C'est parti mon ami !", fallback: 'Francais, say par tee mon amee', bcp47: 'fr-FR', pitch: 1.15, rate: 1.06 },
       de: { text: "Deutsch! Los geht's, mein Freund!", fallback: 'Deutsch, los gates mine froynd', bcp47: 'de-DE', pitch: 1.12, rate: 1.04 },
@@ -7424,24 +7424,47 @@
       if (!('speechSynthesis' in window)) return;
       try {
         loadSpeechVoices();
-        window.speechSynthesis.cancel();
-        const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []);
-        const match = voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith(lang)) ||
-                      (lang === 'ar' ? voices.find(v => /arab|majed|maged|tarik|laila/i.test(v.name || '')) : null);
-
-        // If native voice is installed, speak native script; otherwise speak phonetic fallback so it ALWAYS talks!
-        const rawText = match ? g.text : (g.fallback || g.text);
-        const spokenText = rawText.replace(/[!¡！]/g, ' ').replace(/\s+/g, ' ').trim();
-        const utter = new SpeechSynthesisUtterance(spokenText);
-        if (match) {
-          utter.voice = match;
-          utter.lang = match.lang;
-        } else {
-          utter.lang = 'en-US';
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+          window.speechSynthesis.cancel();
         }
-        utter.pitch = g.pitch || 1.1;
-        utter.rate = g.rate || 1.02;
-        window.speechSynthesis.speak(utter);
+        const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []);
+        const match = voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith(lang) && v.localService !== false) ||
+                      voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith(lang));
+
+        const speakUtterance = (textStr, voiceObj, langCode) => {
+          const clean = textStr.replace(/[!¡！]/g, ' ').replace(/\s+/g, ' ').trim();
+          const u = new SpeechSynthesisUtterance(clean);
+          if (voiceObj) {
+            u.voice = voiceObj;
+            u.lang = voiceObj.lang;
+          } else {
+            u.lang = langCode || 'en-US';
+          }
+          u.volume = 1.0;
+          u.pitch = g.pitch || 1.08;
+          u.rate = g.rate || 1.0;
+          return u;
+        };
+
+        if (match) {
+          const u = speakUtterance(g.text, match, match.lang);
+          let started = false;
+          u.onstart = () => { started = true; };
+          u.onerror = () => {
+            if (!started && g.fallback) {
+              window.speechSynthesis.speak(speakUtterance(g.fallback, null, 'en-US'));
+            }
+          };
+          window.speechSynthesis.speak(u);
+          // Fallback if browser had a stub voice that stayed silent after 500ms
+          setTimeout(() => {
+            if (!started && !window.speechSynthesis.speaking && g.fallback) {
+              window.speechSynthesis.speak(speakUtterance(g.fallback, null, 'en-US'));
+            }
+          }, 500);
+        } else {
+          window.speechSynthesis.speak(speakUtterance(g.fallback || g.text, null, 'en-US'));
+        }
       } catch (e) {}
     }
 
