@@ -357,7 +357,25 @@
   <!-- PURE WHITE BLANK WELCOME PAGE (FIRST SCREEN BEFORE STARTING)              -->
   <!-- ========================================================================= -->
   <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6">
-    <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full">
+    <!-- Tall Big Golden Rewards Sign on the Left Side -->
+    <button id="btnWelcomeRewards" class="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 w-28 sm:w-44 min-h-[250px] sm:min-h-[340px] px-3 sm:px-5 py-5 sm:py-7 rounded-3xl bg-gradient-to-b from-amber-50 via-amber-100/90 to-orange-100 hover:from-amber-100 hover:to-orange-200 border-2 border-amber-300 shadow-lg hover:shadow-xl active:scale-95 transition-all flex flex-col items-center justify-between text-center cursor-pointer z-10">
+      <span id="welcomeRewardsBadge" class="hidden -top-2 -right-2 absolute min-w-[24px] h-[24px] px-1.5 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center shadow-md animate-bounce">0</span>
+
+      <div class="flex flex-col items-center gap-1.5">
+        <span class="text-4xl sm:text-5xl drop-shadow-xs">🏆</span>
+        <span data-i18n="rewards" class="text-base sm:text-xl font-black text-amber-900 tracking-tight">Rewards</span>
+      </div>
+
+      <div class="flex flex-col items-center gap-1.5 w-full my-2">
+        <span data-i18n="filterEasy" class="w-full py-1 rounded-lg bg-white/80 border border-emerald-200 text-emerald-700 text-[10px] sm:text-xs font-extrabold">🟢 Easy</span>
+        <span data-i18n="filterMedium" class="w-full py-1 rounded-lg bg-white/80 border border-amber-200 text-amber-700 text-[10px] sm:text-xs font-extrabold">🟡 Medium</span>
+        <span data-i18n="filterHard" class="w-full py-1 rounded-lg bg-white/80 border border-rose-200 text-rose-700 text-[10px] sm:text-xs font-extrabold">🔴 Hard</span>
+      </div>
+
+      <span data-i18n="openRewardsBtn" class="w-full py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] sm:text-xs font-black shadow-xs">Open →</span>
+    </button>
+
+    <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full pl-24 sm:pl-0">
       <div class="flex flex-col items-center gap-2">
         <div class="text-5xl">🐍</div>
         <h1 data-i18n="gameTitle" class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
@@ -378,17 +396,10 @@
         </button>
       </div>
 
-      <div class="flex items-center gap-2.5">
-        <button id="btnWelcomeSkin" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 hover:bg-purple-50 text-purple-700 border border-purple-200 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
-          <span>🎨</span>
-          <span data-i18n="chooseSkin">Choose Skin</span>
-        </button>
-        <button id="btnWelcomeRewards" class="relative px-4 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
-          <span>🏆</span>
-          <span data-i18n="rewards">Rewards</span>
-          <span id="welcomeRewardsBadge" class="hidden -top-1.5 -right-1.5 absolute min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center shadow-sm">0</span>
-        </button>
-      </div>
+      <button id="btnWelcomeSkin" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-50 hover:bg-purple-50 text-purple-700 border border-purple-200 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
+        <span>🎨</span>
+        <span data-i18n="chooseSkin">Choose Skin</span>
+      </button>
     </div>
 
     <button id="btnWelcomePlay" class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 py-3.5 px-8 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-extrabold shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
@@ -6834,6 +6845,7 @@
         play: 'Play',
         chooseSkin: 'Choose Skin',
         rewards: 'Rewards',
+        openRewardsBtn: 'Open →',
         choiceFullTitle: 'With Players (35)',
         choiceFullDesc: 'Join a full live server with 34 other snakes already in the arena.',
         choiceFullBtn: 'Join Full Server →',
@@ -6866,6 +6878,7 @@
         play: 'العب',
         chooseSkin: 'اختر الشكل',
         rewards: 'المكافآت',
+        openRewardsBtn: '← فتح',
         choiceFullTitle: 'مع لاعبين (35)',
         choiceFullDesc: 'ادخل سيرفر مباشر وممتلئ مع 34 ثعباناً آخر في الحلبة.',
         choiceFullBtn: '← دخول السيرفر الممتلئ',
