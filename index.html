@@ -367,13 +367,24 @@
         </div>
       </div>
 
-      <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1" dir="ltr">
-        <button id="btnLangEn" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs">
-          🇬🇧 English
-        </button>
-        <button id="btnLangAr" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800">
-          🇸🇦 العربية
-        </button>
+      <div class="inline-flex items-center px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1.5" dir="ltr">
+        <span class="text-sm">🌐</span>
+        <select id="langSelect" aria-label="Language" class="bg-transparent text-xs font-extrabold text-slate-800 focus:outline-none cursor-pointer pr-1">
+          <option value="en">🇬🇧 English</option>
+          <option value="ar">🇸🇦 العربية</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="fr">🇫🇷 Français</option>
+          <option value="de">🇩🇪 Deutsch</option>
+          <option value="it">🇮🇹 Italiano</option>
+          <option value="pt">🇵🇹 Português</option>
+          <option value="tr">🇹🇷 Türkçe</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="zh">🇨🇳 中文</option>
+          <option value="ja">🇯🇵 日本語</option>
+          <option value="ko">🇰🇷 한국어</option>
+          <option value="hi">🇮🇳 हिन्दी</option>
+          <option value="ur">🇵🇰 اردو</option>
+        </select>
       </div>
     </div>
 
@@ -572,8 +583,7 @@
     const btnWelcomePlay = document.getElementById('btnWelcomePlay');
     const btnWelcomeSkin = document.getElementById('btnWelcomeSkin');
     const btnBackToWelcome = document.getElementById('btnBackToWelcome');
-    const btnLangEn = document.getElementById('btnLangEn');
-    const btnLangAr = document.getElementById('btnLangAr');
+    const langSelect = document.getElementById('langSelect');
     const btnWelcomeSound = document.getElementById('btnWelcomeSound');
     const startChoicePage = document.getElementById('startChoicePage');
     const startChoiceServerLabel = document.getElementById('startChoiceServerLabel');
@@ -6849,82 +6859,193 @@
     }
 
     // =========================================================================
-    // LANGUAGE SYSTEM (ENGLISH / ARABIC)
+    // MULTI-LANGUAGE SYSTEM (14 WORLD LANGUAGES + RTL SUPPORT)
     // =========================================================================
     let currentLang = localStorage.getItem('snakeGameLang') || 'en';
+    const RTL_LANGS = ['ar', 'ur'];
 
     const I18N = {
       en: {
-        gameTitle: 'Snake Arena',
-        play: 'Play',
-        chooseSkin: 'Choose Skin',
-        skinsCountLabel: '🐺 100 Skins',
-        noAdsTitle: 'NO ADS',
-        noAdsSub: '100% Free to Play',
-        rewards: 'Rewards',
-        openRewardsBtn: 'Open →',
-        choiceFullTitle: 'With Players (35)',
-        choiceFullDesc: 'Join a full live server with 34 other snakes already in the arena.',
-        choiceFullBtn: 'Join Full Server →',
-        choiceFreeTitle: 'Empty Free Server',
-        choiceFreeDesc: 'Starts empty (1 / 35), and new players automatically join until it reaches 35.',
-        choiceFreeBtn: 'Join Free Server →',
-        choiceSoloTitle: 'Solo Server',
-        choiceSoloDesc: 'Join an empty server by yourself — no other players will join.',
-        choiceSoloBtn: 'Play Solo →',
-        backBtn: '← Back',
-        chooseSkinBefore: 'Choose Skin Before Joining',
-        eliminatedTitle: 'You Were Eliminated!',
-        liveServerLabel: 'Live Server:',
-        scoreLabel: 'Score:',
-        deathMatchLiveHint: '⚡ The 35-player match is still live in the background! Choose where to play:',
-        rejoinLiveDesc: 'Rejoin live 35-player room! All bots & food stay preserved.',
-        joinNewDesc: 'Connect to fresh 35-player room with new rivals.',
-        backToLobbyBtn: 'Back to Lobby',
-        changeSkinBtn: 'Change Character Skin [S]',
-        serverActiveNoRush: 'Server stays active • No rush',
-        rewardsModalTitle: 'Challenges & Rewards',
-        rewardsModalSub: 'Complete tough Easy, Medium & Hard missions to unlock skins, shields, fuel & magnet!',
-        filterAll: 'All (9)',
-        filterEasy: '🟢 Easy',
-        filterMedium: '🟡 Medium',
-        filterHard: '🔴 Hard'
+        gameTitle: 'Snake Arena', play: 'Play', chooseSkin: 'Choose Skin', skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'NO ADS', noAdsSub: '100% Free to Play', rewards: 'Rewards', openRewardsBtn: 'Open →',
+        choiceFullTitle: 'With Players (35)', choiceFullDesc: 'Join a full live server with 34 other snakes already in the arena.', choiceFullBtn: 'Join Full Server →',
+        choiceFreeTitle: 'Empty Free Server', choiceFreeDesc: 'Starts empty (1 / 35), and new players automatically join until it reaches 35.', choiceFreeBtn: 'Join Free Server →',
+        choiceSoloTitle: 'Solo Server', choiceSoloDesc: 'Join an empty server by yourself — no other players will join.', choiceSoloBtn: 'Play Solo →',
+        backBtn: '← Back', chooseSkinBefore: 'Choose Skin Before Joining', eliminatedTitle: 'You Were Eliminated!',
+        liveServerLabel: 'Live Server:', scoreLabel: 'Score:', deathMatchLiveHint: '⚡ The 35-player match is still live in the background! Choose where to play:',
+        rejoinLiveDesc: 'Rejoin live 35-player room! All bots & food stay preserved.', joinNewDesc: 'Connect to fresh 35-player room with new rivals.',
+        backToLobbyBtn: 'Back to Lobby', changeSkinBtn: 'Change Character Skin [S]', serverActiveNoRush: 'Server stays active • No rush',
+        rewardsModalTitle: 'Challenges & Rewards', rewardsModalSub: 'Complete tough Easy, Medium & Hard missions to unlock skins, shields, fuel & magnet!',
+        filterAll: 'All (9)', filterEasy: '🟢 Easy', filterMedium: '🟡 Medium', filterHard: '🔴 Hard'
       },
       ar: {
-        gameTitle: 'حلبة الثعابين',
-        play: 'العب',
-        chooseSkin: 'اختر الشكل',
-        skinsCountLabel: '🐺 100 شكل',
-        noAdsTitle: 'بدون إعلانات',
-        noAdsSub: 'مجاني 100%',
-        rewards: 'المكافآت',
-        openRewardsBtn: '← فتح',
-        choiceFullTitle: 'مع لاعبين (35)',
-        choiceFullDesc: 'ادخل سيرفر مباشر وممتلئ مع 34 ثعباناً آخر في الحلبة.',
-        choiceFullBtn: '← دخول السيرفر الممتلئ',
-        choiceFreeTitle: 'سيرفر فارغ مجاني',
-        choiceFreeDesc: 'يبدأ فارغاً (1 / 35) ويدخل اللاعبون تلقائياً حتى يصل إلى 35 لاعباً.',
-        choiceFreeBtn: '← دخول السيرفر المجاني',
-        choiceSoloTitle: 'لعب فردي',
-        choiceSoloDesc: 'ادخل سيرفر فارغ وحدك — لن يدخل أي لاعبين آخرين.',
-        choiceSoloBtn: '← العب وحدك',
-        backBtn: 'رجوع →',
-        chooseSkinBefore: 'اختر الشكل قبل الدخول',
-        eliminatedTitle: 'لقد تم إقصاؤك!',
-        liveServerLabel: 'السيرفر المباشر:',
-        scoreLabel: 'النقاط:',
-        deathMatchLiveHint: '⚡ المباراة ما زالت مستمرة في الخلفية! اختر أين تريد اللعب:',
-        rejoinLiveDesc: 'ارجع إلى نفس السيرفر المباشر مع بقاء كل اللاعبين والطعام.',
-        joinNewDesc: 'ادخل إلى سيرفر جديد بمنافسين جدد.',
-        backToLobbyBtn: 'العودة إلى اللوبي',
-        changeSkinBtn: 'تغيير الشكل [S]',
-        serverActiveNoRush: 'السيرفر يعمل • خذ وقتك',
-        rewardsModalTitle: 'التحديات والمكافآت',
-        rewardsModalSub: 'أكمل التحديات السهلة والمتوسطة والصعبة لفتح الأشكال والدروع والوقود والمغناطيس!',
-        filterAll: 'الكل (9)',
-        filterEasy: '🟢 سهل',
-        filterMedium: '🟡 متوسط',
-        filterHard: '🔴 صعب'
+        gameTitle: 'حلبة الثعابين', play: 'العب', chooseSkin: 'اختر الشكل', skinsCountLabel: '🐺 100 شكل',
+        noAdsTitle: 'بدون إعلانات', noAdsSub: 'مجاني 100%', rewards: 'المكافآت', openRewardsBtn: '← فتح',
+        choiceFullTitle: 'مع لاعبين (35)', choiceFullDesc: 'ادخل سيرفر مباشر وممتلئ مع 34 ثعباناً آخر في الحلبة.', choiceFullBtn: '← دخول السيرفر الممتلئ',
+        choiceFreeTitle: 'سيرفر فارغ مجاني', choiceFreeDesc: 'يبدأ فارغاً (1 / 35) ويدخل اللاعبون تلقائياً حتى يصل إلى 35 لاعباً.', choiceFreeBtn: '← دخول السيرفر المجاني',
+        choiceSoloTitle: 'لعب فردي', choiceSoloDesc: 'ادخل سيرفر فارغ وحدك — لن يدخل أي لاعبين آخرين.', choiceSoloBtn: '← العب وحدك',
+        backBtn: 'رجوع →', chooseSkinBefore: 'اختر الشكل قبل الدخول', eliminatedTitle: 'لقد تم إقصاؤك!',
+        liveServerLabel: 'السيرفر المباشر:', scoreLabel: 'النقاط:', deathMatchLiveHint: '⚡ المباراة ما زالت مستمرة في الخلفية! اختر أين تريد اللعب:',
+        rejoinLiveDesc: 'ارجع إلى نفس السيرفر المباشر مع بقاء كل اللاعبين والطعام.', joinNewDesc: 'ادخل إلى سيرفر جديد بمنافسين جدد.',
+        backToLobbyBtn: 'العودة إلى اللوبي', changeSkinBtn: 'تغيير الشكل [S]', serverActiveNoRush: 'السيرفر يعمل • خذ وقتك',
+        rewardsModalTitle: 'التحديات والمكافآت', rewardsModalSub: 'أكمل التحديات السهلة والمتوسطة والصعبة لفتح الأشكال والدروع والوقود والمغناطيس!',
+        filterAll: 'الكل (9)', filterEasy: '🟢 سهل', filterMedium: '🟡 متوسط', filterHard: '🔴 صعب'
+      },
+      es: {
+        gameTitle: 'Arena de Serpientes', play: 'Jugar', chooseSkin: 'Elegir Skin', skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'SIN ANUNCIOS', noAdsSub: '100% Gratis', rewards: 'Recompensas', openRewardsBtn: 'Abrir →',
+        choiceFullTitle: 'Con Jugadores (35)', choiceFullDesc: 'Únete a un servidor lleno con 34 serpientes activas.', choiceFullBtn: 'Entrar →',
+        choiceFreeTitle: 'Servidor Vacío', choiceFreeDesc: 'Empieza vacío (1 / 35) y se unen jugadores hasta 35.', choiceFreeBtn: 'Entrar Gratis →',
+        choiceSoloTitle: 'Modo Solo', choiceSoloDesc: 'Juega solo en un servidor vacío sin rivales.', choiceSoloBtn: 'Jugar Solo →',
+        backBtn: '← Atrás', chooseSkinBefore: 'Elegir Skin Antes de Entrar', eliminatedTitle: '¡Has Sido Eliminado!',
+        liveServerLabel: 'Servidor Activo:', scoreLabel: 'Puntos:', deathMatchLiveHint: '⚡ ¡La partida sigue en vivo! Elige dónde jugar:',
+        rejoinLiveDesc: 'Vuelve al mismo servidor con todo intacto.', joinNewDesc: 'Conéctate a un nuevo servidor de 35 jugadores.',
+        backToLobbyBtn: 'Volver al Lobby', changeSkinBtn: 'Cambiar Skin [S]', serverActiveNoRush: 'Servidor activo • Sin prisa',
+        rewardsModalTitle: 'Desafíos y Recompensas', rewardsModalSub: '¡Completa misiones Fácil, Media y Difícil para ganar skins y poderes!',
+        filterAll: 'Todos (9)', filterEasy: '🟢 Fácil', filterMedium: '🟡 Medio', filterHard: '🔴 Difícil'
+      },
+      fr: {
+        gameTitle: 'Arène des Serpents', play: 'Jouer', chooseSkin: 'Choisir Skin', skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'SANS PUB', noAdsSub: '100% Gratuit', rewards: 'Récompenses', openRewardsBtn: 'Ouvrir →',
+        choiceFullTitle: 'Avec Joueurs (35)', choiceFullDesc: 'Rejoins un serveur complet avec 34 autres serpents.', choiceFullBtn: 'Rejoindre →',
+        choiceFreeTitle: 'Serveur Vide', choiceFreeDesc: 'Commence vide (1 / 35) et se remplit jusqu’à 35 joueurs.', choiceFreeBtn: 'Serveur Gratuit →',
+        choiceSoloTitle: 'Mode Solo', choiceSoloDesc: 'Joue seul dans une arène vide sans autres joueurs.', choiceSoloBtn: 'Jouer Solo →',
+        backBtn: '← Retour', chooseSkinBefore: 'Choisir un Skin Avant', eliminatedTitle: 'Vous Êtes Éliminé !',
+        liveServerLabel: 'Serveur Live :', scoreLabel: 'Score :', deathMatchLiveHint: '⚡ La partie continue en direct ! Choisissez :',
+        rejoinLiveDesc: 'Retournez sur le même serveur en direct.', joinNewDesc: 'Rejoignez un tout nouveau serveur de 35 joueurs.',
+        backToLobbyBtn: 'Retour au Lobby', changeSkinBtn: 'Changer de Skin [S]', serverActiveNoRush: 'Serveur actif • Prenez votre temps',
+        rewardsModalTitle: 'Défis et Récompenses', rewardsModalSub: 'Terminez les défis Facile, Moyen et Difficile pour débloquer skins et bonus !',
+        filterAll: 'Tous (9)', filterEasy: '🟢 Facile', filterMedium: '🟡 Moyen', filterHard: '🔴 Difficile'
+      },
+      de: {
+        gameTitle: 'Schlangen-Arena', play: 'Spielen', chooseSkin: 'Skin Wählen', skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'KEINE WERBUNG', noAdsSub: '100% Kostenlos', rewards: 'Belohnungen', openRewardsBtn: 'Öffnen →',
+        choiceFullTitle: 'Mit Spielern (35)', choiceFullDesc: 'Tritt einem vollen Server mit 34 Schlangen bei.', choiceFullBtn: 'Beitreten →',
+        choiceFreeTitle: 'Leerer Server', choiceFreeDesc: 'Startet leer (1 / 35) und füllt sich bis 35 Spieler.', choiceFreeBtn: 'Freier Server →',
+        choiceSoloTitle: 'Solo-Modus', choiceSoloDesc: 'Spiele allein auf einem leeren Server.', choiceSoloBtn: 'Solo Spielen →',
+        backBtn: '← Zurück', chooseSkinBefore: 'Skin Vorher Wählen', eliminatedTitle: 'Ausgeschieden!',
+        liveServerLabel: 'Live-Server:', scoreLabel: 'Punkte:', deathMatchLiveHint: '⚡ Das Spiel läuft weiter! Wähle aus:',
+        rejoinLiveDesc: 'Kehre in denselben Live-Server zurück.', joinNewDesc: 'Tritt einem neuen 35-Spieler-Server bei.',
+        backToLobbyBtn: 'Zurück zur Lobby', changeSkinBtn: 'Skin Ändern [S]', serverActiveNoRush: 'Server aktiv • Keine Eile',
+        rewardsModalTitle: 'Aufgaben & Belohnungen', rewardsModalSub: 'Meistere Leicht, Mittel & Schwer für Skins, Schilde & Magnet!',
+        filterAll: 'Alle (9)', filterEasy: '🟢 Leicht', filterMedium: '🟡 Mittel', filterHard: '🔴 Schwer'
+      },
+      it: {
+        gameTitle: 'Arena dei Serpenti', play: 'Gioca', chooseSkin: 'Scegli Skin', skinsCountLabel: '🐺 100 Skin',
+        noAdsTitle: 'SENZA PUBBLICITÀ', noAdsSub: '100% Gratis', rewards: 'Ricompense', openRewardsBtn: 'Apri →',
+        choiceFullTitle: 'Con Giocatori (35)', choiceFullDesc: 'Entra in un server pieno con 34 serpenti.', choiceFullBtn: 'Entra →',
+        choiceFreeTitle: 'Server Vuoto', choiceFreeDesc: 'Inizia vuoto (1 / 35) e si riempie fino a 35 giocatori.', choiceFreeBtn: 'Server Libero →',
+        choiceSoloTitle: 'Modalità Solo', choiceSoloDesc: 'Gioca da solo in un server vuoto.', choiceSoloBtn: 'Gioca Solo →',
+        backBtn: '← Indietro', chooseSkinBefore: 'Scegli Skin Prima', eliminatedTitle: 'Sei Stato Eliminato!',
+        liveServerLabel: 'Server Live:', scoreLabel: 'Punti:', deathMatchLiveHint: '⚡ La partita continua! Scegli dove giocare:',
+        rejoinLiveDesc: 'Torna nello stesso server live.', joinNewDesc: 'Unisciti a un nuovo server da 35 giocatori.',
+        backToLobbyBtn: 'Torna alla Lobby', changeSkinBtn: 'Cambia Skin [S]', serverActiveNoRush: 'Server attivo • Nessuna fretta',
+        rewardsModalTitle: 'Sfide e Ricompense', rewardsModalSub: 'Completa sfide Facile, Medio e Difficile per vincere skin e potenziamenti!',
+        filterAll: 'Tutti (9)', filterEasy: '🟢 Facile', filterMedium: '🟡 Medio', filterHard: '🔴 Difficile'
+      },
+      pt: {
+        gameTitle: 'Arena das Cobras', play: 'Jogar', chooseSkin: 'Escolher Skin', skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'SEM ANÚNCIOS', noAdsSub: '100% Grátis', rewards: 'Recompensas', openRewardsBtn: 'Abrir →',
+        choiceFullTitle: 'Com Jogadores (35)', choiceFullDesc: 'Entre em um servidor cheio com 34 cobras.', choiceFullBtn: 'Entrar →',
+        choiceFreeTitle: 'Servidor Vazio', choiceFreeDesc: 'Começa vazio (1 / 35) e enche até 35 jogadores.', choiceFreeBtn: 'Servidor Livre →',
+        choiceSoloTitle: 'Modo Solo', choiceSoloDesc: 'Jogue sozinho em um servidor vazio.', choiceSoloBtn: 'Jogar Solo →',
+        backBtn: '← Voltar', chooseSkinBefore: 'Escolher Skin Antes', eliminatedTitle: 'Você Foi Eliminado!',
+        liveServerLabel: 'Servidor Ativo:', scoreLabel: 'Pontos:', deathMatchLiveHint: '⚡ A partida continua ao vivo! Escolha:',
+        rejoinLiveDesc: 'Volte para o mesmo servidor ativo.', joinNewDesc: 'Entre em um novo servidor de 35 jogadores.',
+        backToLobbyBtn: 'Voltar ao Lobby', changeSkinBtn: 'Trocar Skin [S]', serverActiveNoRush: 'Servidor ativo • Sem pressa',
+        rewardsModalTitle: 'Desafios e Recompensas', rewardsModalSub: 'Complete missões Fácil, Médio e Difícil para ganhar skins e poderes!',
+        filterAll: 'Todos (9)', filterEasy: '🟢 Fácil', filterMedium: '🟡 Médio', filterHard: '🔴 Difícil'
+      },
+      tr: {
+        gameTitle: 'Yılan Arenası', play: 'Oyna', chooseSkin: 'Kostüm Seç', skinsCountLabel: '🐺 100 Kostüm',
+        noAdsTitle: 'REKLAMSIZ', noAdsSub: '%100 Ücretsiz', rewards: 'Ödüller', openRewardsBtn: 'Aç →',
+        choiceFullTitle: 'Oyuncularla (35)', choiceFullDesc: '34 yılanın bulunduğu dolu sunucuya katıl.', choiceFullBtn: 'Katıl →',
+        choiceFreeTitle: 'Boş Sunucu', choiceFreeDesc: 'Boş başlar (1 / 35) ve 35 oyuncuya kadar dolar.', choiceFreeBtn: 'Ücretsiz Gir →',
+        choiceSoloTitle: 'Tek Kişilik', choiceSoloDesc: 'Başka oyuncu olmadan tek başına oyna.', choiceSoloBtn: 'Tek Oyna →',
+        backBtn: '← Geri', chooseSkinBefore: 'Girmeden Kostüm Seç', eliminatedTitle: 'Elendin!',
+        liveServerLabel: 'Canlı Sunucu:', scoreLabel: 'Skor:', deathMatchLiveHint: '⚡ Maç hâlâ devam ediyor! Seçimini yap:',
+        rejoinLiveDesc: 'Aynı canlı sunucuya geri dön.', joinNewDesc: 'Yeni 35 kişilik sunucuya katıl.',
+        backToLobbyBtn: 'Lobiye Dön', changeSkinBtn: 'Kostüm Değiştir [S]', serverActiveNoRush: 'Sunucu aktif • Acele yok',
+        rewardsModalTitle: 'Görevler ve Ödüller', rewardsModalSub: 'Kolay, Orta ve Zor görevleri tamamla, kostüm ve güç kazan!',
+        filterAll: 'Tümü (9)', filterEasy: '🟢 Kolay', filterMedium: '🟡 Orta', filterHard: '🔴 Zor'
+      },
+      ru: {
+        gameTitle: 'Арена Змей', play: 'Играть', chooseSkin: 'Выбрать Скин', skinsCountLabel: '🐺 100 Скинов',
+        noAdsTitle: 'БЕЗ РЕКЛАМЫ', noAdsSub: '100% Бесплатно', rewards: 'Награды', openRewardsBtn: 'Открыть →',
+        choiceFullTitle: 'С игроками (35)', choiceFullDesc: 'Зайти на полный сервер с 34 змеями.', choiceFullBtn: 'Войти →',
+        choiceFreeTitle: 'Пустой Сервер', choiceFreeDesc: 'Начинается пустым (1 / 35) и заполняется до 35.', choiceFreeBtn: 'Войти →',
+        choiceSoloTitle: 'Одиночный', choiceSoloDesc: 'Играйте в одиночку без других игроков.', choiceSoloBtn: 'Играть одному →',
+        backBtn: '← Назад', chooseSkinBefore: 'Выбрать скин до входа', eliminatedTitle: 'Вы Выбыли!',
+        liveServerLabel: 'Сервер:', scoreLabel: 'Счёт:', deathMatchLiveHint: '⚡ Матч продолжается! Выберите действие:',
+        rejoinLiveDesc: 'Вернуться на тот же живой сервер.', joinNewDesc: 'Войти на новый сервер (35 игроков).',
+        backToLobbyBtn: 'В Лобби', changeSkinBtn: 'Сменить Скин [S]', serverActiveNoRush: 'Сервер активен',
+        rewardsModalTitle: 'Задания и Награды', rewardsModalSub: 'Выполняйте задания Лёгко, Средне и Сложно за скины и бонусы!',
+        filterAll: 'Все (9)', filterEasy: '🟢 Лёгко', filterMedium: '🟡 Средне', filterHard: '🔴 Сложно'
+      },
+      zh: {
+        gameTitle: '贪吃蛇竞技场', play: '开始游戏', chooseSkin: '选择皮肤', skinsCountLabel: '🐺 100 款皮肤',
+        noAdsTitle: '无广告', noAdsSub: '100% 免费游玩', rewards: '奖励', openRewardsBtn: '打开 →',
+        choiceFullTitle: '满员服务器 (35)', choiceFullDesc: '立即加入已有 34 条蛇的实时对局。', choiceFullBtn: '进入 →',
+        choiceFreeTitle: '空闲服务器', choiceFreeDesc: '从空房开始 (1 / 35)，玩家将陆续加入至 35 人。', choiceFreeBtn: '免费加入 →',
+        choiceSoloTitle: '单人模式', choiceSoloDesc: '独自进入空房间，不会有其他玩家加入。', choiceSoloBtn: '单人游玩 →',
+        backBtn: '← 返回', chooseSkinBefore: '进入前选择皮肤', eliminatedTitle: '你被淘汰了！',
+        liveServerLabel: '实时服务器：', scoreLabel: '分数：', deathMatchLiveHint: '⚡ 比赛仍在后台进行！请选择：',
+        rejoinLiveDesc: '返回同一个实时服务器。', joinNewDesc: '加入全新的 35 人服务器。',
+        backToLobbyBtn: '返回大厅', changeSkinBtn: '更换皮肤 [S]', serverActiveNoRush: '服务器持续运行',
+        rewardsModalTitle: '挑战与奖励', rewardsModalSub: '完成简单、中等与困难任务解锁皮肤、护盾、燃料与磁铁！',
+        filterAll: '全部 (9)', filterEasy: '🟢 简单', filterMedium: '🟡 中等', filterHard: '🔴 困难'
+      },
+      ja: {
+        gameTitle: 'スネークアリーナ', play: 'プレイ', chooseSkin: 'スキン選択', skinsCountLabel: '🐺 100 スキン',
+        noAdsTitle: '広告なし', noAdsSub: '100% 無料', rewards: '報酬', openRewardsBtn: '開く →',
+        choiceFullTitle: 'プレイヤーあり (35)', choiceFullDesc: '34体のスネークがいる満員サーバーに参加。', choiceFullBtn: '参加 →',
+        choiceFreeTitle: '空きサーバー', choiceFreeDesc: '空の状態 (1 / 35) から始まり35人まで増加。', choiceFreeBtn: '無料参加 →',
+        choiceSoloTitle: 'ソロモード', choiceSoloDesc: '他のプレイヤーなしで1人でプレイ。', choiceSoloBtn: 'ソロで遊ぶ →',
+        backBtn: '← 戻る', chooseSkinBefore: '参加前にスキン選択', eliminatedTitle: 'ゲームオーバー！',
+        liveServerLabel: 'サーバー:', scoreLabel: 'スコア:', deathMatchLiveHint: '⚡ 試合は進行中です！選択してください：',
+        rejoinLiveDesc: '同じライブサーバーに戻る。', joinNewDesc: '新しい35人サーバーに参加。',
+        backToLobbyBtn: 'ロビーに戻る', changeSkinBtn: 'スキン変更 [S]', serverActiveNoRush: 'サーバー稼働中',
+        rewardsModalTitle: 'チャレンジと報酬', rewardsModalSub: '簡単・普通・難しいミッションをクリアして報酬をゲット！',
+        filterAll: 'すべて (9)', filterEasy: '🟢 簡単', filterMedium: '🟡 普通', filterHard: '🔴 難しい'
+      },
+      ko: {
+        gameTitle: '스네이크 아레나', play: '플레이', chooseSkin: '스킨 선택', skinsCountLabel: '🐺 100 스킨',
+        noAdsTitle: '광고 없음', noAdsSub: '100% 무료', rewards: '보상', openRewardsBtn: '열기 →',
+        choiceFullTitle: '플레이어와 함께 (35)', choiceFullDesc: '34마리의 뱀이 있는 실시간 서버에 참가.', choiceFullBtn: '참가 →',
+        choiceFreeTitle: '빈 무료 서버', choiceFreeDesc: '비어있는 상태(1 / 35)로 시작해 35명까지 채워집니다.', choiceFreeBtn: '무료 참가 →',
+        choiceSoloTitle: '솔로 서버', choiceSoloDesc: '다른 플레이어 없이 혼자 플레이.', choiceSoloBtn: '혼자 플레이 →',
+        backBtn: '← 뒤로', chooseSkinBefore: '참가 전 스킨 선택', eliminatedTitle: '탈락했습니다!',
+        liveServerLabel: '라이브 서버:', scoreLabel: '점수:', deathMatchLiveHint: '⚡ 경기가 계속 진행 중입니다! 선택하세요:',
+        rejoinLiveDesc: '같은 라이브 서버로 돌아가기.', joinNewDesc: '새 35인 서버에 참가하기.',
+        backToLobbyBtn: '로비로 돌아가기', changeSkinBtn: '스킨 변경 [S]', serverActiveNoRush: '서버 실행 중',
+        rewardsModalTitle: '도전 과제 및 보상', rewardsModalSub: '쉬움·보통·어려움 미션을 완료해 스킨과 능력을 얻으세요!',
+        filterAll: '전체 (9)', filterEasy: '🟢 쉬움', filterMedium: '🟡 보통', filterHard: '🔴 어려움'
+      },
+      hi: {
+        gameTitle: 'स्नेक एरीना', play: 'खेलें', chooseSkin: 'स्किन चुनें', skinsCountLabel: '🐺 100 स्किन्स',
+        noAdsTitle: 'कोई विज्ञापन नहीं', noAdsSub: '100% मुफ़्त', rewards: 'इनाम', openRewardsBtn: 'खोलें →',
+        choiceFullTitle: 'खिलाड़ियों के साथ (35)', choiceFullDesc: '34 अन्य साँपों के साथ लाइव सर्वर में जुड़ें।', choiceFullBtn: 'जुड़ें →',
+        choiceFreeTitle: 'खाली फ्री सर्वर', choiceFreeDesc: 'खाली शुरू होता है (1 / 35) और 35 तक भरता है।', choiceFreeBtn: 'मुफ़्त जुड़ें →',
+        choiceSoloTitle: 'सोलो सर्वर', choiceSoloDesc: 'बिना किसी अन्य खिलाड़ी के अकेले खेलें।', choiceSoloBtn: 'अकेले खेलें →',
+        backBtn: '← वापस', chooseSkinBefore: 'जुड़ने से पहले स्किन चुनें', eliminatedTitle: 'आप बाहर हो गए!',
+        liveServerLabel: 'लाइव सर्वर:', scoreLabel: 'स्कोर:', deathMatchLiveHint: '⚡ मैच अभी भी चल रहा है! चुनें:',
+        rejoinLiveDesc: 'उसी लाइव सर्वर में वापस जाएं।', joinNewDesc: 'नए 35-खिलाड़ी सर्वर से जुड़ें।',
+        backToLobbyBtn: 'लॉबी में वापस', changeSkinBtn: 'स्किन बदलें [S]', serverActiveNoRush: 'सर्वर चालू है',
+        rewardsModalTitle: 'चुनौतियाँ और इनाम', rewardsModalSub: 'स्किन, शील्ड, फ्यूल और मैग्नेट के लिए मिशन पूरे करें!',
+        filterAll: 'सभी (9)', filterEasy: '🟢 आसान', filterMedium: '🟡 मध्यम', filterHard: '🔴 कठिन'
+      },
+      ur: {
+        gameTitle: 'سانپ ایرینا', play: 'کھیلیں', chooseSkin: 'اسکن منتخب کریں', skinsCountLabel: '🐺 100 اسکنز',
+        noAdsTitle: 'کوئی اشتہار نہیں', noAdsSub: '100% مفت', rewards: 'انعامات', openRewardsBtn: '← کھولیں',
+        choiceFullTitle: 'کھلاڑیوں کے ساتھ (35)', choiceFullDesc: '34 دیگر سانپوں کے ساتھ لائیو سرور میں شامل ہوں۔', choiceFullBtn: '← شامل ہوں',
+        choiceFreeTitle: 'خالی مفت سرور', choiceFreeDesc: 'خالی شروع ہوتا ہے (1 / 35) اور 35 کھلاڑیوں تک بھرتا ہے۔', choiceFreeBtn: '← مفت شامل ہوں',
+        choiceSoloTitle: 'سولو سرور', choiceSoloDesc: 'کسی دوسرے کھلاڑی کے بغیر اکیلے کھیلیں۔', choiceSoloBtn: '← اکیلے کھیلیں',
+        backBtn: 'واپس →', chooseSkinBefore: 'شامل ہونے سے پہلے اسکن چنیں', eliminatedTitle: 'آپ آؤٹ ہو گئے!',
+        liveServerLabel: 'لائیو سرور:', scoreLabel: 'اسکور:', deathMatchLiveHint: '⚡ میچ ابھی جاری ہے! انتخاب کریں:',
+        rejoinLiveDesc: 'اسی لائیو سرور میں واپس جائیں۔', joinNewDesc: 'نئے 35 کھلاڑیوں کے سرور میں شامل ہوں۔',
+        backToLobbyBtn: 'لابی میں واپس', changeSkinBtn: 'اسکن تبدیل کریں [S]', serverActiveNoRush: 'سرور فعال ہے',
+        rewardsModalTitle: 'چیلنجز اور انعامات', rewardsModalSub: 'آسان، درمیانے اور مشکل مشن مکمل کر کے انعامات جیتیں!',
+        filterAll: 'سب (9)', filterEasy: '🟢 آسان', filterMedium: '🟡 درمیانہ', filterHard: '🔴 مشکل'
       }
     };
 
@@ -6941,7 +7062,7 @@
     };
 
     function applyLanguage(lang) {
-      currentLang = (lang === 'ar') ? 'ar' : 'en';
+      currentLang = I18N[lang] ? lang : 'en';
       try { localStorage.setItem('snakeGameLang', currentLang); } catch (e) {}
 
       const dict = I18N[currentLang] || I18N.en;
@@ -6950,19 +7071,13 @@
         if (dict[key]) el.textContent = dict[key];
       });
 
-      const dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      const dir = RTL_LANGS.includes(currentLang) ? 'rtl' : 'ltr';
       [welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
         if (el) el.setAttribute('dir', dir);
       });
 
-      if (btnLangEn && btnLangAr) {
-        if (currentLang === 'ar') {
-          btnLangAr.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs';
-          btnLangEn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800';
-        } else {
-          btnLangEn.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs';
-          btnLangAr.className = 'px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800';
-        }
+      if (langSelect && langSelect.value !== currentLang) {
+        langSelect.value = currentLang;
       }
 
       if (startChoiceServerLabel) {
@@ -7183,8 +7298,7 @@
     }
 
     // Wire White Welcome Page & Start Choice Page buttons
-    if (btnLangEn) btnLangEn.addEventListener('click', () => applyLanguage('en'));
-    if (btnLangAr) btnLangAr.addEventListener('click', () => applyLanguage('ar'));
+    if (langSelect) langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
     if (btnWelcomeSound) {
       btnWelcomeSound.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
