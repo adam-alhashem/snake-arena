@@ -330,6 +330,15 @@
           <span data-i18n="joinNewDesc" class="text-[10px] text-indigo-100 font-medium">Connect to fresh 35-player room with new rivals.</span>
           <span class="mt-1 px-2 py-0.5 rounded bg-indigo-700/60 font-mono text-[9px] font-bold text-indigo-200">Press [2] or [N]</span>
         </button>
+
+        <!-- Choice 3: Back to Lobby -->
+        <button id="btnBackToLobby" class="sm:col-span-2 p-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 shadow-xs active:scale-95 transition-all flex items-center justify-between gap-2 cursor-pointer border border-slate-300">
+          <div class="flex items-center gap-2 text-sm font-extrabold">
+            <span>🏠</span>
+            <span data-i18n="backToLobbyBtn">Back to Lobby</span>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-slate-200 font-mono text-[9px] font-bold text-slate-600">Press [3] or [L]</span>
+        </button>
       </div>
 
       <!-- Bottom: Skin Selector Option -->
@@ -530,6 +539,7 @@
     const btnRespawnSameServer = document.getElementById('btnRespawnSameServer');
     const btnRespawnSameServerText = document.getElementById('btnRespawnSameServerText');
     const btnJoinNewServer = document.getElementById('btnJoinNewServer');
+    const btnBackToLobby = document.getElementById('btnBackToLobby');
     const btnJoinNewServerText = document.getElementById('btnJoinNewServerText');
     const btnSwitchServer = document.getElementById('btnSwitchServer');
     const skinLockedToast = document.getElementById('skinLockedToast');
@@ -6235,6 +6245,11 @@
           joinNewServer();
           return;
         }
+        if (e.key === '3' || k === 'l') {
+          e.preventDefault();
+          showWelcomeBlankPage();
+          return;
+        }
         if (k === 's') {
           e.preventDefault();
           openSkinModal();
@@ -6326,6 +6341,7 @@
     if (btnDeathSkinModal) btnDeathSkinModal.addEventListener('click', openSkinModal);
     if (btnRespawnSameServer) btnRespawnSameServer.addEventListener('click', respawnInSameServer);
     if (btnJoinNewServer) btnJoinNewServer.addEventListener('click', joinNewServer);
+    if (btnBackToLobby) btnBackToLobby.addEventListener('click', showWelcomeBlankPage);
     if (btnSwitchServer) btnSwitchServer.addEventListener('click', joinNewServer);
     if (btnCircle) btnCircle.addEventListener('click', performCircleLoop);
 
@@ -6835,6 +6851,7 @@
         deathMatchLiveHint: '⚡ The 35-player match is still live in the background! Choose where to play:',
         rejoinLiveDesc: 'Rejoin live 35-player room! All bots & food stay preserved.',
         joinNewDesc: 'Connect to fresh 35-player room with new rivals.',
+        backToLobbyBtn: 'Back to Lobby',
         changeSkinBtn: 'Change Character Skin [S]',
         serverActiveNoRush: 'Server stays active • No rush',
         rewardsModalTitle: 'Challenges & Rewards',
@@ -6866,6 +6883,7 @@
         deathMatchLiveHint: '⚡ المباراة ما زالت مستمرة في الخلفية! اختر أين تريد اللعب:',
         rejoinLiveDesc: 'ارجع إلى نفس السيرفر المباشر مع بقاء كل اللاعبين والطعام.',
         joinNewDesc: 'ادخل إلى سيرفر جديد بمنافسين جدد.',
+        backToLobbyBtn: 'العودة إلى اللوبي',
         changeSkinBtn: 'تغيير الشكل [S]',
         serverActiveNoRush: 'السيرفر يعمل • خذ وقتك',
         rewardsModalTitle: 'التحديات والمكافآت',
