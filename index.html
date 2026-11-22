@@ -7297,8 +7297,46 @@
       requestAnimationFrame(frame);
     }
 
+    const LANG_GREETINGS = {
+      en: { text: "Let's talk English!", bcp47: 'en-US' },
+      ar: { text: 'هيا نتحدث العربية!', bcp47: 'ar-SA' },
+      es: { text: '¡Hablemos español!', bcp47: 'es-ES' },
+      fr: { text: 'Parlons français !', bcp47: 'fr-FR' },
+      de: { text: 'Lass uns Deutsch sprechen!', bcp47: 'de-DE' },
+      it: { text: 'Parliamo italiano!', bcp47: 'it-IT' },
+      pt: { text: 'Vamos falar português!', bcp47: 'pt-BR' },
+      tr: { text: 'Hadi Türkçe konuşalım!', bcp47: 'tr-TR' },
+      ru: { text: 'Давай говорить по-русски!', bcp47: 'ru-RU' },
+      zh: { text: '让我们说中文吧！', bcp47: 'zh-CN' },
+      ja: { text: '日本語で話しましょう！', bcp47: 'ja-JP' },
+      ko: { text: '한국어로 이야기해요!', bcp47: 'ko-KR' },
+      hi: { text: 'चलो हिंदी में बात करते हैं!', bcp47: 'hi-IN' },
+      ur: { text: 'آؤ اردو میں بات کرتے ہیں!', bcp47: 'ur-PK' }
+    };
+
+    function speakLanguageGreeting(lang) {
+      const g = LANG_GREETINGS[lang] || LANG_GREETINGS.en;
+      showRewardToast(`🗣️ ${g.text}`);
+      if (!soundEnabled || !('speechSynthesis' in window)) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(g.text);
+        utter.lang = g.bcp47;
+        utter.rate = 1.0;
+        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+        const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+        if (match) utter.voice = match;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
     // Wire White Welcome Page & Start Choice Page buttons
-    if (langSelect) langSelect.addEventListener('change', (e) => applyLanguage(e.target.value));
+    if (langSelect) {
+      langSelect.addEventListener('change', (e) => {
+        applyLanguage(e.target.value);
+        speakLanguageGreeting(e.target.value);
+      });
+    }
     if (btnWelcomeSound) {
       btnWelcomeSound.addEventListener('click', () => {
         soundEnabled = !soundEnabled;
