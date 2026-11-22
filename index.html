@@ -354,9 +354,64 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- FIRST PAGE: PLAYER PROFILE SETUP (NAME, DATE, BOY OR GIRL)                -->
+  <!-- ========================================================================= -->
+  <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
+      <div class="flex flex-col items-center text-center gap-1.5">
+        <div class="text-4xl">🐍</div>
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
+        <p class="text-xs sm:text-sm text-slate-500 font-medium">Enter your details to continue to the game</p>
+      </div>
+
+      <!-- 1. Name -->
+      <div class="flex flex-col gap-1.5">
+        <label for="profileNameInput" class="text-xs font-extrabold text-slate-700">Your Name</label>
+        <input id="profileNameInput" type="text" maxlength="24" placeholder="Type your name..." class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white transition-all" />
+      </div>
+
+      <!-- 2. Date -->
+      <div class="flex flex-col gap-1.5">
+        <label for="profileDateInput" class="text-xs font-extrabold text-slate-700">Date</label>
+        <input id="profileDateInput" type="date" class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white transition-all" />
+      </div>
+
+      <!-- 3. Boy or Girl -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-extrabold text-slate-700">Boy or Girl</span>
+        <div class="grid grid-cols-2 gap-3">
+          <button id="btnGenderBoy" type="button" class="py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
+            <span class="text-xl">👦</span>
+            <span>Boy</span>
+          </button>
+          <button id="btnGenderGirl" type="button" class="py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-pink-50 hover:border-pink-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
+            <span class="text-xl">👧</span>
+            <span>Girl</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Validation Error -->
+      <p id="profileErrorMsg" class="hidden text-xs font-bold text-red-600 text-center bg-red-50 border border-red-200 rounded-xl py-2 px-3">
+        Please enter your name, date, and pick Boy or Girl!
+      </p>
+
+      <!-- Continue Button -->
+      <button id="btnProfileContinue" type="button" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer">
+        Continue to Lobby →
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- PURE WHITE BLANK WELCOME PAGE (FIRST SCREEN BEFORE STARTING)              -->
   <!-- ========================================================================= -->
-  <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6">
+  <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6 hidden">
+    <!-- Top-Left Player Profile Badge (Click to edit profile) -->
+    <button id="btnEditProfile" title="Click to edit your profile" class="fixed top-4 left-4 sm:top-6 sm:left-6 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs flex items-center gap-2 text-xs font-extrabold text-slate-800 active:scale-95 transition-all cursor-pointer z-10">
+      <span id="lobbyProfileIcon" class="text-base">👦</span>
+      <span id="lobbyProfileName">Player</span>
+    </button>
     <!-- Top-Right Column: NO ADS sign + Language Selector directly below it -->
     <div class="fixed top-4 right-4 sm:top-6 sm:right-8 flex flex-col items-end gap-2 z-10">
       <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 select-none">
@@ -579,6 +634,16 @@
     const btnJoinNewServerText = document.getElementById('btnJoinNewServerText');
     const btnSwitchServer = document.getElementById('btnSwitchServer');
     const skinLockedToast = document.getElementById('skinLockedToast');
+    const profileSetupPage = document.getElementById('profileSetupPage');
+    const profileNameInput = document.getElementById('profileNameInput');
+    const profileDateInput = document.getElementById('profileDateInput');
+    const btnGenderBoy = document.getElementById('btnGenderBoy');
+    const btnGenderGirl = document.getElementById('btnGenderGirl');
+    const profileErrorMsg = document.getElementById('profileErrorMsg');
+    const btnProfileContinue = document.getElementById('btnProfileContinue');
+    const btnEditProfile = document.getElementById('btnEditProfile');
+    const lobbyProfileIcon = document.getElementById('lobbyProfileIcon');
+    const lobbyProfileName = document.getElementById('lobbyProfileName');
     const welcomeBlankPage = document.getElementById('welcomeBlankPage');
     const btnWelcomePlay = document.getElementById('btnWelcomePlay');
     const btnWelcomeSkin = document.getElementById('btnWelcomeSkin');
@@ -6262,8 +6327,9 @@
 
       const k = e.key.toLowerCase();
 
-      // If on the white welcome page or server choice page, ignore game hotkeys
-      if ((welcomeBlankPage && !welcomeBlankPage.classList.contains('hidden')) ||
+      // If on the profile page, white welcome page, or server choice page, ignore game hotkeys
+      if ((profileSetupPage && !profileSetupPage.classList.contains('hidden')) ||
+          (welcomeBlankPage && !welcomeBlankPage.classList.contains('hidden')) ||
           (startChoicePage && !startChoicePage.classList.contains('hidden'))) {
         return;
       }
@@ -7353,16 +7419,98 @@
     if (btnJoinSoloServer) btnJoinSoloServer.addEventListener('click', () => enterServerFromChoice('solo'));
     if (btnStartChooseSkin) btnStartChooseSkin.addEventListener('click', openSkinModal);
 
+    // =========================================================================
+    // PLAYER PROFILE SETUP PAGE (NAME, DATE, BOY OR GIRL)
+    // =========================================================================
+    let playerProfile = (() => {
+      try {
+        const saved = JSON.parse(localStorage.getItem('snakePlayerProfile_v1') || 'null');
+        if (saved && typeof saved === 'object') return saved;
+      } catch (e) {}
+      return { name: '', date: '', gender: '' };
+    })();
+
+    let selectedGender = playerProfile.gender || '';
+
+    function updateGenderButtonsUI() {
+      if (btnGenderBoy) {
+        btnGenderBoy.className = selectedGender === 'boy'
+          ? 'py-3 px-4 rounded-2xl border-2 border-sky-500 bg-sky-100 text-sky-900 font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm scale-[1.02] transition-all cursor-pointer'
+          : 'py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer';
+      }
+      if (btnGenderGirl) {
+        btnGenderGirl.className = selectedGender === 'girl'
+          ? 'py-3 px-4 rounded-2xl border-2 border-pink-500 bg-pink-100 text-pink-900 font-extrabold text-sm flex items-center justify-center gap-2 shadow-sm scale-[1.02] transition-all cursor-pointer'
+          : 'py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-pink-50 hover:border-pink-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer';
+      }
+    }
+
+    function updateLobbyProfileBadge() {
+      if (lobbyProfileIcon) lobbyProfileIcon.textContent = playerProfile.gender === 'girl' ? '👧' : '👦';
+      if (lobbyProfileName) lobbyProfileName.textContent = playerProfile.name || 'Player';
+    }
+
+    function showProfileSetupPage() {
+      isRunning = false;
+      isPaused = false;
+      setBoosting(false);
+      if (gameLoop) clearInterval(gameLoop);
+      if (spawnTimerInterval) clearInterval(spawnTimerInterval);
+      hideDeathModal();
+      if (welcomeBlankPage) welcomeBlankPage.classList.add('hidden');
+      if (startChoicePage) startChoicePage.classList.add('hidden');
+      if (profileNameInput) profileNameInput.value = playerProfile.name || '';
+      if (profileDateInput) profileDateInput.value = playerProfile.date || '';
+      selectedGender = playerProfile.gender || '';
+      updateGenderButtonsUI();
+      if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
+      if (profileSetupPage) profileSetupPage.classList.remove('hidden');
+    }
+
+    if (btnGenderBoy) {
+      btnGenderBoy.addEventListener('click', () => {
+        selectedGender = 'boy';
+        updateGenderButtonsUI();
+        if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
+      });
+    }
+    if (btnGenderGirl) {
+      btnGenderGirl.addEventListener('click', () => {
+        selectedGender = 'girl';
+        updateGenderButtonsUI();
+        if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
+      });
+    }
+    if (btnEditProfile) btnEditProfile.addEventListener('click', showProfileSetupPage);
+
+    if (btnProfileContinue) {
+      btnProfileContinue.addEventListener('click', () => {
+        const nameVal = profileNameInput ? profileNameInput.value.trim() : '';
+        const dateVal = profileDateInput ? profileDateInput.value.trim() : '';
+        if (!nameVal || !dateVal || !selectedGender) {
+          if (profileErrorMsg) profileErrorMsg.classList.remove('hidden');
+          return;
+        }
+        playerProfile = { name: nameVal, date: dateVal, gender: selectedGender };
+        try { localStorage.setItem('snakePlayerProfile_v1', JSON.stringify(playerProfile)); } catch (e) {}
+        updateLobbyProfileBadge();
+        if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
+        if (profileSetupPage) profileSetupPage.classList.add('hidden');
+        showWelcomeBlankPage();
+      });
+    }
+
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
     updateSoundButtonUI();
     applyLanguage(currentLang);
+    updateLobbyProfileBadge();
     setSkin(currentSkin, true);
     updateFoodBankUI();
     startRenderLoop();
 
-    // Show pure white blank welcome page first on load
-    showWelcomeBlankPage();
+    // Show the Player Profile Setup page first before the lobby/playing page
+    showProfileSetupPage();
   </script>
 </body>
 </html>
