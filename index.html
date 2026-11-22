@@ -357,7 +357,7 @@
   <!-- PURE WHITE BLANK WELCOME PAGE (FIRST SCREEN BEFORE STARTING)              -->
   <!-- ========================================================================= -->
   <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6">
-    <!-- Top-Right Stack: NO ADS sign + English/Arabic & Sound directly below it -->
+    <!-- Top-Right Column: NO ADS sign + Language Selector directly below it -->
     <div class="fixed top-4 right-4 sm:top-6 sm:right-8 flex flex-col items-end gap-2 z-10">
       <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 select-none">
         <span class="text-xl sm:text-2xl">🚫</span>
@@ -367,18 +367,12 @@
         </div>
       </div>
 
-      <!-- Language Selector (English / العربية) + Sound Toggle right below NO ADS -->
-      <div class="flex items-center gap-1.5" dir="ltr">
-        <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1">
-          <button id="btnLangEn" class="px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs">
-            🇬🇧 English
-          </button>
-          <button id="btnLangAr" class="px-3 py-1 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800">
-            🇸🇦 العربية
-          </button>
-        </div>
-        <button id="btnWelcomeSound" title="Toggle Arcade Sound Effects" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
-          🔊
+      <div class="inline-flex items-center p-1 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1" dir="ltr">
+        <button id="btnLangEn" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer bg-white text-slate-900 shadow-xs">
+          🇬🇧 English
+        </button>
+        <button id="btnLangAr" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer text-slate-500 hover:text-slate-800">
+          🇸🇦 العربية
         </button>
       </div>
     </div>
@@ -401,11 +395,16 @@
       <span data-i18n="openRewardsBtn" class="w-full py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] sm:text-xs font-black shadow-xs">Open →</span>
     </button>
 
-    <div class="flex flex-col items-center text-center gap-3 max-w-sm w-full px-28 sm:px-0">
+    <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full px-28 sm:px-0">
       <div class="flex flex-col items-center gap-2">
-        <div class="text-5xl sm:text-6xl">🐍</div>
+        <div class="text-5xl">🐍</div>
         <h1 data-i18n="gameTitle" class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
       </div>
+
+      <!-- Sound Toggle stays right here in the center -->
+      <button id="btnWelcomeSound" title="Toggle Arcade Sound Effects" class="px-3 py-2 rounded-xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
+        🔊
+      </button>
     </div>
 
     <!-- Bottom-Right Column: Square Choose Skin Sign directly above Play button -->
