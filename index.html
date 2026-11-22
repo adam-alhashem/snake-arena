@@ -357,6 +357,11 @@
   <!-- FIRST PAGE: PLAYER PROFILE SETUP (NAME, DATE, BOY OR GIRL)                -->
   <!-- ========================================================================= -->
   <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <!-- Sound Toggle right on the First Page -->
+    <button id="btnProfileSound" type="button" title="Toggle Arcade Sound Effects" class="fixed top-4 right-4 sm:top-6 sm:right-8 px-3.5 py-2 rounded-xl text-sm font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-2xs active:scale-95 transition-all cursor-pointer z-10">
+      🔊
+    </button>
+
     <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
       <div class="flex flex-col items-center text-center gap-1.5">
         <div class="text-4xl">🐍</div>
@@ -650,6 +655,7 @@
     const btnBackToWelcome = document.getElementById('btnBackToWelcome');
     const langSelect = document.getElementById('langSelect');
     const btnWelcomeSound = document.getElementById('btnWelcomeSound');
+    const btnProfileSound = document.getElementById('btnProfileSound');
     const startChoicePage = document.getElementById('startChoicePage');
     const startChoiceServerLabel = document.getElementById('startChoiceServerLabel');
     const btnJoinWithPlayers = document.getElementById('btnJoinWithPlayers');
@@ -7258,9 +7264,16 @@
     }
 
     function updateSoundButtonUI() {
-      if (btnWelcomeSound) {
-        btnWelcomeSound.textContent = soundEnabled ? '🔊' : '🔇';
-      }
+      const icon = soundEnabled ? '🔊' : '🔇';
+      if (btnWelcomeSound) btnWelcomeSound.textContent = icon;
+      if (btnProfileSound) btnProfileSound.textContent = icon;
+    }
+
+    function toggleSoundSetting() {
+      soundEnabled = !soundEnabled;
+      try { localStorage.setItem('snakeSoundEnabled', String(soundEnabled)); } catch (e) {}
+      updateSoundButtonUI();
+      if (soundEnabled) playSFX('eat');
     }
 
     const POWERUP_TYPES = [
@@ -7501,14 +7514,8 @@
         speakLanguageGreeting(e.target.value);
       });
     }
-    if (btnWelcomeSound) {
-      btnWelcomeSound.addEventListener('click', () => {
-        soundEnabled = !soundEnabled;
-        try { localStorage.setItem('snakeSoundEnabled', String(soundEnabled)); } catch (e) {}
-        updateSoundButtonUI();
-        if (soundEnabled) playSFX('eat');
-      });
-    }
+    if (btnWelcomeSound) btnWelcomeSound.addEventListener('click', toggleSoundSetting);
+    if (btnProfileSound) btnProfileSound.addEventListener('click', toggleSoundSetting);
     if (btnWelcomePlay) btnWelcomePlay.addEventListener('click', showStartChoicePage);
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
@@ -7594,6 +7601,7 @@
         updateLobbyProfileBadge();
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
         if (profileSetupPage) profileSetupPage.classList.add('hidden');
+        playSFX('powerup');
         showWelcomeBlankPage();
       });
     }
