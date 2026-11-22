@@ -357,6 +357,15 @@
   <!-- PURE WHITE BLANK WELCOME PAGE (FIRST SCREEN BEFORE STARTING)              -->
   <!-- ========================================================================= -->
   <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6">
+    <!-- Clean Bold "NO ADS" Sign in Top-Right -->
+    <div class="fixed top-4 right-4 sm:top-6 sm:right-8 px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 z-10 select-none">
+      <span class="text-xl sm:text-2xl">🚫</span>
+      <div class="flex flex-col text-left leading-tight">
+        <span data-i18n="noAdsTitle" class="text-xs sm:text-sm font-black text-slate-900 tracking-wide uppercase">NO ADS</span>
+        <span data-i18n="noAdsSub" class="text-[10px] font-bold text-emerald-700">100% Free to Play</span>
+      </div>
+    </div>
+
     <!-- Tall Big Golden Rewards Sign on the Left Side -->
     <button id="btnWelcomeRewards" class="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 w-28 sm:w-44 min-h-[250px] sm:min-h-[340px] px-3 sm:px-5 py-5 sm:py-7 rounded-3xl bg-gradient-to-b from-amber-50 via-amber-100/90 to-orange-100 hover:from-amber-100 hover:to-orange-200 border-2 border-amber-300 shadow-lg hover:shadow-xl active:scale-95 transition-all flex flex-col items-center justify-between text-center cursor-pointer z-10">
       <span id="welcomeRewardsBadge" class="hidden -top-2 -right-2 absolute min-w-[24px] h-[24px] px-1.5 rounded-full bg-red-500 text-white text-xs font-black flex items-center justify-center shadow-md animate-bounce">0</span>
@@ -6849,6 +6858,8 @@
         play: 'Play',
         chooseSkin: 'Choose Skin',
         skinsCountLabel: '🐺 100 Skins',
+        noAdsTitle: 'NO ADS',
+        noAdsSub: '100% Free to Play',
         rewards: 'Rewards',
         openRewardsBtn: 'Open →',
         choiceFullTitle: 'With Players (35)',
@@ -6883,6 +6894,8 @@
         play: 'العب',
         chooseSkin: 'اختر الشكل',
         skinsCountLabel: '🐺 100 شكل',
+        noAdsTitle: 'بدون إعلانات',
+        noAdsSub: 'مجاني 100%',
         rewards: 'المكافآت',
         openRewardsBtn: '← فتح',
         choiceFullTitle: 'مع لاعبين (35)',
