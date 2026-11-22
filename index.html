@@ -7364,35 +7364,63 @@
     }
 
     const LANG_GREETINGS = {
-      en: { text: "Let's talk English!", bcp47: 'en-US' },
-      ar: { text: 'هيا نتحدث العربية!', bcp47: 'ar-SA' },
-      es: { text: '¡Hablemos español!', bcp47: 'es-ES' },
-      fr: { text: 'Parlons français !', bcp47: 'fr-FR' },
-      de: { text: 'Lass uns Deutsch sprechen!', bcp47: 'de-DE' },
-      it: { text: 'Parliamo italiano!', bcp47: 'it-IT' },
-      pt: { text: 'Vamos falar português!', bcp47: 'pt-BR' },
-      tr: { text: 'Hadi Türkçe konuşalım!', bcp47: 'tr-TR' },
-      ru: { text: 'Давай говорить по-русски!', bcp47: 'ru-RU' },
-      zh: { text: '让我们说中文吧！', bcp47: 'zh-CN' },
-      ja: { text: '日本語で話しましょう！', bcp47: 'ja-JP' },
-      ko: { text: '한국어로 이야기해요!', bcp47: 'ko-KR' },
-      hi: { text: 'चलो हिंदी में बात करते हैं!', bcp47: 'hi-IN' },
-      ur: { text: 'آؤ اردو میں بات کرتے ہیں!', bcp47: 'ur-PK' }
+      en: { text: "English! Let's play Snake Arena, my friend!", bcp47: 'en-US', pitch: 1.15, rate: 1.08 },
+      ar: { text: 'عربي! يلا نلعب حلبة الثعابين يا بطل!', bcp47: 'ar-SA', pitch: 1.15, rate: 1.06 },
+      es: { text: '¡Español! ¡Vamos a jugar, amigo!', bcp47: 'es-ES', pitch: 1.15, rate: 1.08 },
+      fr: { text: "Français ! C'est parti mon ami !", bcp47: 'fr-FR', pitch: 1.15, rate: 1.08 },
+      de: { text: "Deutsch! Los geht's, mein Freund!", bcp47: 'de-DE', pitch: 1.12, rate: 1.06 },
+      it: { text: 'Italiano! Andiamo a giocare, amico!', bcp47: 'it-IT', pitch: 1.15, rate: 1.08 },
+      pt: { text: 'Português! Bora jogar, meu amigo!', bcp47: 'pt-BR', pitch: 1.15, rate: 1.08 },
+      tr: { text: 'Türkçe! Haydi oynayalım dostum!', bcp47: 'tr-TR', pitch: 1.15, rate: 1.06 },
+      ru: { text: 'Русский! Погнали играть, друг!', bcp47: 'ru-RU', pitch: 1.12, rate: 1.06 },
+      zh: { text: '中文！朋友，快来玩吧！', bcp47: 'zh-CN', pitch: 1.15, rate: 1.08 },
+      ja: { text: '日本語！さあ遊ぼう、友達！', bcp47: 'ja-JP', pitch: 1.18, rate: 1.08 },
+      ko: { text: '한국어! 친구야, 같이 놀자!', bcp47: 'ko-KR', pitch: 1.16, rate: 1.08 },
+      hi: { text: 'हिन्दी! चलो खेलते हैं दोस्त!', bcp47: 'hi-IN', pitch: 1.15, rate: 1.06 },
+      ur: { text: 'اردو! چلو کھیلتے ہیں دوست!', bcp47: 'ur-PK', pitch: 1.15, rate: 1.06 }
     };
+
+    // Cheerful Shawarma-Legend-style bouncy jingle before voice speaks!
+    function playLanguageJingle() {
+      const ac = getAudioCtx();
+      if (!ac) return;
+      try {
+        const now = ac.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, idx) => {
+          const osc = ac.createOscillator();
+          const gain = ac.createGain();
+          osc.type = 'triangle';
+          osc.connect(gain);
+          gain.connect(ac.destination);
+          const t0 = now + idx * 0.055;
+          osc.frequency.setValueAtTime(freq, t0);
+          gain.gain.setValueAtTime(0.09, t0);
+          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.14);
+          osc.start(t0);
+          osc.stop(t0 + 0.15);
+        });
+      } catch (e) {}
+    }
 
     function speakLanguageGreeting(lang) {
       const g = LANG_GREETINGS[lang] || LANG_GREETINGS.en;
       showRewardToast(`🗣️ ${g.text}`);
-      if (!soundEnabled || !('speechSynthesis' in window)) return;
+      if (!soundEnabled) return;
+      playLanguageJingle();
+      if (!('speechSynthesis' in window)) return;
       try {
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(g.text);
         utter.lang = g.bcp47;
-        utter.rate = 1.0;
+        utter.pitch = g.pitch || 1.15;
+        utter.rate = g.rate || 1.06;
         const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
         const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
         if (match) utter.voice = match;
-        window.speechSynthesis.speak(utter);
+        setTimeout(() => {
+          try { window.speechSynthesis.speak(utter); } catch (e) {}
+        }, 140);
       } catch (e) {}
     }
 
