@@ -7393,71 +7393,28 @@
       window.speechSynthesis.onvoiceschanged = loadSpeechVoices;
     }
 
-    // Shawarma-Legend-style bouncy musical jingle (with authentic Middle Eastern Hijaz Oud + Darbuka riff for Arabic!)
+    // Clean, warm studio-style chime (soft sine + gentle harmonic, never harsh or buzzy)
     function playLanguageJingle(lang) {
       const ac = getAudioCtx();
       if (!ac) return;
       try {
         const now = ac.currentTime;
-        if (lang === 'ar' || lang === 'tr' || lang === 'ur') {
-          // Catchy Middle Eastern Hijaz scale riff (D4, Eb4, F#4, G4, A4, F#4, D4) + bouncy darbuka taps!
-          const hijazNotes = [293.66, 311.13, 369.99, 392.00, 440.00, 369.99, 293.66];
-          const step = 0.085;
-          hijazNotes.forEach((freq, idx) => {
-            const osc = ac.createOscillator();
-            const gain = ac.createGain();
-            osc.type = 'sawtooth';
-            const filter = ac.createBiquadFilter();
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(1400, now + idx * step);
-            osc.connect(filter);
-            filter.connect(gain);
-            gain.connect(ac.destination);
-            const t0 = now + idx * step;
-            osc.frequency.setValueAtTime(freq, t0);
-            gain.gain.setValueAtTime(0.085, t0);
-            gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.16);
-            osc.start(t0);
-            osc.stop(t0 + 0.17);
-          });
-          // Bouncy Darbuka "Doum - Tek - Tek - Doum" drum beats
-          const beats = [
-            { t: 0.0, f0: 150, f1: 58, vol: 0.14 },
-            { t: 0.17, f0: 420, f1: 190, vol: 0.07 },
-            { t: 0.34, f0: 420, f1: 190, vol: 0.07 },
-            { t: 0.51, f0: 165, f1: 62, vol: 0.15 }
-          ];
-          beats.forEach(b => {
-            const dOsc = ac.createOscillator();
-            const dGain = ac.createGain();
-            dOsc.type = 'triangle';
-            dOsc.connect(dGain);
-            dGain.connect(ac.destination);
-            const t0 = now + b.t;
-            dOsc.frequency.setValueAtTime(b.f0, t0);
-            dOsc.frequency.exponentialRampToValueAtTime(b.f1, t0 + 0.08);
-            dGain.gain.setValueAtTime(b.vol, t0);
-            dGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.095);
-            dOsc.start(t0);
-            dOsc.stop(t0 + 0.1);
-          });
-          return;
-        }
-
-        // Upbeat bouncy arcade fanfare for other languages
-        const notes = [523.25, 659.25, 783.99, 1046.5];
+        const notes = (lang === 'ar' || lang === 'tr' || lang === 'ur')
+          ? [587.33, 739.99, 880.00]   // Warm clean D-F#-A chime
+          : [523.25, 659.25, 783.99];  // Warm clean C-E-G chime
         notes.forEach((freq, idx) => {
           const osc = ac.createOscillator();
           const gain = ac.createGain();
-          osc.type = 'triangle';
+          osc.type = 'sine';
           osc.connect(gain);
           gain.connect(ac.destination);
-          const t0 = now + idx * 0.055;
+          const t0 = now + idx * 0.06;
           osc.frequency.setValueAtTime(freq, t0);
-          gain.gain.setValueAtTime(0.09, t0);
-          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.14);
+          gain.gain.setValueAtTime(0.001, t0);
+          gain.gain.linearRampToValueAtTime(0.065, t0 + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
           osc.start(t0);
-          osc.stop(t0 + 0.15);
+          osc.stop(t0 + 0.24);
         });
       } catch (e) {}
     }
