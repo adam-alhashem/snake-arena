@@ -416,7 +416,7 @@
     <div class="fixed top-4 right-4 sm:top-6 sm:right-8 flex flex-col items-end gap-2 z-10">
       <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 select-none">
         <span class="text-xl sm:text-2xl">🚫</span>
-        <div class="flex flex-col text-left leading-tight">
+        <div class="flex flex-col text-start leading-tight">
           <span data-i18n="noAdsTitle" class="text-xs sm:text-sm font-black text-slate-900 tracking-wide uppercase">NO ADS</span>
           <span data-i18n="noAdsSub" class="text-[10px] font-bold text-emerald-700">100% Free to Play</span>
         </div>
@@ -7364,21 +7364,34 @@
     }
 
     const LANG_GREETINGS = {
-      en: { text: "English! Let's play Snake Arena, my friend!", bcp47: 'en-US', pitch: 1.15, rate: 1.08 },
-      ar: { text: 'عربي! يلا نلعب حلبة الثعابين يا بطل!', bcp47: 'ar-SA', pitch: 1.15, rate: 1.06 },
-      es: { text: '¡Español! ¡Vamos a jugar, amigo!', bcp47: 'es-ES', pitch: 1.15, rate: 1.08 },
-      fr: { text: "Français ! C'est parti mon ami !", bcp47: 'fr-FR', pitch: 1.15, rate: 1.08 },
-      de: { text: "Deutsch! Los geht's, mein Freund!", bcp47: 'de-DE', pitch: 1.12, rate: 1.06 },
-      it: { text: 'Italiano! Andiamo a giocare, amico!', bcp47: 'it-IT', pitch: 1.15, rate: 1.08 },
-      pt: { text: 'Português! Bora jogar, meu amigo!', bcp47: 'pt-BR', pitch: 1.15, rate: 1.08 },
-      tr: { text: 'Türkçe! Haydi oynayalım dostum!', bcp47: 'tr-TR', pitch: 1.15, rate: 1.06 },
-      ru: { text: 'Русский! Погнали играть, друг!', bcp47: 'ru-RU', pitch: 1.12, rate: 1.06 },
-      zh: { text: '中文！朋友，快来玩吧！', bcp47: 'zh-CN', pitch: 1.15, rate: 1.08 },
-      ja: { text: '日本語！さあ遊ぼう、友達！', bcp47: 'ja-JP', pitch: 1.18, rate: 1.08 },
-      ko: { text: '한국어! 친구야, 같이 놀자!', bcp47: 'ko-KR', pitch: 1.16, rate: 1.08 },
-      hi: { text: 'हिन्दी! चलो खेलते हैं दोस्त!', bcp47: 'hi-IN', pitch: 1.15, rate: 1.06 },
-      ur: { text: 'اردو! چلو کھیلتے ہیں دوست!', bcp47: 'ur-PK', pitch: 1.15, rate: 1.06 }
+      en: { text: "English! Let's play Snake Arena, my friend!", bcp47: 'en-US', pitch: 1.15, rate: 1.06 },
+      ar: { text: 'أَهْلاً يَا بَطَل! هَيَّا نَلْعَبُ مَعاً!', bcp47: 'ar-001', pitch: 1.05, rate: 0.98 },
+      es: { text: '¡Español! ¡Vamos a jugar, amigo!', bcp47: 'es-ES', pitch: 1.15, rate: 1.06 },
+      fr: { text: "Français ! C'est parti mon ami !", bcp47: 'fr-FR', pitch: 1.15, rate: 1.06 },
+      de: { text: "Deutsch! Los geht's, mein Freund!", bcp47: 'de-DE', pitch: 1.12, rate: 1.04 },
+      it: { text: 'Italiano! Andiamo a giocare, amico!', bcp47: 'it-IT', pitch: 1.15, rate: 1.06 },
+      pt: { text: 'Português! Bora jogar, meu amigo!', bcp47: 'pt-BR', pitch: 1.15, rate: 1.06 },
+      tr: { text: 'Türkçe! Haydi oynayalım dostum!', bcp47: 'tr-TR', pitch: 1.15, rate: 1.04 },
+      ru: { text: 'Русский! Погнали играть, друг!', bcp47: 'ru-RU', pitch: 1.12, rate: 1.04 },
+      zh: { text: '中文！朋友，快来玩吧！', bcp47: 'zh-CN', pitch: 1.15, rate: 1.06 },
+      ja: { text: '日本語！さあ遊ぼう、友達！', bcp47: 'ja-JP', pitch: 1.15, rate: 1.06 },
+      ko: { text: '한국어! 친구야, 같이 놀자!', bcp47: 'ko-KR', pitch: 1.14, rate: 1.06 },
+      hi: { text: 'हिन्दी! चलो खेलते हैं दोस्त!', bcp47: 'hi-IN', pitch: 1.12, rate: 1.04 },
+      ur: { text: 'اردو! چلو کھیلتے ہیں دوست!', bcp47: 'ur-PK', pitch: 1.08, rate: 1.0 }
     };
+
+    // Preload browser speech voices so Arabic & other languages match native voices reliably
+    let cachedVoices = [];
+    function loadSpeechVoices() {
+      if ('speechSynthesis' in window && window.speechSynthesis.getVoices) {
+        const v = window.speechSynthesis.getVoices();
+        if (v && v.length > 0) cachedVoices = v;
+      }
+    }
+    loadSpeechVoices();
+    if ('speechSynthesis' in window && 'onvoiceschanged' in window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = loadSpeechVoices;
+    }
 
     // Cheerful Shawarma-Legend-style bouncy jingle before voice speaks!
     function playLanguageJingle() {
@@ -7410,14 +7423,19 @@
       playLanguageJingle();
       if (!('speechSynthesis' in window)) return;
       try {
+        loadSpeechVoices();
         window.speechSynthesis.cancel();
         const utter = new SpeechSynthesisUtterance(g.text);
         utter.lang = g.bcp47;
-        utter.pitch = g.pitch || 1.15;
-        utter.rate = g.rate || 1.06;
-        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-        const match = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
-        if (match) utter.voice = match;
+        utter.pitch = g.pitch || 1.1;
+        utter.rate = g.rate || 1.0;
+        const voices = cachedVoices.length > 0 ? cachedVoices : (window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : []);
+        const match = voices.find(v => v.lang && v.lang.toLowerCase().replace('_', '-').startsWith(lang)) ||
+                      (lang === 'ar' ? voices.find(v => /arab|majed|maged|tarik|laila/i.test(v.name || '')) : null);
+        if (match) {
+          utter.voice = match;
+          utter.lang = match.lang;
+        }
         setTimeout(() => {
           try { window.speechSynthesis.speak(utter); } catch (e) {}
         }, 140);
