@@ -357,59 +357,75 @@
   <!-- FIRST PAGE: PLAYER PROFILE SETUP (NAME, DATE, BOY OR GIRL)                -->
   <!-- ========================================================================= -->
   <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-    <!-- Sound Toggle right on the First Page -->
-    <button id="btnProfileSound" type="button" title="Toggle Arcade Sound Effects" class="fixed top-4 right-4 sm:top-6 sm:right-8 px-3.5 py-2 rounded-xl text-sm font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 shadow-2xs active:scale-95 transition-all cursor-pointer z-10">
-      🔊
-    </button>
+    <!-- Language Selector on the First Page (Top-Right) -->
+    <div class="fixed top-4 right-4 sm:top-6 sm:right-8 inline-flex items-center px-3 py-2 rounded-xl bg-slate-100 border border-slate-200 shadow-sm gap-1.5 z-10" dir="ltr">
+      <button id="btnReplayLangVoice" type="button" title="Hear language greeting" class="text-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer">🗣️</button>
+      <select id="langSelect" aria-label="Language" class="bg-transparent text-xs font-extrabold text-slate-800 focus:outline-none cursor-pointer pr-1">
+        <option value="en">🇬🇧 English</option>
+        <option value="ar">🇸🇦 العربية</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+        <option value="it">🇮🇹 Italiano</option>
+        <option value="pt">🇵🇹 Português</option>
+        <option value="tr">🇹🇷 Türkçe</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="ur">🇵🇰 اردو</option>
+      </select>
+    </div>
 
     <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
       <div class="flex flex-col items-center text-center gap-1.5">
         <div class="text-4xl">🐍</div>
-        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
-        <p class="text-xs sm:text-sm text-slate-500 font-medium">Enter your details to continue to the game</p>
+        <h1 data-i18n="profileTitle" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
+        <p data-i18n="profileSub" class="text-xs sm:text-sm text-slate-500 font-medium">Enter your details to continue to the game</p>
       </div>
 
       <!-- 1. Name -->
       <div class="flex flex-col gap-1.5">
-        <label for="profileNameInput" class="text-xs font-extrabold text-slate-700">Your Name</label>
+        <label for="profileNameInput" data-i18n="yourNameLabel" class="text-xs font-extrabold text-slate-700">Your Name</label>
         <input id="profileNameInput" type="text" maxlength="24" placeholder="Type your name..." class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white transition-all" />
       </div>
 
       <!-- 2. Date -->
       <div class="flex flex-col gap-1.5">
-        <label for="profileDateInput" class="text-xs font-extrabold text-slate-700">Date</label>
+        <label for="profileDateInput" data-i18n="dateLabel" class="text-xs font-extrabold text-slate-700">Date</label>
         <input id="profileDateInput" type="date" class="w-full px-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-sm font-semibold text-slate-800 bg-slate-50 focus:bg-white transition-all" />
       </div>
 
       <!-- 3. Boy or Girl -->
       <div class="flex flex-col gap-1.5">
-        <span class="text-xs font-extrabold text-slate-700">Boy or Girl</span>
+        <span data-i18n="boyOrGirlLabel" class="text-xs font-extrabold text-slate-700">Boy or Girl</span>
         <div class="grid grid-cols-2 gap-3">
           <button id="btnGenderBoy" type="button" class="py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
             <span class="text-xl">👦</span>
-            <span>Boy</span>
+            <span data-i18n="boyBtn">Boy</span>
           </button>
           <button id="btnGenderGirl" type="button" class="py-3 px-4 rounded-2xl border-2 border-slate-200 bg-slate-50 hover:bg-pink-50 hover:border-pink-400 text-slate-700 font-extrabold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer">
             <span class="text-xl">👧</span>
-            <span>Girl</span>
+            <span data-i18n="girlBtn">Girl</span>
           </button>
         </div>
       </div>
 
       <!-- Validation Error -->
-      <p id="profileErrorMsg" class="hidden text-xs font-bold text-red-600 text-center bg-red-50 border border-red-200 rounded-xl py-2 px-3">
+      <p id="profileErrorMsg" data-i18n="profileErr" class="hidden text-xs font-bold text-red-600 text-center bg-red-50 border border-red-200 rounded-xl py-2 px-3">
         Please enter your name, date, and pick Boy or Girl!
       </p>
 
       <!-- Continue Button -->
-      <button id="btnProfileContinue" type="button" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer">
+      <button id="btnProfileContinue" type="button" data-i18n="continueLobbyBtn" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer">
         Continue to Lobby →
       </button>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- PURE WHITE BLANK WELCOME PAGE (FIRST SCREEN BEFORE STARTING)              -->
+  <!-- PURE WHITE BLANK WELCOME PAGE (SECOND PAGE / LOBBY)                       -->
   <!-- ========================================================================= -->
   <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6 hidden">
     <!-- Top-Left Player Profile Badge (Click to edit profile) -->
@@ -417,7 +433,7 @@
       <span id="lobbyProfileIcon" class="text-base">👦</span>
       <span id="lobbyProfileName">Player</span>
     </button>
-    <!-- Top-Right Column: NO ADS sign + Language Selector directly below it -->
+    <!-- Top-Right: NO ADS sign only (Language selector moved to first page) -->
     <div class="fixed top-4 right-4 sm:top-6 sm:right-8 flex flex-col items-end gap-2 z-10">
       <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 select-none">
         <span class="text-xl sm:text-2xl">🚫</span>
@@ -425,26 +441,6 @@
           <span data-i18n="noAdsTitle" class="text-xs sm:text-sm font-black text-slate-900 tracking-wide uppercase">NO ADS</span>
           <span data-i18n="noAdsSub" class="text-[10px] font-bold text-emerald-700">100% Free to Play</span>
         </div>
-      </div>
-
-      <div class="inline-flex items-center px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 shadow-2xs gap-1.5" dir="ltr">
-        <button id="btnReplayLangVoice" type="button" title="Hear language greeting" class="text-sm hover:scale-110 active:scale-90 transition-transform cursor-pointer">🗣️</button>
-        <select id="langSelect" aria-label="Language" class="bg-transparent text-xs font-extrabold text-slate-800 focus:outline-none cursor-pointer pr-1">
-          <option value="en">🇬🇧 English</option>
-          <option value="ar">🇸🇦 العربية</option>
-          <option value="es">🇪🇸 Español</option>
-          <option value="fr">🇫🇷 Français</option>
-          <option value="de">🇩🇪 Deutsch</option>
-          <option value="it">🇮🇹 Italiano</option>
-          <option value="pt">🇵🇹 Português</option>
-          <option value="tr">🇹🇷 Türkçe</option>
-          <option value="ru">🇷🇺 Русский</option>
-          <option value="zh">🇨🇳 中文</option>
-          <option value="ja">🇯🇵 日本語</option>
-          <option value="ko">🇰🇷 한국어</option>
-          <option value="hi">🇮🇳 हिन्दी</option>
-          <option value="ur">🇵🇰 اردو</option>
-        </select>
       </div>
     </div>
 
@@ -655,7 +651,6 @@
     const btnBackToWelcome = document.getElementById('btnBackToWelcome');
     const langSelect = document.getElementById('langSelect');
     const btnWelcomeSound = document.getElementById('btnWelcomeSound');
-    const btnProfileSound = document.getElementById('btnProfileSound');
     const startChoicePage = document.getElementById('startChoicePage');
     const startChoiceServerLabel = document.getElementById('startChoiceServerLabel');
     const btnJoinWithPlayers = document.getElementById('btnJoinWithPlayers');
@@ -6938,6 +6933,7 @@
 
     const I18N = {
       en: {
+        profileTitle: 'Player Profile', profileSub: 'Enter your details to continue to the game', yourNameLabel: 'Your Name', dateLabel: 'Date', boyOrGirlLabel: 'Boy or Girl', boyBtn: 'Boy', girlBtn: 'Girl', profileErr: 'Please enter your name, date, and pick Boy or Girl!', continueLobbyBtn: 'Continue to Lobby →',
         gameTitle: 'Snake Arena', play: 'Play', chooseSkin: 'Choose Skin', skinsCountLabel: '🐺 100 Skins',
         noAdsTitle: 'NO ADS', noAdsSub: '100% Free to Play', rewards: 'Rewards', openRewardsBtn: 'Open →',
         choiceFullTitle: 'With Players (35)', choiceFullDesc: 'Join a full live server with 34 other snakes already in the arena.', choiceFullBtn: 'Join Full Server →',
@@ -6951,6 +6947,7 @@
         filterAll: 'All (9)', filterEasy: '🟢 Easy', filterMedium: '🟡 Medium', filterHard: '🔴 Hard'
       },
       ar: {
+        profileTitle: 'ملف اللاعب', profileSub: 'أدخل بياناتك للدخول إلى اللعبة', yourNameLabel: 'اسمك', dateLabel: 'التاريخ', boyOrGirlLabel: 'ولد أم بنت', boyBtn: 'ولد', girlBtn: 'بنت', profileErr: 'يرجى إدخال اسمك والتاريخ واختيار ولد أو بنت!', continueLobbyBtn: '← المتابعة إلى اللوبي',
         gameTitle: 'حلبة الثعابين', play: 'العب', chooseSkin: 'اختر الشكل', skinsCountLabel: '🐺 100 شكل',
         noAdsTitle: 'بدون إعلانات', noAdsSub: 'مجاني 100%', rewards: 'المكافآت', openRewardsBtn: '← فتح',
         choiceFullTitle: 'مع لاعبين (35)', choiceFullDesc: 'ادخل سيرفر مباشر وممتلئ مع 34 ثعباناً آخر في الحلبة.', choiceFullBtn: '← دخول السيرفر الممتلئ',
@@ -7144,7 +7141,7 @@
       });
 
       const dir = RTL_LANGS.includes(currentLang) ? 'rtl' : 'ltr';
-      [welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
+      [profileSetupPage, welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
         if (el) el.setAttribute('dir', dir);
       });
 
@@ -7264,16 +7261,9 @@
     }
 
     function updateSoundButtonUI() {
-      const icon = soundEnabled ? '🔊' : '🔇';
-      if (btnWelcomeSound) btnWelcomeSound.textContent = icon;
-      if (btnProfileSound) btnProfileSound.textContent = icon;
-    }
-
-    function toggleSoundSetting() {
-      soundEnabled = !soundEnabled;
-      try { localStorage.setItem('snakeSoundEnabled', String(soundEnabled)); } catch (e) {}
-      updateSoundButtonUI();
-      if (soundEnabled) playSFX('eat');
+      if (btnWelcomeSound) {
+        btnWelcomeSound.textContent = soundEnabled ? '🔊' : '🔇';
+      }
     }
 
     const POWERUP_TYPES = [
@@ -7514,8 +7504,14 @@
         speakLanguageGreeting(e.target.value);
       });
     }
-    if (btnWelcomeSound) btnWelcomeSound.addEventListener('click', toggleSoundSetting);
-    if (btnProfileSound) btnProfileSound.addEventListener('click', toggleSoundSetting);
+    if (btnWelcomeSound) {
+      btnWelcomeSound.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        try { localStorage.setItem('snakeSoundEnabled', String(soundEnabled)); } catch (e) {}
+        updateSoundButtonUI();
+        if (soundEnabled) playSFX('eat');
+      });
+    }
     if (btnWelcomePlay) btnWelcomePlay.addEventListener('click', showStartChoicePage);
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
@@ -7601,7 +7597,6 @@
         updateLobbyProfileBadge();
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
         if (profileSetupPage) profileSetupPage.classList.add('hidden');
-        playSFX('powerup');
         showWelcomeBlankPage();
       });
     }
