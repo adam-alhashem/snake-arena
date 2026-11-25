@@ -112,7 +112,7 @@
 
       <!-- Food Bank Counter (Skin Currency) -->
       <button id="btnOpenFoodBank" title="Your Food Bank: Collect food to unlock skins!" class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-mono text-xs hover:border-emerald-400 hover:bg-emerald-50/50 transition-all cursor-pointer shrink-0">
-        <span class="text-emerald-600 font-bold flex items-center gap-1"><span>🍎</span> <strong id="hudFoodBank">10,000</strong></span>
+        <span class="text-emerald-600 font-bold flex items-center gap-1"><span>🍎</span> <strong id="hudFoodBank">0</strong></span>
         <span class="text-[10px] text-slate-500 font-sans">Food</span>
       </button>
 
@@ -232,7 +232,7 @@
         <div class="flex items-center gap-2">
           <!-- Food Bank Display -->
           <div class="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-xs font-mono">
-            <span class="text-emerald-700 font-bold flex items-center gap-1"><span>🍎</span> <strong id="modalFoodBank">10,000</strong> Food</span>
+            <span class="text-emerald-700 font-bold flex items-center gap-1"><span>🍎</span> <strong id="modalFoodBank">0</strong> Food</span>
           </div>
           <button id="btnCloseSkinModal" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 text-xl font-bold flex items-center justify-center transition-all" aria-label="Close modal">&times;</button>
         </div>
@@ -3299,8 +3299,12 @@
     let currentFoodMult = 1.0;
     let isBoosting = false;
 
-    // Food Bank & Skin Currency System (10,000 Food initial grant)
-    let foodBank = parseInt(localStorage.getItem('snakeFoodBank') || '10000', 10);
+    // Food Bank & Skin Currency System (starts at 0 Food; one-time reset for existing saves)
+    if (!localStorage.getItem('snakeFoodBankResetV1')) {
+      localStorage.setItem('snakeFoodBank', '0');
+      localStorage.setItem('snakeFoodBankResetV1', '1');
+    }
+    let foodBank = parseInt(localStorage.getItem('snakeFoodBank') || '0', 10);
     let unlockedSkins = JSON.parse(localStorage.getItem('snakeUnlockedSkins') || '["blue_wolf", "purple_car"]');
     if (!unlockedSkins.includes('blue_wolf')) unlockedSkins.push('blue_wolf');
     if (!unlockedSkins.includes('purple_car')) unlockedSkins.push('purple_car');
