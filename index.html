@@ -486,11 +486,20 @@
   <!-- PURE WHITE BLANK WELCOME PAGE (SECOND PAGE / LOBBY)                       -->
   <!-- ========================================================================= -->
   <div id="welcomeBlankPage" class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6 hidden">
-    <!-- Top-Left Player Profile Badge (Click to edit profile) -->
-    <button id="btnEditProfile" title="Click to edit your profile" class="fixed top-4 left-4 sm:top-6 sm:left-6 px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs flex items-center gap-2 text-xs font-extrabold text-slate-800 active:scale-95 transition-all cursor-pointer z-10">
-      <span id="lobbyProfileIcon" class="text-base">👦</span>
-      <span id="lobbyProfileName">Player</span>
-    </button>
+    <!-- Top-Left Player Profile Badge & Dropdown Menu -->
+    <div id="profileMenuWrapper" class="fixed top-4 left-4 sm:top-6 sm:left-6 flex flex-col items-start gap-1.5 z-20">
+      <button id="btnEditProfile" type="button" title="Profile options" class="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs flex items-center gap-2 text-xs font-extrabold text-slate-800 active:scale-95 transition-all cursor-pointer">
+        <span id="lobbyProfileIcon" class="text-base">👦</span>
+        <span id="lobbyProfileName">Player</span>
+        <span class="text-[10px] text-slate-400">▾</span>
+      </button>
+
+      <div id="profileMenuDropdown" class="hidden min-w-[148px] bg-white rounded-xl border border-slate-200 shadow-lg p-1.5 flex flex-col">
+        <button id="btnOpenEditProfile" type="button" class="w-full px-3 py-2 rounded-lg text-left text-xs font-extrabold text-slate-800 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer">
+          Edit Profile
+        </button>
+      </div>
+    </div>
     <!-- Top-Right: NO ADS sign only (Language selector lives on the first page!) -->
     <div class="fixed top-4 right-4 sm:top-6 sm:right-8 flex flex-col items-end gap-2 z-10">
       <div class="px-4 py-2 rounded-2xl bg-gradient-to-r from-rose-50 to-emerald-50 border-2 border-emerald-300 shadow-md flex items-center gap-2 select-none">
@@ -9247,7 +9256,30 @@
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
       });
     }
-    if (btnEditProfile) btnEditProfile.addEventListener('click', showProfileSetupPage);
+    const profileMenuDropdown = document.getElementById('profileMenuDropdown');
+    const btnOpenEditProfile = document.getElementById('btnOpenEditProfile');
+    const profileMenuWrapper = document.getElementById('profileMenuWrapper');
+
+    if (btnEditProfile) {
+      btnEditProfile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (profileMenuDropdown) profileMenuDropdown.classList.toggle('hidden');
+      });
+    }
+    if (btnOpenEditProfile) {
+      btnOpenEditProfile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (profileMenuDropdown) profileMenuDropdown.classList.add('hidden');
+        showProfileSetupPage();
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (profileMenuDropdown && !profileMenuDropdown.classList.contains('hidden')) {
+        if (!profileMenuWrapper || !profileMenuWrapper.contains(e.target)) {
+          profileMenuDropdown.classList.add('hidden');
+        }
+      }
+    });
 
     if (btnProfileContinue) {
       btnProfileContinue.addEventListener('click', () => {
