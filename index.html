@@ -725,50 +725,54 @@
       <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white flex items-center justify-between gap-3">
         <div>
           <h2 class="text-lg sm:text-xl font-black tracking-tight leading-tight">Arrow Factory</h2>
-          <p id="factoryHeaderSub" class="text-xs font-semibold text-amber-300">Lv. 1 • Craft arrows using Food (150 Food each)</p>
+          <p id="factoryHeaderSub" class="text-xs font-semibold text-amber-300">Recipe: 1 Stick + 1 Feather = 1 Arrow</p>
         </div>
         <button id="btnCloseArrowFactory" type="button" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center cursor-pointer" aria-label="Close Arrow Factory">&times;</button>
       </div>
 
-      <!-- Animated Conveyor Belt Canvas -->
+      <!-- Animated Conveyor Belt Canvas (Stick + Feather -> Arrow) -->
       <div class="relative bg-slate-800 border-b border-slate-700">
         <canvas id="arrowFactoryCanvas" width="560" height="110" class="w-full h-[96px] sm:h-[110px] block"></canvas>
         <div id="factoryNextTimerBadge" class="absolute top-2 right-3 px-2.5 py-0.5 rounded-full bg-slate-900/80 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/30">
-          Craft Cost: 150 Food
+          1 Stick + 1 Feather = 1 Arrow
         </div>
       </div>
 
       <!-- Factory Stats & Controls -->
       <div class="p-4 sm:p-5 flex flex-col gap-3.5 overflow-y-auto">
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Crafted Arrows</div>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="bg-amber-50 rounded-xl border border-amber-200 py-2 px-1.5">
+            <div class="text-[10px] font-bold text-amber-700 uppercase">Sticks</div>
+            <div id="factoryStickStat" class="text-base font-black text-amber-900">0</div>
+          </div>
+          <div class="bg-sky-50 rounded-xl border border-sky-200 py-2 px-1.5">
+            <div class="text-[10px] font-bold text-sky-700 uppercase">Feathers</div>
+            <div id="factoryFeatherStat" class="text-base font-black text-sky-900">0</div>
+          </div>
+          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-1.5">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Arrows</div>
             <div id="factoryStoredCount" class="text-base font-black text-amber-600">0 / 10</div>
           </div>
-          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Factory Level</div>
+          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-1.5">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Level</div>
             <div id="factoryLevelStat" class="text-base font-black text-slate-900">Lv. 1</div>
-          </div>
-          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Your Food</div>
-            <div id="factoryFoodStat" class="text-base font-black text-emerald-600">0</div>
           </div>
         </div>
 
         <!-- Craft & Upgrade Action Buttons -->
         <div class="grid grid-cols-2 gap-2">
           <button id="btnCraftArrowNow" type="button" class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
-            Craft +1 Arrow (150 Food)
+            Craft +1 Arrow (1 Stick + 1 Feather)
           </button>
           <button id="btnCraftArrow5" type="button" class="py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
-            Craft +5 Arrows (750 Food)
+            Craft +5 Arrows (5 Sticks + 5 Feathers)
           </button>
         </div>
         <button id="btnUpgradeFactory" type="button" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
-          Upgrade Factory (1,000 Food)
+          Upgrade Storage & Styles (1,000 Food)
         </button>
 
-        <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">You must craft arrows here before entering a match. Crafted arrows load into your quiver (up to 10 per match).</p>
+        <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">Collect Sticks and Feathers on the arena floor, then combine 1 Stick + 1 Feather here to craft an Arrow!</p>
 
         <!-- Arrow Style Selector -->
         <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
@@ -4871,6 +4875,96 @@
     let pendingSpinStartArrows = 0;
     let pendingSpinExtraShield = 0;
 
+    // Collectible Crafting Materials on Arena Floor: Sticks & Feathers
+    const FLOOR_STICK_COUNT = 12;
+    const FLOOR_FEATHER_COUNT = 12;
+    let floorSticks = [];
+    let floorFeathers = [];
+
+    function spawnFloorStick() {
+      for (let t = 0; t < 80; t++) {
+        const sx = Math.floor(Math.random() * (COLS - 10)) + 5;
+        const sy = Math.floor(Math.random() * (ROWS - 10)) + 5;
+        if (!floorSticks.some(m => m.x === sx && m.y === sy) && !floorFeathers.some(m => m.x === sx && m.y === sy)) {
+          floorSticks.push({ x: sx, y: sy });
+          return;
+        }
+      }
+    }
+
+    function spawnFloorFeather() {
+      for (let t = 0; t < 80; t++) {
+        const fx = Math.floor(Math.random() * (COLS - 10)) + 5;
+        const fy = Math.floor(Math.random() * (ROWS - 10)) + 5;
+        if (!floorSticks.some(m => m.x === fx && m.y === fy) && !floorFeathers.some(m => m.x === fx && m.y === fy)) {
+          floorFeathers.push({ x: fx, y: fy });
+          return;
+        }
+      }
+    }
+
+    function drawFloorMaterials(vMinX, vMaxX, vMinY, vMaxY) {
+      const pulse = (Math.sin(Date.now() / 240) + 1) / 2;
+      // Draw Wooden Sticks
+      for (let i = 0; i < floorSticks.length; i++) {
+        const st = floorSticks[i];
+        const px = st.x * GRID_SIZE + GRID_SIZE / 2;
+        const py = st.y * GRID_SIZE + GRID_SIZE / 2;
+        if (px < vMinX || px > vMaxX || py < vMinY || py > vMaxY) continue;
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.beginPath();
+        ctx.arc(0, 0, 9 + pulse * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(180, 83, 9, ${0.14 + pulse * 0.1})`;
+        ctx.fill();
+        ctx.rotate(-Math.PI / 4);
+        ctx.strokeStyle = '#78350f';
+        ctx.lineWidth = 4.2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-7.5, 0);
+        ctx.lineTo(7.5, 0);
+        ctx.stroke();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(-6, -0.5);
+        ctx.lineTo(6, -0.5);
+        ctx.stroke();
+        ctx.restore();
+      }
+      // Draw Crisp Feathers
+      for (let i = 0; i < floorFeathers.length; i++) {
+        const fe = floorFeathers[i];
+        const px = fe.x * GRID_SIZE + GRID_SIZE / 2;
+        const py = fe.y * GRID_SIZE + GRID_SIZE / 2;
+        if (px < vMinX || px > vMaxX || py < vMinY || py > vMaxY) continue;
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.beginPath();
+        ctx.arc(0, 0, 9 + pulse * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(56, 189, 248, ${0.16 + pulse * 0.12})`;
+        ctx.fill();
+        ctx.rotate(-Math.PI / 5);
+        // Feather plume
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.ellipse(1, 0, 7.5, 3.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        // Feather quill center line
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-8.5, 0);
+        ctx.lineTo(7, 0);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
     function pushElimFeed(text, color = '#0f172a') {
       const now = Date.now();
       elimFeed.unshift({ text, color, start: now, until: now + 2200 });
@@ -5073,6 +5167,10 @@
       dashCooldownUntil = 0;
       elimFeed = [];
       spawnArenaPortals();
+      floorSticks = [];
+      floorFeathers = [];
+      for (let i = 0; i < FLOOR_STICK_COUNT; i++) spawnFloorStick();
+      for (let i = 0; i < FLOOR_FEATHER_COUNT; i++) spawnFloorFeather();
 
       const midX = Math.floor(COLS / 2);
       const midY = Math.floor(ROWS / 2);
@@ -5934,8 +6032,31 @@
               }
               playerArrowAmmo = Math.min(MAX_PLAYER_ARROWS, playerArrowAmmo + 3);
               addFoodBank(25);
+              if (typeof addFactoryMaterials === 'function') addFactoryMaterials(2, 2);
               playSFX('powerup');
-              triggerCenterBanner('CHEST OPENED! +3 ARROWS', '#d97706', 2200);
+              triggerCenterBanner('CHEST OPENED! +2 STICKS & FEATHERS', '#d97706', 2200);
+            }
+
+            // Collect Sticks & Feathers on the floor for Arrow Crafting
+            for (let si = floorSticks.length - 1; si >= 0; si--) {
+              if (head.x === floorSticks[si].x && head.y === floorSticks[si].y) {
+                floorSticks.splice(si, 1);
+                if (typeof addFactoryMaterials === 'function') addFactoryMaterials(1, 0);
+                playSFX('eat');
+                floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE, text: '+1 Stick', color: '#b45309', life: 28, maxLife: 28 });
+                spawnFloorStick();
+                break;
+              }
+            }
+            for (let fi = floorFeathers.length - 1; fi >= 0; fi--) {
+              if (head.x === floorFeathers[fi].x && head.y === floorFeathers[fi].y) {
+                floorFeathers.splice(fi, 1);
+                if (typeof addFactoryMaterials === 'function') addFactoryMaterials(0, 1);
+                playSFX('eat');
+                floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE, text: '+1 Feather', color: '#0284c7', life: 28, maxLife: 28 });
+                spawnFloorFeather();
+                break;
+              }
             }
 
             // Check food
@@ -7153,6 +7274,7 @@
         drawPowerUps(vMinX, vMaxX, vMinY, vMaxY);
         drawArenaPortals(vMinX, vMaxX, vMinY, vMaxY);
         drawArenaChest(vMinX, vMaxX, vMinY, vMaxY);
+        drawFloorMaterials(vMinX, vMaxX, vMinY, vMaxY);
 
         // Draw Bots (Frustum culled for smooth 60 FPS with 100 snakes)
         bots.forEach(bot => {
@@ -9469,13 +9591,24 @@
     let arrowFactoryState = (() => {
       try {
         const s = JSON.parse(localStorage.getItem('snakeArrowFactory_v1') || 'null');
-        if (s && typeof s === 'object') return s;
+        if (s && typeof s === 'object') {
+          if (typeof s.sticks !== 'number') s.sticks = 0;
+          if (typeof s.feathers !== 'number') s.feathers = 0;
+          return s;
+        }
       } catch (e) {}
-      return { level: 1, stored: 0, styleId: 'gold' };
+      return { level: 1, stored: 0, sticks: 0, feathers: 0, styleId: 'gold' };
     })();
 
     function saveArrowFactoryState() {
       try { localStorage.setItem('snakeArrowFactory_v1', JSON.stringify(arrowFactoryState)); } catch (e) {}
+    }
+
+    function addFactoryMaterials(sticksAdd, feathersAdd) {
+      arrowFactoryState.sticks = (arrowFactoryState.sticks || 0) + sticksAdd;
+      arrowFactoryState.feathers = (arrowFactoryState.feathers || 0) + feathersAdd;
+      saveArrowFactoryState();
+      updateArrowFactoryLobbyBadge();
     }
 
     function getFactoryConfig() {
@@ -9487,7 +9620,7 @@
       return st ? st.color : '#f59e0b';
     }
 
-    // Manual crafting only — no free auto-production
+    // Manual crafting only — 1 Stick + 1 Feather = 1 Arrow
     function tickArrowFactoryProduction() {}
 
     function consumeFactoryArrowsForMatch(maxNeeded) {
@@ -9502,7 +9635,7 @@
     function updateArrowFactoryLobbyBadge() {
       const cfg = getFactoryConfig();
       const lbl = document.getElementById('welcomeFactoryLabel');
-      if (lbl) lbl.textContent = `${arrowFactoryState.stored || 0} Crafted • Lv. ${cfg.level}`;
+      if (lbl) lbl.textContent = `${arrowFactoryState.stored || 0} Arrows • ${arrowFactoryState.sticks || 0}S/${arrowFactoryState.feathers || 0}F`;
     }
 
     function renderArrowFactoryUI() {
@@ -9512,36 +9645,41 @@
       const sub = document.getElementById('factoryHeaderSub');
       const storedEl = document.getElementById('factoryStoredCount');
       const lvEl = document.getElementById('factoryLevelStat');
-      const foodEl = document.getElementById('factoryFoodStat');
+      const stickEl = document.getElementById('factoryStickStat');
+      const featherEl = document.getElementById('factoryFeatherStat');
       const timerBadge = document.getElementById('factoryNextTimerBadge');
       const btnCraft = document.getElementById('btnCraftArrowNow');
       const btnCraft5 = document.getElementById('btnCraftArrow5');
       const btnUpg = document.getElementById('btnUpgradeFactory');
       const stylesGrid = document.getElementById('factoryArrowStylesGrid');
 
-      if (sub) sub.textContent = `Lv. ${cfg.level} • Craft arrows for ${cfg.craftCost} Food each (Max ${cfg.cap})`;
+      const sticks = arrowFactoryState.sticks || 0;
+      const feathers = arrowFactoryState.feathers || 0;
+      const maxCraftable = Math.min(sticks, feathers);
+      const spaceLeft = Math.max(0, cfg.cap - (arrowFactoryState.stored || 0));
+
+      if (sub) sub.textContent = `Lv. ${cfg.level} • Combine 1 Stick + 1 Feather to craft 1 Arrow (Max ${cfg.cap})`;
       if (storedEl) storedEl.textContent = `${arrowFactoryState.stored || 0} / ${cfg.cap}`;
       if (lvEl) lvEl.textContent = `Lv. ${cfg.level}`;
-      if (foodEl) foodEl.textContent = foodBank.toLocaleString();
-      if (timerBadge) timerBadge.textContent = `Craft Cost: ${cfg.craftCost} Food`;
+      if (stickEl) stickEl.textContent = sticks.toLocaleString();
+      if (featherEl) featherEl.textContent = feathers.toLocaleString();
+      if (timerBadge) timerBadge.textContent = '1 Stick + 1 Feather = 1 Arrow';
 
-      const spaceLeft = Math.max(0, cfg.cap - (arrowFactoryState.stored || 0));
       if (btnCraft) {
-        const canCraft1 = spaceLeft >= 1 && foodBank >= cfg.craftCost;
+        const canCraft1 = spaceLeft >= 1 && maxCraftable >= 1;
         btnCraft.disabled = !canCraft1;
-        btnCraft.textContent = spaceLeft === 0 ? 'Storage Full' : `Craft +1 Arrow (${cfg.craftCost} Food)`;
+        btnCraft.textContent = spaceLeft === 0 ? 'Storage Full' : 'Craft +1 Arrow (1 Stick + 1 Feather)';
         btnCraft.className = canCraft1
           ? 'py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
           : 'py-2.5 px-3 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
       }
 
       if (btnCraft5) {
-        const batchCount = Math.min(5, spaceLeft);
-        const batchCost = batchCount * cfg.craftCost;
-        const canCraftBatch = batchCount > 0 && foodBank >= batchCost;
+        const batchCount = Math.min(5, spaceLeft, Math.max(1, maxCraftable));
+        const canCraftBatch = spaceLeft >= 1 && maxCraftable >= batchCount && batchCount > 0;
         btnCraft5.disabled = !canCraftBatch;
-        btnCraft5.textContent = spaceLeft === 0 ? 'Storage Full' : `Craft +${batchCount} Arrows (${batchCost.toLocaleString()} Food)`;
-        btnCraft5.className = canCraftBatch
+        btnCraft5.textContent = spaceLeft === 0 ? 'Storage Full' : `Craft +${Math.min(5, spaceLeft)} Arrows (${Math.min(5, spaceLeft)}S + ${Math.min(5, spaceLeft)}F)`;
+        btnCraft5.className = (spaceLeft >= 1 && maxCraftable >= Math.min(5, spaceLeft))
           ? 'py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
           : 'py-2.5 px-3 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
       }
@@ -9554,7 +9692,7 @@
         } else {
           const canUpg = foodBank >= cfg.upgradeCost;
           btnUpg.disabled = !canUpg;
-          btnUpg.textContent = `Upgrade to Lv.${cfg.level + 1} — Cheaper Arrows (${cfg.upgradeCost.toLocaleString()} Food)`;
+          btnUpg.textContent = `Upgrade Storage & Style to Lv.${cfg.level + 1} (${cfg.upgradeCost.toLocaleString()} Food)`;
           btnUpg.className = canUpg
             ? 'w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
             : 'w-full py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
@@ -9627,9 +9765,38 @@
           fctx.fillRect(x, h - 30, 12, 18);
         }
 
-        // Moving crafted arrows riding the belt
-        const arrowOffset = (now * 0.06) % 110;
-        for (let x = -60 + arrowOffset; x < w + 60; x += 110) {
+        // Left side of belt: Sticks + Feathers entering the center crafting press
+        const midX = w / 2;
+        const matOffset = (now * 0.06) % 100;
+        for (let x = -40 + matOffset; x < midX - 20; x += 100) {
+          // Wooden Stick
+          fctx.save();
+          fctx.translate(x - 14, h - 46);
+          fctx.rotate(-0.35);
+          fctx.strokeStyle = '#d97706';
+          fctx.lineWidth = 4;
+          fctx.lineCap = 'round';
+          fctx.beginPath();
+          fctx.moveTo(-10, 0);
+          fctx.lineTo(10, 0);
+          fctx.stroke();
+          fctx.restore();
+          // White Feather
+          fctx.save();
+          fctx.translate(x + 12, h - 48);
+          fctx.rotate(-0.3);
+          fctx.fillStyle = '#ffffff';
+          fctx.strokeStyle = '#38bdf8';
+          fctx.lineWidth = 1.2;
+          fctx.beginPath();
+          fctx.ellipse(0, 0, 9, 4, 0, 0, Math.PI * 2);
+          fctx.fill();
+          fctx.stroke();
+          fctx.restore();
+        }
+
+        // Right side of belt: Finished glowing Arrows coming out!
+        for (let x = midX + 30 + (matOffset % 100); x < w + 60; x += 100) {
           fctx.save();
           fctx.translate(x, h - 46);
           fctx.strokeStyle = arrowCol;
@@ -9651,11 +9818,18 @@
           fctx.restore();
         }
 
-        // Factory Press Machine silhouette on left
+        // Center Crafting Press Machine
         fctx.fillStyle = '#0f172a';
-        fctx.fillRect(0, 0, 56, h - 28);
+        fctx.fillRect(midX - 28, 6, 56, h - 34);
+        fctx.strokeStyle = arrowCol;
+        fctx.lineWidth = 2;
+        fctx.strokeRect(midX - 28, 6, 56, h - 34);
+        fctx.fillStyle = '#f8fafc';
+        fctx.font = '800 9px monospace';
+        fctx.textAlign = 'center';
+        fctx.fillText('CRAFT', midX, 34);
         fctx.fillStyle = arrowCol;
-        fctx.fillRect(46, 18, 6, 48);
+        fctx.fillText('PRESS', midX, 47);
 
         factoryRafId = requestAnimationFrame(frame);
       }
@@ -9672,16 +9846,17 @@
     function craftArrowsBatch(requestedCount) {
       const cfg = getFactoryConfig();
       const spaceLeft = Math.max(0, cfg.cap - (arrowFactoryState.stored || 0));
-      const count = Math.min(requestedCount, spaceLeft);
-      const totalCost = count * cfg.craftCost;
-      if (count <= 0 || foodBank < totalCost) return;
-      foodBank -= totalCost;
+      const sticks = arrowFactoryState.sticks || 0;
+      const feathers = arrowFactoryState.feathers || 0;
+      const count = Math.min(requestedCount, spaceLeft, sticks, feathers);
+      if (count <= 0) return;
+      arrowFactoryState.sticks -= count;
+      arrowFactoryState.feathers -= count;
       arrowFactoryState.stored = (arrowFactoryState.stored || 0) + count;
-      saveFoodBank();
       saveArrowFactoryState();
       renderArrowFactoryUI();
       const msg = document.getElementById('factoryStatusMsg');
-      if (msg) msg.textContent = `Crafted +${count} Arrow${count > 1 ? 's' : ''}! (${arrowFactoryState.stored}/${cfg.cap} ready for battle)`;
+      if (msg) msg.textContent = `Crafted +${count} Arrow${count > 1 ? 's' : ''} from ${count} Stick${count > 1 ? 's' : ''} + ${count} Feather${count > 1 ? 's' : ''}!`;
       if (typeof playSFX === 'function') playSFX('eat');
     }
 
