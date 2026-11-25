@@ -3264,7 +3264,7 @@
     "innerColor": "#facc15",
     "stripeColor": "#fef9c3",
     "headColor": "#92400e",
-    "category": "Mythic",
+    "category": "Gold",
     "scoreLabel": "Gold",
     "hasWolfTriangles": true,
     "subtext": "The Legendary 1 Billion Food Golden Dragon-Snake with royal horns & diamond crest",
@@ -3512,7 +3512,7 @@
     let currentCategoryFilter = 'All';
     let currentSearchFilter = '';
 
-    const CATEGORIES = ['All', 'Food', 'Hovercars', 'Snakes', 'Beasts', 'Cyber', 'Mythic', 'Elements', 'Special'];
+    const CATEGORIES = ['All', 'Gold', 'Food', 'Hovercars', 'Snakes', 'Beasts', 'Cyber', 'Mythic', 'Elements', 'Special'];
 
     function saveFoodBank() {
       localStorage.setItem('snakeFoodBank', foodBank);
@@ -3538,8 +3538,11 @@
         const count = (cat === 'All') ? SKINS_LIST.length : SKINS_LIST.filter(s => s.category === cat).length;
         const btn = document.createElement('button');
         const isActive = (cat === currentCategoryFilter);
+        const isGold = (cat === 'Gold');
         btn.className = `px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap transition-all ${
-          isActive ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          isGold
+            ? (isActive ? 'bg-amber-500 text-white shadow-xs ring-2 ring-amber-300' : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300')
+            : (isActive ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')
         }`;
         btn.textContent = `${cat} (${count})`;
         btn.addEventListener('click', () => {
@@ -8120,10 +8123,10 @@
           playSFX('powerup');
           return;
         }
-        // Not enough food yet: open Skins modal focused on Golden Emperor Snake
-        currentCategoryFilter = 'All';
-        currentSearchFilter = 'Golden Emperor';
-        if (skinSearchInput) skinSearchInput.value = 'Golden Emperor';
+        // Not enough food yet: open Skins modal directly on the Gold section
+        currentCategoryFilter = 'Gold';
+        currentSearchFilter = '';
+        if (skinSearchInput) skinSearchInput.value = '';
         openSkinModal();
       });
     }
