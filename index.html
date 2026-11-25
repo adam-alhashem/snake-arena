@@ -238,6 +238,17 @@
         </div>
       </div>
 
+      <!-- Level-Based Food Type Picker (Changes ONLY your food, keeps round dot shape) -->
+      <div class="px-5 py-2.5 border-b border-slate-100 bg-slate-50/80 flex flex-col gap-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-extrabold text-slate-700">Your Food Type <span id="foodLevelBadge" class="ml-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">Lv. 1</span></span>
+          <span id="foodLevelNextHint" class="text-[11px] text-slate-500 font-medium">Eat dots to unlock more food types</span>
+        </div>
+        <div id="foodTypePickerBar" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+          <!-- Dynamically filled by renderFoodTypePicker() -->
+        </div>
+      </div>
+
       <!-- Filter Controls: Search + Categories -->
       <div class="px-5 py-3 border-b border-slate-100 bg-white flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
         <!-- Search Box -->
@@ -3558,6 +3569,7 @@
       const modalEl = document.getElementById('modalFoodBank');
       if (hudEl) hudEl.textContent = foodBank.toLocaleString();
       if (modalEl) modalEl.textContent = foodBank.toLocaleString();
+      if (typeof renderFoodTypePicker === 'function') renderFoodTypePicker();
     }
 
     function addFoodBank(amount) {
@@ -4593,8 +4605,108 @@
       '#a855f7'  // Neon Violet
     ];
 
+    // Level-Based Food Type System (changes ONLY your food color/name; keeps round dot shape!)
+    const FOOD_TYPES_BY_LEVEL = [
+      { id: 'classic_berry', level: 1, minFood: 0,    name: 'Classic Berry', color: '#ef4444', palette: ['#ef4444', '#f87171', '#dc2626'] },
+      { id: 'citrus_drop',   level: 2, minFood: 25,   name: 'Citrus Drop',   color: '#f97316', palette: ['#f97316', '#fb923c', '#ea580c'] },
+      { id: 'mint_melon',    level: 3, minFood: 75,   name: 'Mint Melon',    color: '#10b981', palette: ['#10b981', '#34d399', '#059669'] },
+      { id: 'blue_berry',    level: 4, minFood: 150,  name: 'Blue Berry',    color: '#3b82f6', palette: ['#3b82f6', '#60a5fa', '#2563eb'] },
+      { id: 'royal_grape',   level: 5, minFood: 300,  name: 'Royal Grape',   color: '#8b5cf6', palette: ['#8b5cf6', '#a78bfa', '#7c3aed'] },
+      { id: 'pink_candy',    level: 6, minFood: 600,  name: 'Pink Candy',    color: '#ec4899', palette: ['#ec4899', '#f472b6', '#db2777'] },
+      { id: 'frost_crystal', level: 7, minFood: 1200, name: 'Frost Crystal', color: '#06b6d4', palette: ['#06b6d4', '#22d3ee', '#0891b2'] },
+      { id: 'solar_gold',    level: 8, minFood: 2500, name: 'Solar Gold',    color: '#eab308', palette: ['#eab308', '#facc15', '#ca8a04'] }
+    ];
+
+    let totalFoodEaten = parseInt(localStorage.getItem('snakeTotalFoodEaten_v1') || '0', 10);
+    let selectedFoodTypeId = localStorage.getItem('snakeSelectedFoodType_v1') || '';
+
+    function getPlayerFoodLevel() {
+      let lv = 1;
+      for (let i = 0; i < FOOD_TYPES_BY_LEVEL.length; i++) {
+        if (totalFoodEaten >= FOOD_TYPES_BY_LEVEL[i].minFood) lv = FOOD_TYPES_BY_LEVEL[i].level;
+      }
+      return lv;
+    }
+
+    function getActiveFoodType() {
+      const lv = getPlayerFoodLevel();
+      const chosen = FOOD_TYPES_BY_LEVEL.find(ft => ft.id === selectedFoodTypeId && ft.level <= lv);
+      if (chosen) return chosen;
+      // Default to highest unlocked food type for current level
+      return FOOD_TYPES_BY_LEVEL[Math.min(lv - 1, FOOD_TYPES_BY_LEVEL.length - 1)];
+    }
+
+    function setPlayerFoodType(typeId) {
+      const lv = getPlayerFoodLevel();
+      const ft = FOOD_TYPES_BY_LEVEL.find(item => item.id === typeId && item.level <= lv);
+      if (!ft) return;
+      selectedFoodTypeId = ft.id;
+      try { localStorage.setItem('snakeSelectedFoodType_v1', ft.id); } catch (e) {}
+      // Recolor regular floor dots to your chosen food type (round shape unchanged, snake unchanged!)
+      foods.forEach(f => {
+        if (!f.isLoot) {
+          f.color = ft.palette[Math.floor(Math.random() * ft.palette.length)];
+        }
+      });
+      renderFoodTypePicker();
+      if (typeof playSFX === 'function') playSFX('eat');
+    }
+
+    function renderFoodTypePicker() {
+      const bar = document.getElementById('foodTypePickerBar');
+      const lvBadge = document.getElementById('foodLevelBadge');
+      const nextHint = document.getElementById('foodLevelNextHint');
+      if (!bar) return;
+
+      const lv = getPlayerFoodLevel();
+      const active = getActiveFoodType();
+      if (lvBadge) lvBadge.textContent = `Lv. ${lv} • ${active.name}`;
+
+      const nextType = FOOD_TYPES_BY_LEVEL.find(ft => ft.level === lv + 1);
+      if (nextHint) {
+        if (nextType) {
+          const remaining = Math.max(0, nextType.minFood - totalFoodEaten);
+          nextHint.textContent = `Next: Lv. ${nextType.level} ${nextType.name} (${remaining.toLocaleString()} more eaten)`;
+        } else {
+          nextHint.textContent = `Max Food Level reached (${totalFoodEaten.toLocaleString()} eaten)`;
+        }
+      }
+
+      bar.innerHTML = '';
+      FOOD_TYPES_BY_LEVEL.forEach(ft => {
+        const unlocked = ft.level <= lv;
+        const isSelected = ft.id === active.id;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.disabled = !unlocked;
+        btn.className = `px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5 transition-all border ${
+          isSelected
+            ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+            : unlocked
+              ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 cursor-pointer'
+              : 'bg-slate-100 text-slate-400 border-slate-200/80 cursor-not-allowed opacity-70'
+        }`;
+        const dot = document.createElement('span');
+        dot.className = 'w-2.5 h-2.5 rounded-full inline-block shrink-0';
+        dot.style.backgroundColor = ft.color;
+        dot.style.boxShadow = unlocked ? `0 0 6px ${ft.color}` : 'none';
+        btn.appendChild(dot);
+
+        const lbl = document.createElement('span');
+        lbl.textContent = unlocked ? `${ft.name}` : `Lv.${ft.level} ${ft.name}`;
+        btn.appendChild(lbl);
+
+        if (unlocked) {
+          btn.addEventListener('click', () => setPlayerFoodType(ft.id));
+        }
+        bar.appendChild(btn);
+      });
+    }
+
     function getRandomFoodColor() {
-      return FOOD_COLORS[Math.floor(Math.random() * FOOD_COLORS.length)];
+      const ft = getActiveFoodType();
+      const pal = (ft && ft.palette && ft.palette.length) ? ft.palette : FOOD_COLORS;
+      return pal[Math.floor(Math.random() * pal.length)];
     }
 
     function spawnFood() {
@@ -4752,14 +4864,31 @@
                 playSFX('eat');
                 checkPersonalBest(score);
                 recordRewardProgress('bestScore', score);
-                // Award 1 Food per food eaten
+                // Award 1 Food per food eaten & advance Food Level
+                const prevFoodLv = getPlayerFoodLevel();
+                totalFoodEaten += 1;
+                try { localStorage.setItem('snakeTotalFoodEaten_v1', String(totalFoodEaten)); } catch (e) {}
+                const newFoodLv = getPlayerFoodLevel();
+                if (newFoodLv > prevFoodLv) {
+                  const unlockedFt = FOOD_TYPES_BY_LEVEL[newFoodLv - 1];
+                  if (unlockedFt) {
+                    selectedFoodTypeId = unlockedFt.id;
+                    try { localStorage.setItem('snakeSelectedFoodType_v1', unlockedFt.id); } catch (e) {}
+                    foods.forEach(f => {
+                      if (!f.isLoot) f.color = unlockedFt.palette[Math.floor(Math.random() * unlockedFt.palette.length)];
+                    });
+                    triggerCenterBanner(`LEVEL ${newFoodLv}: ${unlockedFt.name.toUpperCase()}`, unlockedFt.color, 2400);
+                    playSFX('powerup');
+                  }
+                }
+                const activeFt = getActiveFoodType();
                 const foodEarned = 1;
                 addFoodBank(foodEarned);
                 floatingTexts.push({
                   x: head.x * GRID_SIZE + GRID_SIZE / 2,
                   y: head.y * GRID_SIZE + GRID_SIZE / 2,
-                  text: `+${foodEarned} 🍎`,
-                  color: '#10b981',
+                  text: `+${foodEarned} ${activeFt.name}`,
+                  color: activeFt.color || '#10b981',
                   life: 28,
                   maxLife: 28
                 });
