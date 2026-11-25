@@ -3779,7 +3779,244 @@
       return isPlayerAlive && snake.length > 0;
     }
 
-    // MINI LIVE SNAKE SHAPE PREVIEW: Shows exact curved body, stripes, wolf spines & head before taking a snake!
+    // UNIQUE SNAKE VISUAL STYLE ENGINE: Makes every snake distinct with round heads + custom body patterns!
+    function getSnakeVisualStyle(cfg) {
+      if (!cfg) return { pattern: 0, headStyle: 'gem' };
+      const id = String(cfg.id || '');
+      const cat = String(cfg.category || '');
+      let hash = (typeof cfg.num === 'number' && cfg.num > 0) ? cfg.num : 0;
+      for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) % 997;
+
+      // 6 distinct body patterns: 0=stripe, 1=polka dots, 2=zebra bands, 3=diamond scales, 4=wolf spines, 5=neon rings
+      let pattern = hash % 6;
+      if (id === 'blue_wolf' || cfg.hasWolfTriangles) pattern = 4;
+
+      // 8 distinct round-head accessories so snakes look immediately different!
+      const styles = ['gem', 'ears', 'horns', 'crown', 'visor', 'antennae', 'spikes', 'halo'];
+      let headStyle = styles[hash % styles.length];
+      if (id === 'blue_wolf' || cat === 'Beasts') headStyle = (hash % 2 === 0) ? 'ears' : 'spikes';
+      else if (cat === 'Mythic') headStyle = (hash % 2 === 0) ? 'horns' : 'halo';
+      else if (cat === 'Cyber' || cat === 'Hovercars') headStyle = (hash % 2 === 0) ? 'visor' : 'spikes';
+      else if (cat === 'Food') headStyle = (hash % 2 === 0) ? 'antennae' : 'gem';
+      else if (cat === 'Special') headStyle = (hash % 2 === 0) ? 'crown' : 'halo';
+      else if (cat === 'Elements') headStyle = (hash % 2 === 0) ? 'spikes' : 'horns';
+
+      return { pattern, headStyle };
+    }
+
+    function drawSnakeBodyPatternPoint(tctx, cfg, segIdx) {
+      if (cfg.id === 'golden_emperor') {
+        tctx.fillStyle = '#fef9c3';
+        tctx.strokeStyle = '#b45309';
+        tctx.lineWidth = 0.9;
+        tctx.beginPath();
+        tctx.moveTo(5, 0);
+        tctx.lineTo(-3.5, -4.2);
+        tctx.lineTo(-1.2, 0);
+        tctx.lineTo(-3.5, 4.2);
+        tctx.closePath();
+        tctx.fill();
+        tctx.stroke();
+        return;
+      }
+
+      const { pattern } = getSnakeVisualStyle(cfg);
+      const accent = cfg.stripeColor || '#ffffff';
+      const inner = cfg.innerColor || '#60a5fa';
+      const dark = cfg.headColor || cfg.bodyColor || '#1e293b';
+
+      if (pattern === 1) {
+        // Glowing Polka Dots / Leopard Spots
+        const side = (segIdx % 2 === 0) ? -2.6 : 2.6;
+        tctx.fillStyle = accent;
+        tctx.beginPath();
+        tctx.arc(0, side, 2.3, 0, Math.PI * 2);
+        tctx.fill();
+        tctx.fillStyle = dark;
+        tctx.beginPath();
+        tctx.arc(0, -side, 1.5, 0, Math.PI * 2);
+        tctx.fill();
+      } else if (pattern === 2) {
+        // Bold Zebra / Tiger Cross-Bands
+        if (segIdx % 2 === 0) {
+          tctx.fillStyle = dark;
+          tctx.beginPath();
+          tctx.roundRect ? tctx.roundRect(-2.2, -6.2, 4.4, 12.4, 2) : tctx.rect(-2.2, -6.2, 4.4, 12.4);
+          tctx.fill();
+          tctx.fillStyle = accent;
+          tctx.fillRect(-0.8, -5.2, 1.6, 10.4);
+        }
+      } else if (pattern === 3) {
+        // Glowing Diamond Scales along spine
+        tctx.fillStyle = accent;
+        tctx.strokeStyle = dark;
+        tctx.lineWidth = 0.7;
+        tctx.beginPath();
+        tctx.moveTo(4.6, 0);
+        tctx.lineTo(0, -3.6);
+        tctx.lineTo(-4.6, 0);
+        tctx.lineTo(0, 3.6);
+        tctx.closePath();
+        tctx.fill();
+        tctx.stroke();
+      } else if (pattern === 4) {
+        // Sharp Wolf / Dragon Spine Triangles
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath();
+        tctx.moveTo(5.2, 0);
+        tctx.lineTo(-4.2, -4.8);
+        tctx.lineTo(-1.8, 0);
+        tctx.lineTo(-4.2, 4.8);
+        tctx.closePath();
+        tctx.fill();
+        tctx.fillStyle = inner;
+        tctx.beginPath();
+        tctx.moveTo(1.5, 0);
+        tctx.lineTo(-2.6, -2.2);
+        tctx.lineTo(-1.2, 0);
+        tctx.lineTo(-2.6, 2.2);
+        tctx.closePath();
+        tctx.fill();
+      } else if (pattern === 5) {
+        // Sleek Neon Rings / Beads
+        tctx.strokeStyle = accent;
+        tctx.lineWidth = 1.6;
+        tctx.beginPath();
+        tctx.arc(0, 0, 4.2, 0, Math.PI * 2);
+        tctx.stroke();
+      }
+    }
+
+    // SMOOTH ROUND SNAKE HEAD with 8 unique distinct styles!
+    function drawRoundSnakeHead(tctx, cfg) {
+      const { headStyle } = getSnakeVisualStyle(cfg);
+      const baseColor = cfg.headColor || cfg.bodyColor || '#2563eb';
+      const innerColor = cfg.innerColor || '#60a5fa';
+      const accentColor = cfg.stripeColor || '#ffffff';
+
+      // Soft head drop shadow
+      tctx.fillStyle = 'rgba(15, 23, 42, 0.16)';
+      tctx.beginPath();
+      tctx.arc(0.5, 1.5, 9.5, 0, Math.PI * 2);
+      tctx.fill();
+
+      // Back accessories (behind the round head)
+      if (headStyle === 'ears') {
+        tctx.fillStyle = baseColor;
+        tctx.beginPath();
+        tctx.moveTo(-2, -7.5); tctx.lineTo(-7.5, -13); tctx.lineTo(3, -8.2); tctx.closePath();
+        tctx.fill();
+        tctx.beginPath();
+        tctx.moveTo(-2, 7.5); tctx.lineTo(-7.5, 13); tctx.lineTo(3, 8.2); tctx.closePath();
+        tctx.fill();
+        tctx.fillStyle = innerColor;
+        tctx.beginPath();
+        tctx.moveTo(-1.5, -7.8); tctx.lineTo(-5.2, -10.8); tctx.lineTo(1.5, -8.1); tctx.closePath();
+        tctx.fill();
+        tctx.beginPath();
+        tctx.moveTo(-1.5, 7.8); tctx.lineTo(-5.2, 10.8); tctx.lineTo(1.5, 8.1); tctx.closePath();
+        tctx.fill();
+      } else if (headStyle === 'horns') {
+        tctx.fillStyle = accentColor;
+        tctx.strokeStyle = baseColor;
+        tctx.lineWidth = 1;
+        tctx.beginPath();
+        tctx.moveTo(-3, -6); tctx.lineTo(-10.5, -11.5); tctx.lineTo(0.5, -7.5); tctx.closePath();
+        tctx.fill(); tctx.stroke();
+        tctx.beginPath();
+        tctx.moveTo(-3, 6); tctx.lineTo(-10.5, 11.5); tctx.lineTo(0.5, 7.5); tctx.closePath();
+        tctx.fill(); tctx.stroke();
+      } else if (headStyle === 'antennae') {
+        tctx.strokeStyle = baseColor;
+        tctx.lineWidth = 1.6;
+        tctx.beginPath();
+        tctx.moveTo(4, -5); tctx.lineTo(11, -10);
+        tctx.moveTo(4, 5); tctx.lineTo(11, 10);
+        tctx.stroke();
+        tctx.fillStyle = accentColor;
+        tctx.beginPath();
+        tctx.arc(11.5, -10.3, 2.3, 0, Math.PI * 2);
+        tctx.arc(11.5, 10.3, 2.3, 0, Math.PI * 2);
+        tctx.fill();
+      } else if (headStyle === 'spikes') {
+        tctx.fillStyle = accentColor;
+        for (const sy of [-5, 0, 5]) {
+          tctx.beginPath();
+          tctx.moveTo(-6, sy - 2);
+          tctx.lineTo(-12.5, sy);
+          tctx.lineTo(-6, sy + 2);
+          tctx.closePath();
+          tctx.fill();
+        }
+      }
+
+      // Main Smooth ROUND Head
+      tctx.fillStyle = baseColor;
+      tctx.beginPath();
+      tctx.arc(0.5, 0, 9.2, 0, Math.PI * 2);
+      tctx.fill();
+
+      // Inner round highlight dome
+      tctx.fillStyle = innerColor;
+      tctx.beginPath();
+      tctx.arc(-0.5, 0, 6.4, 0, Math.PI * 2);
+      tctx.fill();
+
+      // Top / Front accessories
+      if (headStyle === 'visor') {
+        // Sleek glowing cyber visor across the round head
+        tctx.fillStyle = '#0f172a';
+        tctx.beginPath();
+        tctx.roundRect ? tctx.roundRect(1.2, -6.5, 5.8, 13, 3) : tctx.rect(1.2, -6.5, 5.8, 13);
+        tctx.fill();
+        tctx.fillStyle = accentColor;
+        tctx.beginPath();
+        tctx.roundRect ? tctx.roundRect(2.6, -5.2, 3, 10.4, 1.5) : tctx.rect(2.6, -5.2, 3, 10.4);
+        tctx.fill();
+      } else {
+        // Expressive round eyes with white glint
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath();
+        tctx.arc(4.2, -3.9, 2.7, 0, Math.PI * 2);
+        tctx.arc(4.2, 3.9, 2.7, 0, Math.PI * 2);
+        tctx.fill();
+
+        tctx.fillStyle = '#0f172a';
+        tctx.beginPath();
+        tctx.arc(5.1, -3.9, 1.4, 0, Math.PI * 2);
+        tctx.arc(5.1, 3.9, 1.4, 0, Math.PI * 2);
+        tctx.fill();
+
+        tctx.fillStyle = '#ffffff';
+        tctx.beginPath();
+        tctx.arc(4.6, -4.5, 0.55, 0, Math.PI * 2);
+        tctx.arc(4.6, 3.3, 0.55, 0, Math.PI * 2);
+        tctx.fill();
+      }
+
+      if (headStyle === 'gem') {
+        tctx.fillStyle = accentColor;
+        tctx.beginPath();
+        tctx.moveTo(1.5, 0); tctx.lineTo(-1.8, -2.5); tctx.lineTo(-4.8, 0); tctx.lineTo(-1.8, 2.5); tctx.closePath();
+        tctx.fill();
+      } else if (headStyle === 'crown') {
+        tctx.fillStyle = '#facc15';
+        tctx.strokeStyle = '#a16207';
+        tctx.lineWidth = 0.8;
+        tctx.beginPath();
+        tctx.moveTo(-4, -3.5); tctx.lineTo(-0.5, -2.2); tctx.lineTo(-2.5, 0);
+        tctx.lineTo(-0.5, 2.2); tctx.lineTo(-4, 3.5); tctx.lineTo(-5.5, 0); tctx.closePath();
+        tctx.fill(); tctx.stroke();
+      } else if (headStyle === 'halo') {
+        tctx.strokeStyle = accentColor;
+        tctx.lineWidth = 1.7;
+        tctx.beginPath();
+        tctx.arc(-2.5, 0, 5.2, 0, Math.PI * 2);
+        tctx.stroke();
+      }
+    }
+
+    // MINI LIVE SNAKE SHAPE PREVIEW: Shows exact curved body, unique pattern & round head before taking a snake!
     function renderSnakePreview(previewCanvas, cfg) {
       if (!previewCanvas || !cfg) return;
       if (cfg.id === 'golden_emperor' && typeof renderStartGoldenSnake === 'function') {
@@ -3826,34 +4063,25 @@
         pctx.restore();
       }
 
-      // Draw exact 4 layered body strokes (shadow, outer, inner, racing stripe)
-      strokeCurve(cfg.type === 'snake' ? 15 : 16, 'rgba(0, 0, 0, 0.09)', 1.5);
+      // Draw layered body strokes
+      strokeCurve(15, 'rgba(0, 0, 0, 0.09)', 1.5);
       strokeCurve(14, cfg.bodyColor || '#2563eb', 0);
       strokeCurve(8.5, cfg.innerColor || '#60a5fa', 0);
-      strokeCurve(2.5, cfg.stripeColor || '#ffffff', 0);
+      strokeCurve(2.2, cfg.stripeColor || '#ffffff', 0);
 
-      // Draw white spine triangles if Wolf / Dragon skin has them
-      if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
-        for (let i = 1; i < pts.length - 1; i++) {
-          const prev = pts[i - 1];
-          const next = pts[i + 1];
-          const ang = Math.atan2(next.y - prev.y, next.x - prev.x);
-          pctx.save();
-          pctx.translate(pts[i].x, pts[i].y);
-          pctx.rotate(ang);
-          pctx.fillStyle = '#ffffff';
-          pctx.beginPath();
-          pctx.moveTo(5.5, 0);
-          pctx.lineTo(-4.5, -5);
-          pctx.lineTo(-2, 0);
-          pctx.lineTo(-4.5, 5);
-          pctx.closePath();
-          pctx.fill();
-          pctx.restore();
-        }
+      // Draw unique body pattern along the preview curve
+      for (let i = 1; i < pts.length - 1; i++) {
+        const prev = pts[i - 1];
+        const next = pts[i + 1];
+        const ang = Math.atan2(next.y - prev.y, next.x - prev.x);
+        pctx.save();
+        pctx.translate(pts[i].x, pts[i].y);
+        pctx.rotate(ang);
+        drawSnakeBodyPatternPoint(pctx, cfg, i);
+        pctx.restore();
       }
 
-      // Draw exact Head Shape at the front of the preview snake
+      // Draw Round Head Shape at the front of the preview snake
       const head = pts[pts.length - 1];
       const neck = pts[pts.length - 2];
       const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x) * 0.45;
@@ -3861,112 +4089,7 @@
       pctx.save();
       pctx.translate(head.x, head.y);
       pctx.rotate(headAngle);
-
-      if (cfg.id === 'golden_emperor') {
-        // Royal Golden Dragon-Snake Head with horns & diamond forehead crest
-        pctx.fillStyle = '#fde047';
-        pctx.strokeStyle = '#92400e';
-        pctx.lineWidth = 1;
-        pctx.beginPath();
-        pctx.moveTo(-3, -5); pctx.lineTo(-10, -10.5); pctx.lineTo(0, -6.5); pctx.closePath();
-        pctx.fill(); pctx.stroke();
-        pctx.beginPath();
-        pctx.moveTo(-3, 5); pctx.lineTo(-10, 10.5); pctx.lineTo(0, 6.5); pctx.closePath();
-        pctx.fill(); pctx.stroke();
-
-        pctx.fillStyle = '#b45309';
-        pctx.beginPath();
-        pctx.moveTo(12, 0);
-        pctx.quadraticCurveTo(7, -8.5, -6, -6.8);
-        pctx.quadraticCurveTo(-9, 0, -6, 6.8);
-        pctx.quadraticCurveTo(7, 8.5, 12, 0);
-        pctx.closePath();
-        pctx.fill();
-
-        pctx.fillStyle = '#facc15';
-        pctx.beginPath();
-        pctx.moveTo(9.5, 0);
-        pctx.quadraticCurveTo(5, -5.5, -4, -4.2);
-        pctx.quadraticCurveTo(-6, 0, -4, 4.2);
-        pctx.quadraticCurveTo(5, 5.5, 9.5, 0);
-        pctx.closePath();
-        pctx.fill();
-
-        pctx.fillStyle = '#ffffff';
-        pctx.beginPath();
-        pctx.moveTo(2.5, 0); pctx.lineTo(-1, -2.3); pctx.lineTo(-3.8, 0); pctx.lineTo(-1, 2.3); pctx.closePath();
-        pctx.fill();
-
-        pctx.fillStyle = '#ffffff';
-        pctx.beginPath();
-        pctx.arc(4.5, -3.7, 2.1, 0, Math.PI * 2);
-        pctx.arc(4.5, 3.7, 2.1, 0, Math.PI * 2);
-        pctx.fill();
-        pctx.fillStyle = '#0f172a';
-        pctx.beginPath();
-        pctx.arc(5.2, -3.7, 1.05, 0, Math.PI * 2);
-        pctx.arc(5.2, 3.7, 1.05, 0, Math.PI * 2);
-        pctx.fill();
-      } else if (cfg.type === 'snake') {
-        pctx.fillStyle = cfg.headColor || cfg.bodyColor || '#16a34a';
-        pctx.beginPath();
-        pctx.ellipse(2, 0, 9.5, 7.8, 0, 0, Math.PI * 2);
-        pctx.fill();
-
-        pctx.fillStyle = '#ffffff';
-        pctx.beginPath();
-        pctx.arc(4, -4, 2.6, 0, Math.PI * 2);
-        pctx.arc(4, 4, 2.6, 0, Math.PI * 2);
-        pctx.fill();
-
-        pctx.fillStyle = '#0f172a';
-        pctx.beginPath();
-        pctx.arc(5, -4, 1.35, 0, Math.PI * 2);
-        pctx.arc(5, 4, 1.35, 0, Math.PI * 2);
-        pctx.fill();
-      } else if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
-        // Wolf Hovercraft shape with ears
-        pctx.fillStyle = '#1e3a8a';
-        pctx.beginPath();
-        if (pctx.roundRect) pctx.roundRect(-9, -7, 20, 14, [4, 8, 8, 4]);
-        else pctx.rect(-9, -7, 20, 14);
-        pctx.fill();
-
-        pctx.fillStyle = '#2563eb';
-        pctx.beginPath();
-        if (pctx.roundRect) pctx.roundRect(-7, -5, 16, 10, [3, 6, 6, 3]);
-        else pctx.rect(-7, -5, 16, 10);
-        pctx.fill();
-
-        // Pointed wolf ears
-        pctx.fillStyle = '#1e3a8a';
-        pctx.beginPath();
-        pctx.moveTo(-2, -7); pctx.lineTo(2, -11); pctx.lineTo(4, -7);
-        pctx.moveTo(-2, 7);  pctx.lineTo(2, 11);  pctx.lineTo(4, 7);
-        pctx.closePath();
-        pctx.fill();
-      } else {
-        // Sleek Hovercar chassis shape
-        pctx.fillStyle = cfg.headColor || cfg.bodyColor || '#7c3aed';
-        pctx.beginPath();
-        if (pctx.roundRect) pctx.roundRect(-9, -7, 20, 14, [4, 8, 8, 4]);
-        else pctx.rect(-9, -7, 20, 14);
-        pctx.fill();
-
-        pctx.fillStyle = cfg.innerColor || '#a78bfa';
-        pctx.beginPath();
-        if (pctx.roundRect) pctx.roundRect(-6, -4.5, 13, 9, [2, 5, 5, 2]);
-        else pctx.rect(-6, -4.5, 13, 9);
-        pctx.fill();
-
-        // Windshield
-        pctx.fillStyle = '#0f172a';
-        pctx.beginPath();
-        if (pctx.roundRect) pctx.roundRect(1, -4, 5, 8, 2);
-        else pctx.rect(1, -4, 5, 8);
-        pctx.fill();
-      }
-
+      drawRoundSnakeHead(pctx, cfg);
       pctx.restore();
     }
 
@@ -6193,33 +6316,26 @@
         renderPathWithWraps(2.4, cfg.stripeColor);
       }
 
-      // WHITE TRIANGLES / GOLDEN DIAMOND SCALES ON BACK (Smooth tangent rotation along curve bends)
-      if (cfg.id === 'blue_wolf' || cfg.id === 'golden_emperor' || cfg.hasWolfTriangles) {
-        for (let i = segments.length - 1; i >= 0; i--) {
+      // UNIQUE BODY PATTERNS ALONG BACK (Polka dots, Zebra bands, Diamond scales, Wolf spines, Neon rings)
+      const visualStyle = getSnakeVisualStyle(cfg);
+      if (cfg.id === 'golden_emperor' || visualStyle.pattern > 0) {
+        for (let i = segments.length - 1; i >= 1; i--) {
           const seg = segments[i];
           const cx = seg.x * GRID_SIZE + GRID_SIZE / 2;
           const cy = seg.y * GRID_SIZE + GRID_SIZE / 2;
 
           let segAngle = 0;
-          if (i === 0 && segments.length > 1) {
-            let adx = segments[0].x - segments[1].x;
-            let ady = segments[0].y - segments[1].y;
-            if (Math.abs(adx) > 1.5) adx = -Math.sign(adx);
-            if (Math.abs(ady) > 1.5) ady = -Math.sign(ady);
-            segAngle = Math.atan2(ady, adx);
-          } else if (i > 0 && i < segments.length - 1) {
+          if (i > 0 && i < segments.length - 1) {
             let adx1 = segments[i - 1].x - seg.x;
             let ady1 = segments[i - 1].y - seg.y;
             if (Math.abs(adx1) > 1.5) adx1 = -Math.sign(adx1);
             if (Math.abs(ady1) > 1.5) ady1 = -Math.sign(ady1);
-
             let adx2 = seg.x - segments[i + 1].x;
             let ady2 = seg.y - segments[i + 1].y;
             if (Math.abs(adx2) > 1.5) adx2 = -Math.sign(adx2);
             if (Math.abs(ady2) > 1.5) ady2 = -Math.sign(ady2);
-
             segAngle = Math.atan2(ady1 + ady2, adx1 + adx2);
-          } else if (i > 0) {
+          } else {
             let adx = segments[i - 1].x - seg.x;
             let ady = segments[i - 1].y - seg.y;
             if (Math.abs(adx) > 1.5) adx = -Math.sign(adx);
@@ -6230,51 +6346,13 @@
           ctx.save();
           ctx.translate(cx, cy);
           ctx.rotate(segAngle);
-
-          if (cfg.id === 'golden_emperor') {
-            // Exact cream-gold diamond crest scales matching the 3rd-page golden snake
-            ctx.fillStyle = '#fef9c3';
-            ctx.strokeStyle = '#b45309';
-            ctx.lineWidth = 0.9;
-            ctx.beginPath();
-            ctx.moveTo(5, 0);
-            ctx.lineTo(-3.5, -4.2);
-            ctx.lineTo(-1.2, 0);
-            ctx.lineTo(-3.5, 4.2);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-          } else {
-            // Bold White Triangle on Wolf's Back
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
-            ctx.shadowBlur = 3;
-            ctx.beginPath();
-            ctx.moveTo(5.5, 0);       // Forward sharp tip
-            ctx.lineTo(-4.5, -5.2);   // Left wing
-            ctx.lineTo(-2, 0);        // Inner notch
-            ctx.lineTo(-4.5, 5.2);    // Right wing
-            ctx.closePath();
-            ctx.fill();
-
-            // Small frost cyan accent in triangle core
-            ctx.shadowBlur = 0;
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.moveTo(1.5, 0);
-            ctx.lineTo(-3, -2.5);
-            ctx.lineTo(-1.5, 0);
-            ctx.lineTo(-3, 2.5);
-            ctx.closePath();
-            ctx.fill();
-          }
-
+          drawSnakeBodyPatternPoint(ctx, cfg, i);
           ctx.restore();
         }
       }
     }
 
-    // DRAW HEAD (Wheel-less Hovercar or Snake Head)
+    // DRAW HEAD (Smooth Round Head with unique distinct accessories, plus Golden Emperor)
     function drawHead(cx, cy, dirX, dirY, cfg) {
       ctx.save();
       ctx.translate(cx, cy);
@@ -6283,7 +6361,7 @@
       ctx.rotate(angle);
 
       if (cfg.id === 'golden_emperor') {
-        // Royal Golden Dragon-Snake Head with horns & diamond forehead crest (in-game)
+        // Royal Golden Dragon-Snake Round Head with horns & diamond forehead crest (in-game)
         ctx.fillStyle = '#fde047';
         ctx.strokeStyle = '#92400e';
         ctx.lineWidth = 1;
@@ -6296,20 +6374,12 @@
 
         ctx.fillStyle = '#b45309';
         ctx.beginPath();
-        ctx.moveTo(12, 0);
-        ctx.quadraticCurveTo(7, -8.5, -6, -6.8);
-        ctx.quadraticCurveTo(-9, 0, -6, 6.8);
-        ctx.quadraticCurveTo(7, 8.5, 12, 0);
-        ctx.closePath();
+        ctx.arc(0.5, 0, 9.6, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#facc15';
         ctx.beginPath();
-        ctx.moveTo(9.5, 0);
-        ctx.quadraticCurveTo(5, -5.5, -4, -4.2);
-        ctx.quadraticCurveTo(-6, 0, -4, 4.2);
-        ctx.quadraticCurveTo(5, 5.5, 9.5, 0);
-        ctx.closePath();
+        ctx.arc(0, 0, 6.8, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
@@ -6319,239 +6389,16 @@
 
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(4.5, -3.7, 2.1, 0, Math.PI * 2);
-        ctx.arc(4.5, 3.7, 2.1, 0, Math.PI * 2);
+        ctx.arc(4.5, -3.7, 2.2, 0, Math.PI * 2);
+        ctx.arc(4.5, 3.7, 2.2, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#0f172a';
         ctx.beginPath();
-        ctx.arc(5.2, -3.7, 1.05, 0, Math.PI * 2);
-        ctx.arc(5.2, 3.7, 1.05, 0, Math.PI * 2);
+        ctx.arc(5.2, -3.7, 1.1, 0, Math.PI * 2);
+        ctx.arc(5.2, 3.7, 1.1, 0, Math.PI * 2);
         ctx.fill();
-      } else if (cfg.type === 'snake') {
-        ctx.fillStyle = cfg.headColor;
-        ctx.beginPath();
-        ctx.ellipse(1, 0, 8.5, 7, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(3, -4, 2.5, 0, Math.PI * 2);
-        ctx.arc(3, 4, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(4, -4, 1.3, 0, Math.PI * 2);
-        ctx.arc(4, 4, 1.3, 0, Math.PI * 2);
-        ctx.fill();
-        // Snake tongue cancelled per user request
-      } else if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
-        // --- 🐺 SPECIAL BLUE WOLF HOVERCRAFT ---
-        const isSelfBoosting = (cfg.id === currentSkin && isBoosting);
-
-        // Dual Icy / Nitro Thrusters
-        const thrusterLen = isSelfBoosting ? -24 : -15;
-        const thrusterGrad = ctx.createLinearGradient(-8, 0, thrusterLen, 0);
-        thrusterGrad.addColorStop(0, isSelfBoosting ? '#f97316' : '#67e8f9');
-        thrusterGrad.addColorStop(1, 'rgba(14, 165, 233, 0)');
-        ctx.fillStyle = thrusterGrad;
-        ctx.beginPath();
-        ctx.moveTo(-8, -4.5);
-        ctx.lineTo(thrusterLen, -2.5);
-        ctx.lineTo(-8, -1);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(-8, 1);
-        ctx.lineTo(thrusterLen, 2.5);
-        ctx.lineTo(-8, 4.5);
-        ctx.closePath();
-        ctx.fill();
-
-        // Hover Shadow
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.2)';
-        ctx.beginPath();
-        ctx.roundRect(-9, -6, 19, 14, [4, 8, 8, 4]);
-        ctx.fill();
-
-        // Main Wolf Chassis (Deep Midnight Alpha Blue)
-        ctx.fillStyle = '#1e3a8a';
-        ctx.beginPath();
-        ctx.roundRect(-9, -6.5, 19, 13, [4, 8, 8, 4]);
-        ctx.fill();
-
-        // Wolf Aerodynamic Hood (Electric Cobalt)
-        ctx.fillStyle = '#2563eb';
-        ctx.beginPath();
-        ctx.roundRect(-7, -5, 16, 10, [3, 6, 6, 3]);
-        ctx.fill();
-
-        // Pointed Wolf Ears / Aero Fin Spikes on Roof
-        ctx.fillStyle = '#1e3a8a';
-        ctx.beginPath();
-        ctx.moveTo(-2, -6.5);
-        ctx.lineTo(2, -10.5);
-        ctx.lineTo(4, -6.5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.moveTo(-0.5, -6.5);
-        ctx.lineTo(2, -9);
-        ctx.lineTo(3, -6.5);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle = '#1e3a8a';
-        ctx.beginPath();
-        ctx.moveTo(-2, 6.5);
-        ctx.lineTo(2, 10.5);
-        ctx.lineTo(4, 6.5);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.moveTo(-0.5, 6.5);
-        ctx.lineTo(2, 9);
-        ctx.lineTo(3, 6.5);
-        ctx.closePath();
-        ctx.fill();
-
-        // Silver Moonlight Spine Fur Stripe
-        ctx.fillStyle = '#f0f9ff';
-        ctx.fillRect(-9, -1.2, 19, 2.4);
-
-        // White Triangles on Wolf's Back
-        ctx.fillStyle = '#ffffff';
-        // Triangle 1 (rear of back)
-        ctx.beginPath();
-        ctx.moveTo(-4, 0);
-        ctx.lineTo(-8.5, -4);
-        ctx.lineTo(-6.5, 0);
-        ctx.lineTo(-8.5, 4);
-        ctx.closePath();
-        ctx.fill();
-
-        // Triangle 2 (middle of back)
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-4, -3.5);
-        ctx.lineTo(-2.2, 0);
-        ctx.lineTo(-4, 3.5);
-        ctx.closePath();
-        ctx.fill();
-
-        // White Wolf Fur Triangles on Side Flares
-        ctx.beginPath();
-        ctx.moveTo(-5.5, -6.5);
-        ctx.lineTo(-3.5, -8.8);
-        ctx.lineTo(-1.5, -6.5);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(-5.5, 6.5);
-        ctx.lineTo(-3.5, 8.8);
-        ctx.lineTo(-1.5, 6.5);
-        ctx.closePath();
-        ctx.fill();
-
-        // Cockpit Glass / Frost Visor
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.roundRect(-4, -4, 9, 8, 2);
-        ctx.fill();
-
-        ctx.fillStyle = isSelfBoosting ? '#f97316' : '#38bdf8';
-        ctx.beginPath();
-        ctx.roundRect(-2.5, -3, 6, 6, 1.5);
-        ctx.fill();
-
-        // Slanted Predatory Wolf Eyes
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.ellipse(7, -3.8, 2.2, 1.2, -Math.PI / 6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(7, 3.8, 2.2, 1.2, Math.PI / 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pupil Center
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(6.8, -4.3, 1, 1);
-        ctx.fillRect(6.8, 3.3, 1, 1);
-
-        // Wolf Snout & Silver Fangs at front tip
-        ctx.fillStyle = '#f8fafc';
-        ctx.beginPath();
-        ctx.moveTo(9.5, -2);
-        ctx.lineTo(11, -1);
-        ctx.lineTo(9.5, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(9.5, 0);
-        ctx.lineTo(11, 1);
-        ctx.lineTo(9.5, 2);
-        ctx.closePath();
-        ctx.fill();
-        // Car lights cancelled per user request
       } else {
-        // Rear Ion Thruster (Wheel-less Hovercar)
-        const isSelfBoosting = (cfg.id === currentSkin && isBoosting);
-        const thrusterLen = isSelfBoosting ? -22 : -14;
-        const thrusterGrad = ctx.createLinearGradient(-8, 0, thrusterLen, 0);
-        thrusterGrad.addColorStop(0, isSelfBoosting ? '#f97316' : '#38bdf8');
-        thrusterGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
-        ctx.fillStyle = thrusterGrad;
-        ctx.beginPath();
-        ctx.moveTo(-8, -4);
-        ctx.lineTo(thrusterLen, -2.5);
-        ctx.lineTo(-8, -1);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(-8, 1);
-        ctx.lineTo(thrusterLen, 2.5);
-        ctx.lineTo(-8, 4);
-        ctx.closePath();
-        ctx.fill();
-
-        // Hover Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.12)';
-        ctx.beginPath();
-        ctx.roundRect(-8, -5.5, 17, 13, [4, 7, 7, 4]);
-        ctx.fill();
-
-        // Hover Chassis Body
-        ctx.fillStyle = cfg.headColor;
-        ctx.beginPath();
-        ctx.roundRect(-8, -6.5, 17, 13, [4, 7, 7, 4]);
-        ctx.fill();
-
-        // Aerodynamic hood
-        ctx.fillStyle = cfg.bodyColor;
-        ctx.beginPath();
-        ctx.roundRect(-7, -5, 15, 10, [3, 5, 5, 3]);
-        ctx.fill();
-
-        // Racing Center Stripe
-        ctx.fillStyle = cfg.stripeColor;
-        ctx.fillRect(-8, -1.2, 17, 2.4);
-
-        // Cockpit Glass Windshield
-        ctx.fillStyle = '#1e1b4b';
-        ctx.beginPath();
-        ctx.roundRect(-4, -4, 9, 8, 2);
-        ctx.fill();
-
-        ctx.fillStyle = isSelfBoosting ? '#f97316' : '#38bdf8';
-        ctx.beginPath();
-        ctx.roundRect(-2.5, -3, 6, 6, 1.5);
-        ctx.fill();
-        // Car headlights and taillights cancelled per user request
+        drawRoundSnakeHead(ctx, cfg);
       }
 
       ctx.restore();
