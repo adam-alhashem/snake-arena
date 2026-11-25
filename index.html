@@ -553,6 +553,14 @@
             <span id="welcomeFoodLabel" class="text-[10px] font-bold text-emerald-700">Lv. 1 • Classic Berry</span>
           </div>
         </button>
+
+        <button id="btnWelcomeArrowFactory" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 border-2 border-amber-300 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+          <span class="w-4 h-4 rounded-md bg-amber-500 text-white text-[10px] font-black flex items-center justify-center shrink-0">→</span>
+          <div class="flex flex-col text-start leading-tight">
+            <span class="text-sm font-black text-slate-900">Arrow Factory</span>
+            <span id="welcomeFactoryLabel" class="text-[10px] font-bold text-amber-700">0 Ready • Lv. 1</span>
+          </div>
+        </button>
       </div>
     </div>
 
@@ -705,6 +713,68 @@
       <button id="btnSpinNow" type="button" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:brightness-110 text-white text-base font-black shadow-md active:scale-95 transition-all cursor-pointer">
         Spin Now
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- ARROW FACTORY MODAL (Craft, Auto-Produce, Upgrade & Arrow Styles)         -->
+  <!-- ========================================================================= -->
+  <div id="arrowFactoryModal" class="fixed inset-0 z-[67] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-black tracking-tight leading-tight">Arrow Factory</h2>
+          <p id="factoryHeaderSub" class="text-xs font-semibold text-amber-300">Lv. 1 • Crafts 1 arrow every 60s</p>
+        </div>
+        <button id="btnCloseArrowFactory" type="button" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center cursor-pointer" aria-label="Close Arrow Factory">&times;</button>
+      </div>
+
+      <!-- Animated Conveyor Belt Canvas -->
+      <div class="relative bg-slate-800 border-b border-slate-700">
+        <canvas id="arrowFactoryCanvas" width="560" height="110" class="w-full h-[96px] sm:h-[110px] block"></canvas>
+        <div id="factoryNextTimerBadge" class="absolute top-2 right-3 px-2.5 py-0.5 rounded-full bg-slate-900/80 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/30">
+          Next arrow: 60s
+        </div>
+      </div>
+
+      <!-- Factory Stats & Controls -->
+      <div class="p-4 sm:p-5 flex flex-col gap-3.5 overflow-y-auto">
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Arrows Ready</div>
+            <div id="factoryStoredCount" class="text-base font-black text-amber-600">0 / 10</div>
+          </div>
+          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Factory Level</div>
+            <div id="factoryLevelStat" class="text-base font-black text-slate-900">Lv. 1</div>
+          </div>
+          <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Your Food</div>
+            <div id="factoryFoodStat" class="text-base font-black text-emerald-600">0</div>
+          </div>
+        </div>
+
+        <!-- Craft & Upgrade Action Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <button id="btnCraftArrowNow" type="button" class="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
+            Craft +1 Arrow (150 Food)
+          </button>
+          <button id="btnUpgradeFactory" type="button" class="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
+            Upgrade Factory (1,000 Food)
+          </button>
+        </div>
+
+        <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">Arrows in your factory automatically load into your quiver when you start a match (up to 10).</p>
+
+        <!-- Arrow Style Selector -->
+        <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
+          <div class="text-xs font-black uppercase tracking-wider text-slate-500">Arrow Style (Unlocked by Factory Level)</div>
+          <div id="factoryArrowStylesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <!-- Populated by renderArrowFactoryUI() -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3972,6 +4042,7 @@
     if (btnSpinNow) btnSpinNow.addEventListener('click', spinWheelNow);
     updateSpinButtonLabel();
     setInterval(updateSpinButtonLabel, 1000);
+
     }
 
     function addFoodBank(amount) {
@@ -6619,6 +6690,13 @@
         spawnShieldTimer += pendingSpinExtraShield;
         pendingSpinExtraShield = 0;
       }
+      // Load crafted arrows from Arrow Factory into starting quiver (up to MAX_PLAYER_ARROWS)
+      if (typeof consumeFactoryArrowsForMatch === 'function') {
+        const loadedFromFactory = consumeFactoryArrowsForMatch(MAX_PLAYER_ARROWS - playerArrowAmmo);
+        if (loadedFromFactory > 0) {
+          playerArrowAmmo = Math.min(MAX_PLAYER_ARROWS, playerArrowAmmo + loadedFromFactory);
+        }
+      }
       floatingTexts.push({
         x: snake[0].x * GRID_SIZE + GRID_SIZE / 2,
         y: snake[0].y * GRID_SIZE + GRID_SIZE / 2,
@@ -7685,6 +7763,7 @@
       playerArrowAmmo--;
       playSFX('shoot');
       const pSkin = SKINS[currentSkin] || SKINS['blue_wolf'] || SKINS_LIST[0];
+      const factoryArrowCol = (typeof getActiveArrowStyleColor === 'function') ? getActiveArrowStyleColor() : null;
       arrows.push({
         x: startX,
         y: startY,
@@ -7692,7 +7771,7 @@
         dy: dy,
         ownerId: 'player',
         ownerName: 'You',
-        color: (pSkin && pSkin.bodyColor) ? pSkin.bodyColor : '#f59e0b',
+        color: factoryArrowCol || ((pSkin && pSkin.bodyColor) ? pSkin.bodyColor : '#f59e0b'),
         isPlayer: true,
         life: 24
       });
@@ -9546,6 +9625,294 @@
     if (btnSpinNow) btnSpinNow.addEventListener('click', spinWheelNow);
     updateSpinButtonLabel();
     setInterval(updateSpinButtonLabel, 1000);
+
+    // =========================================================================
+    // ARROW FACTORY SYSTEM (Auto-Production, Instant Craft, Upgrades & Styles)
+    // =========================================================================
+    const FACTORY_LEVELS = [
+      { level: 1, intervalSec: 60, cap: 10, upgradeCost: 1000 },
+      { level: 2, intervalSec: 45, cap: 15, upgradeCost: 2500 },
+      { level: 3, intervalSec: 30, cap: 25, upgradeCost: 6000 },
+      { level: 4, intervalSec: 20, cap: 35, upgradeCost: 15000 },
+      { level: 5, intervalSec: 12, cap: 50, upgradeCost: 0 }
+    ];
+    const ARROW_STYLES = [
+      { id: 'gold',   level: 1, name: 'Classic Gold', color: '#f59e0b' },
+      { id: 'fire',   level: 2, name: 'Fire Flame',   color: '#ef4444' },
+      { id: 'frost',  level: 3, name: 'Ice Frost',    color: '#06b6d4' },
+      { id: 'void',   level: 4, name: 'Void Plasma',  color: '#a855f7' },
+      { id: 'solar',  level: 5, name: 'Solar Beam',   color: '#eab308' }
+    ];
+
+    let arrowFactoryState = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeArrowFactory_v1') || 'null');
+        if (s && typeof s === 'object') return s;
+      } catch (e) {}
+      return { level: 1, stored: 2, lastTickAt: Date.now(), styleId: 'gold' };
+    })();
+
+    function saveArrowFactoryState() {
+      try { localStorage.setItem('snakeArrowFactory_v1', JSON.stringify(arrowFactoryState)); } catch (e) {}
+    }
+
+    function getFactoryConfig() {
+      return FACTORY_LEVELS[Math.min(Math.max(0, (arrowFactoryState.level || 1) - 1), FACTORY_LEVELS.length - 1)];
+    }
+
+    function getActiveArrowStyleColor() {
+      const st = ARROW_STYLES.find(a => a.id === arrowFactoryState.styleId && a.level <= (arrowFactoryState.level || 1));
+      return st ? st.color : '#f59e0b';
+    }
+
+    function tickArrowFactoryProduction() {
+      const cfg = getFactoryConfig();
+      const now = Date.now();
+      if (!arrowFactoryState.lastTickAt) arrowFactoryState.lastTickAt = now;
+      if (arrowFactoryState.stored >= cfg.cap) {
+        arrowFactoryState.lastTickAt = now;
+        return;
+      }
+      const elapsedSec = (now - arrowFactoryState.lastTickAt) / 1000;
+      if (elapsedSec >= cfg.intervalSec) {
+        const produced = Math.floor(elapsedSec / cfg.intervalSec);
+        arrowFactoryState.stored = Math.min(cfg.cap, (arrowFactoryState.stored || 0) + produced);
+        arrowFactoryState.lastTickAt += produced * cfg.intervalSec * 1000;
+        if (arrowFactoryState.stored >= cfg.cap) arrowFactoryState.lastTickAt = now;
+        saveArrowFactoryState();
+      }
+    }
+
+    function consumeFactoryArrowsForMatch(maxNeeded) {
+      tickArrowFactoryProduction();
+      if (maxNeeded <= 0 || (arrowFactoryState.stored || 0) <= 0) return 0;
+      const take = Math.min(maxNeeded, arrowFactoryState.stored);
+      arrowFactoryState.stored -= take;
+      arrowFactoryState.lastTickAt = Date.now();
+      saveArrowFactoryState();
+      updateArrowFactoryLobbyBadge();
+      return take;
+    }
+
+    function updateArrowFactoryLobbyBadge() {
+      tickArrowFactoryProduction();
+      const cfg = getFactoryConfig();
+      const lbl = document.getElementById('welcomeFactoryLabel');
+      if (lbl) lbl.textContent = `${arrowFactoryState.stored} Ready • Lv. ${cfg.level}`;
+    }
+
+    function renderArrowFactoryUI() {
+      tickArrowFactoryProduction();
+      const cfg = getFactoryConfig();
+      updateArrowFactoryLobbyBadge();
+
+      const sub = document.getElementById('factoryHeaderSub');
+      const storedEl = document.getElementById('factoryStoredCount');
+      const lvEl = document.getElementById('factoryLevelStat');
+      const foodEl = document.getElementById('factoryFoodStat');
+      const timerBadge = document.getElementById('factoryNextTimerBadge');
+      const btnCraft = document.getElementById('btnCraftArrowNow');
+      const btnUpg = document.getElementById('btnUpgradeFactory');
+      const stylesGrid = document.getElementById('factoryArrowStylesGrid');
+
+      if (sub) sub.textContent = `Lv. ${cfg.level} • Crafts 1 arrow every ${cfg.intervalSec}s (Max ${cfg.cap})`;
+      if (storedEl) storedEl.textContent = `${arrowFactoryState.stored} / ${cfg.cap}`;
+      if (lvEl) lvEl.textContent = `Lv. ${cfg.level}`;
+      if (foodEl) foodEl.textContent = foodBank.toLocaleString();
+
+      if (timerBadge) {
+        if (arrowFactoryState.stored >= cfg.cap) {
+          timerBadge.textContent = 'Storage Full';
+        } else {
+          const rem = Math.max(1, Math.ceil(cfg.intervalSec - (Date.now() - arrowFactoryState.lastTickAt) / 1000));
+          timerBadge.textContent = `Next arrow: ${rem}s`;
+        }
+      }
+
+      if (btnCraft) {
+        const full = arrowFactoryState.stored >= cfg.cap;
+        const canCraft = !full && foodBank >= 150;
+        btnCraft.disabled = !canCraft;
+        btnCraft.textContent = full ? 'Storage Full' : 'Craft +1 Arrow (150 Food)';
+        btnCraft.className = canCraft
+          ? 'py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
+          : 'py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
+      }
+
+      if (btnUpg) {
+        if (cfg.upgradeCost <= 0) {
+          btnUpg.disabled = true;
+          btnUpg.textContent = 'Max Factory Level';
+          btnUpg.className = 'py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-700 text-xs sm:text-sm font-black cursor-default';
+        } else {
+          const canUpg = foodBank >= cfg.upgradeCost;
+          btnUpg.disabled = !canUpg;
+          btnUpg.textContent = `Upgrade to Lv.${cfg.level + 1} (${cfg.upgradeCost.toLocaleString()} Food)`;
+          btnUpg.className = canUpg
+            ? 'py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
+            : 'py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
+        }
+      }
+
+      if (stylesGrid) {
+        stylesGrid.innerHTML = '';
+        ARROW_STYLES.forEach(st => {
+          const unlocked = st.level <= cfg.level;
+          const active = st.id === arrowFactoryState.styleId;
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.disabled = !unlocked;
+          b.className = `px-3 py-2 rounded-xl border-2 text-xs font-extrabold flex items-center gap-2 transition-all ${
+            active
+              ? 'border-slate-900 bg-slate-900 text-white shadow-sm'
+              : unlocked
+                ? 'border-slate-200 bg-white hover:border-amber-400 text-slate-800 cursor-pointer'
+                : 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed opacity-70'
+          }`;
+          const sw = document.createElement('span');
+          sw.className = 'w-3 h-3 rounded-full shrink-0';
+          sw.style.backgroundColor = st.color;
+          const tx = document.createElement('span');
+          tx.textContent = unlocked ? st.name : `Lv.${st.level} ${st.name}`;
+          b.appendChild(sw);
+          b.appendChild(tx);
+          if (unlocked) {
+            b.addEventListener('click', () => {
+              arrowFactoryState.styleId = st.id;
+              saveArrowFactoryState();
+              renderArrowFactoryUI();
+              if (typeof playSFX === 'function') playSFX('eat');
+            });
+          }
+          stylesGrid.appendChild(b);
+        });
+      }
+    }
+
+    let factoryRafId = null;
+    function startFactoryConveyorLoop() {
+      if (factoryRafId) return;
+      const fc = document.getElementById('arrowFactoryCanvas');
+      if (!fc) return;
+      const fctx = fc.getContext('2d');
+      if (!fctx) return;
+
+      function frame() {
+        const m = document.getElementById('arrowFactoryModal');
+        if (!m || m.classList.contains('hidden')) {
+          factoryRafId = null;
+          return;
+        }
+        const now = Date.now();
+        const w = fc.width;
+        const h = fc.height;
+        const arrowCol = getActiveArrowStyleColor();
+
+        fctx.fillStyle = '#1e293b';
+        fctx.fillRect(0, 0, w, h);
+
+        // Conveyor belt track
+        fctx.fillStyle = '#334155';
+        fctx.fillRect(0, h - 32, w, 22);
+        const offset = (now * 0.06) % 28;
+        fctx.fillStyle = '#475569';
+        for (let x = -28 + offset; x < w + 28; x += 28) {
+          fctx.fillRect(x, h - 30, 12, 18);
+        }
+
+        // Moving crafted arrows riding the belt
+        const arrowOffset = (now * 0.06) % 110;
+        for (let x = -60 + arrowOffset; x < w + 60; x += 110) {
+          fctx.save();
+          fctx.translate(x, h - 46);
+          fctx.strokeStyle = arrowCol;
+          fctx.lineWidth = 3.5;
+          fctx.lineCap = 'round';
+          fctx.beginPath();
+          fctx.moveTo(-22, 0);
+          fctx.lineTo(18, 0);
+          fctx.stroke();
+
+          fctx.fillStyle = '#ffffff';
+          fctx.beginPath();
+          fctx.moveTo(24, 0);
+          fctx.lineTo(12, -6);
+          fctx.lineTo(15, 0);
+          fctx.lineTo(12, 6);
+          fctx.closePath();
+          fctx.fill();
+          fctx.restore();
+        }
+
+        // Factory Press Machine silhouette on left
+        fctx.fillStyle = '#0f172a';
+        fctx.fillRect(0, 0, 56, h - 28);
+        fctx.fillStyle = arrowCol;
+        fctx.fillRect(46, 18, 6, 48);
+
+        factoryRafId = requestAnimationFrame(frame);
+      }
+      factoryRafId = requestAnimationFrame(frame);
+    }
+
+    const btnWelcomeArrowFactory = document.getElementById('btnWelcomeArrowFactory');
+    const arrowFactoryModal = document.getElementById('arrowFactoryModal');
+    const btnCloseArrowFactory = document.getElementById('btnCloseArrowFactory');
+    const btnCraftArrowNow = document.getElementById('btnCraftArrowNow');
+    const btnUpgradeFactory = document.getElementById('btnUpgradeFactory');
+
+    if (btnWelcomeArrowFactory) {
+      btnWelcomeArrowFactory.addEventListener('click', () => {
+        if (arrowFactoryModal) arrowFactoryModal.classList.remove('hidden');
+        renderArrowFactoryUI();
+        startFactoryConveyorLoop();
+      });
+    }
+    if (btnCloseArrowFactory) {
+      btnCloseArrowFactory.addEventListener('click', () => {
+        if (arrowFactoryModal) arrowFactoryModal.classList.add('hidden');
+      });
+    }
+    if (arrowFactoryModal) {
+      arrowFactoryModal.addEventListener('click', (e) => {
+        if (e.target === arrowFactoryModal) arrowFactoryModal.classList.add('hidden');
+      });
+    }
+    if (btnCraftArrowNow) {
+      btnCraftArrowNow.addEventListener('click', () => {
+        const cfg = getFactoryConfig();
+        if (arrowFactoryState.stored >= cfg.cap || foodBank < 150) return;
+        foodBank -= 150;
+        arrowFactoryState.stored++;
+        saveFoodBank();
+        saveArrowFactoryState();
+        renderArrowFactoryUI();
+        const msg = document.getElementById('factoryStatusMsg');
+        if (msg) msg.textContent = `Crafted +1 Arrow! (${arrowFactoryState.stored}/${cfg.cap} ready for battle)`;
+        if (typeof playSFX === 'function') playSFX('eat');
+      });
+    }
+    if (btnUpgradeFactory) {
+      btnUpgradeFactory.addEventListener('click', () => {
+        const cfg = getFactoryConfig();
+        if (cfg.upgradeCost <= 0 || foodBank < cfg.upgradeCost) return;
+        foodBank -= cfg.upgradeCost;
+        arrowFactoryState.level++;
+        saveFoodBank();
+        saveArrowFactoryState();
+        renderArrowFactoryUI();
+        const msg = document.getElementById('factoryStatusMsg');
+        if (msg) msg.textContent = `Factory upgraded to Level ${arrowFactoryState.level}! Faster arrows & new style unlocked!`;
+        if (typeof playSFX === 'function') playSFX('powerup');
+      });
+    }
+    updateArrowFactoryLobbyBadge();
+    setInterval(() => {
+      updateArrowFactoryLobbyBadge();
+      if (arrowFactoryModal && !arrowFactoryModal.classList.contains('hidden')) {
+        renderArrowFactoryUI();
+      }
+    }, 1000);
 
     // Draw 3 fantastic showcase snakes on the Lobby "Snakes" button
     function renderWelcomeSnakesShowcase() {
