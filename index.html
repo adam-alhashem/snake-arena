@@ -473,12 +473,15 @@
 
     <!-- Bottom-Right Column: Square Snakes Sign directly above Play button -->
     <div class="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 flex flex-col items-center gap-3 z-10">
-      <button id="btnWelcomeSkin" class="w-32 h-32 sm:w-40 sm:h-40 p-3 sm:p-4 rounded-2xl bg-gradient-to-b from-purple-50 via-indigo-50/90 to-blue-100 hover:from-purple-100 hover:to-blue-200 border-2 border-purple-300 shadow-lg hover:shadow-xl active:scale-95 transition-all flex flex-col items-center justify-center gap-2 text-center cursor-pointer">
-        <span data-i18n="chooseSkin" class="text-lg sm:text-xl font-black text-purple-900 tracking-tight leading-tight">Snakes</span>
-        <span data-i18n="skinsCountLabel" class="px-2.5 py-0.5 rounded-md bg-white/85 border border-purple-200 text-purple-700 text-[10px] sm:text-xs font-extrabold">100 Snakes</span>
+      <button id="btnWelcomeSkin" class="w-36 h-36 sm:w-44 sm:h-44 p-2.5 sm:p-3 rounded-2xl bg-gradient-to-b from-purple-50 via-indigo-50/90 to-blue-100 hover:from-purple-100 hover:to-blue-200 border-2 border-purple-300 shadow-lg hover:shadow-xl active:scale-95 transition-all flex flex-col items-center justify-between gap-1 text-center cursor-pointer overflow-hidden">
+        <canvas id="welcomeSnakesShowcase" width="164" height="78" class="w-full h-[68px] sm:h-[82px] pointer-events-none"></canvas>
+        <div class="flex flex-col items-center gap-1">
+          <span data-i18n="chooseSkin" class="text-base sm:text-lg font-black text-purple-900 tracking-tight leading-none">Snakes</span>
+          <span data-i18n="skinsCountLabel" class="px-2 py-0.5 rounded-md bg-white/85 border border-purple-200 text-purple-700 text-[10px] sm:text-xs font-extrabold">100 Snakes</span>
+        </div>
       </button>
 
-      <button id="btnWelcomePlay" class="w-32 sm:w-40 py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-extrabold shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
+      <button id="btnWelcomePlay" class="w-36 sm:w-44 py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-extrabold shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer">
         <span>▶</span>
         <span data-i18n="play">Play</span>
       </button>
@@ -7666,6 +7669,125 @@
     }
     if (btnWelcomePlay) btnWelcomePlay.addEventListener('click', showStartChoicePage);
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
+
+    // Draw 3 fantastic showcase snakes on the Lobby "Snakes" button
+    function renderWelcomeSnakesShowcase() {
+      const sc = document.getElementById('welcomeSnakesShowcase');
+      if (!sc) return;
+      const sctx = sc.getContext('2d');
+      if (!sctx) return;
+      sctx.clearRect(0, 0, sc.width, sc.height);
+
+      const showcaseSnakes = [
+        // 1. Blazing Crimson Dragon (top)
+        {
+          yBase: 16, amp: 5.5, phase: 0.2,
+          bodyColor: '#dc2626', innerColor: '#f97316', stripeColor: '#fef08a',
+          headColor: '#991b1b', eyeColor: '#fef08a', spines: true
+        },
+        // 2. Neon Hydra (middle)
+        {
+          yBase: 39, amp: 6, phase: 1.6,
+          bodyColor: '#0284c7', innerColor: '#a855f7', stripeColor: '#f472b6',
+          headColor: '#075985', eyeColor: '#67e8f9', spines: true
+        },
+        // 3. Apex Golden Serpent (bottom)
+        {
+          yBase: 62, amp: 5.5, phase: 3.1,
+          bodyColor: '#b45309', innerColor: '#facc15', stripeColor: '#ffffff',
+          headColor: '#78350f', eyeColor: '#ffffff', spines: true
+        }
+      ];
+
+      showcaseSnakes.forEach(sn => {
+        const pts = [];
+        const steps = 6;
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const x = 16 + t * 124;
+          const y = sn.yBase + Math.sin(t * Math.PI * 2 + sn.phase) * sn.amp;
+          pts.push({ x, y });
+        }
+
+        function strokeBody(width, color, yOff = 0) {
+          sctx.save();
+          sctx.lineWidth = width;
+          sctx.strokeStyle = color;
+          sctx.lineCap = 'round';
+          sctx.lineJoin = 'round';
+          sctx.beginPath();
+          sctx.moveTo(pts[0].x, pts[0].y + yOff);
+          for (let i = 1; i < pts.length - 1; i++) {
+            const mx = (pts[i].x + pts[i + 1].x) / 2;
+            const my = (pts[i].y + pts[i + 1].y) / 2 + yOff;
+            sctx.quadraticCurveTo(pts[i].x, pts[i].y + yOff, mx, my);
+          }
+          const last = pts[pts.length - 1];
+          sctx.lineTo(last.x, last.y + yOff);
+          sctx.stroke();
+          sctx.restore();
+        }
+
+        strokeBody(12.5, 'rgba(15, 23, 42, 0.16)', 1.5);
+        strokeBody(11, sn.bodyColor, 0);
+        strokeBody(6.8, sn.innerColor, 0);
+        strokeBody(2.2, sn.stripeColor, 0);
+
+        // Dragon/Wolf spines along the curve
+        if (sn.spines) {
+          for (let i = 1; i < pts.length - 1; i++) {
+            const ang = Math.atan2(pts[i + 1].y - pts[i - 1].y, pts[i + 1].x - pts[i - 1].x);
+            sctx.save();
+            sctx.translate(pts[i].x, pts[i].y);
+            sctx.rotate(ang);
+            sctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            sctx.beginPath();
+            sctx.moveTo(4.2, 0);
+            sctx.lineTo(-3.2, -3.6);
+            sctx.lineTo(-1.4, 0);
+            sctx.lineTo(-3.2, 3.6);
+            sctx.closePath();
+            sctx.fill();
+            sctx.restore();
+          }
+        }
+
+        // Sleek sculpted head with glowing eyes
+        const head = pts[pts.length - 1];
+        const neck = pts[pts.length - 2];
+        const headAng = Math.atan2(head.y - neck.y, head.x - neck.x) * 0.55;
+        sctx.save();
+        sctx.translate(head.x, head.y);
+        sctx.rotate(headAng);
+        // Head silhouette
+        sctx.fillStyle = sn.headColor;
+        sctx.beginPath();
+        sctx.moveTo(10, 0);
+        sctx.quadraticCurveTo(6, -7.2, -5.5, -5.8);
+        sctx.quadraticCurveTo(-8, 0, -5.5, 5.8);
+        sctx.quadraticCurveTo(6, 7.2, 10, 0);
+        sctx.closePath();
+        sctx.fill();
+        // Bright crown highlight
+        sctx.fillStyle = sn.innerColor;
+        sctx.beginPath();
+        sctx.ellipse(-0.5, 0, 4.2, 2.5, 0, 0, Math.PI * 2);
+        sctx.fill();
+        // Glowing eyes
+        sctx.fillStyle = sn.eyeColor;
+        sctx.beginPath();
+        sctx.arc(3.5, -3.1, 1.8, 0, Math.PI * 2);
+        sctx.arc(3.5, 3.1, 1.8, 0, Math.PI * 2);
+        sctx.fill();
+        sctx.fillStyle = '#0f172a';
+        sctx.beginPath();
+        sctx.arc(4.1, -3.1, 0.9, 0, Math.PI * 2);
+        sctx.arc(4.1, 3.1, 0.9, 0, Math.PI * 2);
+        sctx.fill();
+        sctx.restore();
+      });
+    }
+    renderWelcomeSnakesShowcase();
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
     if (btnJoinWithPlayers) btnJoinWithPlayers.addEventListener('click', () => enterServerFromChoice('full'));
     if (btnJoinEmptyFreeServer) btnJoinEmptyFreeServer.addEventListener('click', () => enterServerFromChoice('empty_free'));
