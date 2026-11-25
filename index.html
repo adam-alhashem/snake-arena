@@ -6177,23 +6177,24 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(`🏹 ${playerArrowAmmo}/${MAX_PLAYER_ARROWS}`, px + w / 2, py + h / 2 + 0.5);
 
-      // Tiny sleek Score & Rank pill right next to ammo
+      // Sleek Score & Rank pill centered at the top middle of the screen
       const isKing = (cachedPlayerRank === 1 && cachedTotalPlayers > 1 && score > 0);
       const rankLabel = `${isKing ? '👑' : '⭐'} ${score} • #${cachedPlayerRank}/${cachedTotalPlayers}`;
-      ctx.font = 'bold 12px monospace';
-      const rw = Math.max(106, ctx.measureText(rankLabel).width + 22);
-      const rx = px + w + 8;
+      ctx.font = 'bold 13px monospace';
+      const rw = Math.max(116, ctx.measureText(rankLabel).width + 26);
+      const rh = 30;
+      const rx = Math.round((canvas.width - rw) / 2);
       ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
       ctx.strokeStyle = isKing ? '#facc15' : 'rgba(148, 163, 184, 0.45)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(rx, py, rw, h, 14);
-      else ctx.rect(rx, py, rw, h);
+      if (ctx.roundRect) ctx.roundRect(rx, py, rw, rh, 15);
+      else ctx.rect(rx, py, rw, rh);
       ctx.fill();
       ctx.stroke();
 
       ctx.fillStyle = isKing ? '#fde047' : '#f8fafc';
-      ctx.fillText(rankLabel, rx + rw / 2, py + h / 2 + 0.5);
+      ctx.fillText(rankLabel, rx + rw / 2, py + rh / 2 + 0.5);
       ctx.restore();
     }
 
