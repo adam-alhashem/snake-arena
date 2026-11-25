@@ -725,7 +725,7 @@
       <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 text-white flex items-center justify-between gap-3">
         <div>
           <h2 class="text-lg sm:text-xl font-black tracking-tight leading-tight">Arrow Factory</h2>
-          <p id="factoryHeaderSub" class="text-xs font-semibold text-amber-300">Lv. 1 • Crafts 1 arrow every 60s</p>
+          <p id="factoryHeaderSub" class="text-xs font-semibold text-amber-300">Lv. 1 • Craft arrows using Food (150 Food each)</p>
         </div>
         <button id="btnCloseArrowFactory" type="button" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center cursor-pointer" aria-label="Close Arrow Factory">&times;</button>
       </div>
@@ -734,7 +734,7 @@
       <div class="relative bg-slate-800 border-b border-slate-700">
         <canvas id="arrowFactoryCanvas" width="560" height="110" class="w-full h-[96px] sm:h-[110px] block"></canvas>
         <div id="factoryNextTimerBadge" class="absolute top-2 right-3 px-2.5 py-0.5 rounded-full bg-slate-900/80 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/30">
-          Next arrow: 60s
+          Craft Cost: 150 Food
         </div>
       </div>
 
@@ -742,7 +742,7 @@
       <div class="p-4 sm:p-5 flex flex-col gap-3.5 overflow-y-auto">
         <div class="grid grid-cols-3 gap-2 text-center">
           <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Arrows Ready</div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase">Crafted Arrows</div>
             <div id="factoryStoredCount" class="text-base font-black text-amber-600">0 / 10</div>
           </div>
           <div class="bg-slate-50 rounded-xl border border-slate-200 py-2 px-2">
@@ -756,16 +756,19 @@
         </div>
 
         <!-- Craft & Upgrade Action Buttons -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <button id="btnCraftArrowNow" type="button" class="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btnCraftArrowNow" type="button" class="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
             Craft +1 Arrow (150 Food)
           </button>
-          <button id="btnUpgradeFactory" type="button" class="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
-            Upgrade Factory (1,000 Food)
+          <button id="btnCraftArrow5" type="button" class="py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
+            Craft +5 Arrows (750 Food)
           </button>
         </div>
+        <button id="btnUpgradeFactory" type="button" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
+          Upgrade Factory (1,000 Food)
+        </button>
 
-        <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">Arrows in your factory automatically load into your quiver when you start a match (up to 10).</p>
+        <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">You must craft arrows here before entering a match. Crafted arrows load into your quiver (up to 10 per match).</p>
 
         <!-- Arrow Style Selector -->
         <div class="flex flex-col gap-2 pt-1 border-t border-slate-100">
@@ -3692,7 +3695,7 @@
     let thrusterParticles = [];
     let arrows = [];
     let floorArrows = [];
-    const FLOOR_ARROW_COUNT = 20;
+    const FLOOR_ARROW_COUNT = 0; // Players must craft arrows in the Arrow Factory!
     const MAX_PLAYER_ARROWS = 10;
     let playerArrowAmmo = 0;
     let playerArrowCooldown = 0;
@@ -7580,6 +7583,7 @@
     // SNAKE ARROW SHOOTING SYSTEM (COLLECTIBLE FLOOR ARROWS + PLAYER & BOTS)
     // =========================================================================
     function spawnFloorArrow() {
+      if (FLOOR_ARROW_COUNT <= 0) return;
       let tries = 0;
       while (tries++ < 150) {
         const ax = Math.floor(Math.random() * (COLS - 8)) + 4;
@@ -9627,14 +9631,14 @@
     setInterval(updateSpinButtonLabel, 1000);
 
     // =========================================================================
-    // ARROW FACTORY SYSTEM (Auto-Production, Instant Craft, Upgrades & Styles)
+    // ARROW FACTORY SYSTEM (Manual Crafting Required, Upgrades & Arrow Styles)
     // =========================================================================
     const FACTORY_LEVELS = [
-      { level: 1, intervalSec: 60, cap: 10, upgradeCost: 1000 },
-      { level: 2, intervalSec: 45, cap: 15, upgradeCost: 2500 },
-      { level: 3, intervalSec: 30, cap: 25, upgradeCost: 6000 },
-      { level: 4, intervalSec: 20, cap: 35, upgradeCost: 15000 },
-      { level: 5, intervalSec: 12, cap: 50, upgradeCost: 0 }
+      { level: 1, craftCost: 150, cap: 10, upgradeCost: 1000 },
+      { level: 2, craftCost: 120, cap: 15, upgradeCost: 2500 },
+      { level: 3, craftCost: 90,  cap: 25, upgradeCost: 6000 },
+      { level: 4, craftCost: 65,  cap: 35, upgradeCost: 15000 },
+      { level: 5, craftCost: 40,  cap: 50, upgradeCost: 0 }
     ];
     const ARROW_STYLES = [
       { id: 'gold',   level: 1, name: 'Classic Gold', color: '#f59e0b' },
@@ -9649,7 +9653,7 @@
         const s = JSON.parse(localStorage.getItem('snakeArrowFactory_v1') || 'null');
         if (s && typeof s === 'object') return s;
       } catch (e) {}
-      return { level: 1, stored: 2, lastTickAt: Date.now(), styleId: 'gold' };
+      return { level: 1, stored: 0, styleId: 'gold' };
     })();
 
     function saveArrowFactoryState() {
@@ -9665,44 +9669,25 @@
       return st ? st.color : '#f59e0b';
     }
 
-    function tickArrowFactoryProduction() {
-      const cfg = getFactoryConfig();
-      const now = Date.now();
-      if (!arrowFactoryState.lastTickAt) arrowFactoryState.lastTickAt = now;
-      if (arrowFactoryState.stored >= cfg.cap) {
-        arrowFactoryState.lastTickAt = now;
-        return;
-      }
-      const elapsedSec = (now - arrowFactoryState.lastTickAt) / 1000;
-      if (elapsedSec >= cfg.intervalSec) {
-        const produced = Math.floor(elapsedSec / cfg.intervalSec);
-        arrowFactoryState.stored = Math.min(cfg.cap, (arrowFactoryState.stored || 0) + produced);
-        arrowFactoryState.lastTickAt += produced * cfg.intervalSec * 1000;
-        if (arrowFactoryState.stored >= cfg.cap) arrowFactoryState.lastTickAt = now;
-        saveArrowFactoryState();
-      }
-    }
+    // Manual crafting only — no free auto-production
+    function tickArrowFactoryProduction() {}
 
     function consumeFactoryArrowsForMatch(maxNeeded) {
-      tickArrowFactoryProduction();
       if (maxNeeded <= 0 || (arrowFactoryState.stored || 0) <= 0) return 0;
       const take = Math.min(maxNeeded, arrowFactoryState.stored);
       arrowFactoryState.stored -= take;
-      arrowFactoryState.lastTickAt = Date.now();
       saveArrowFactoryState();
       updateArrowFactoryLobbyBadge();
       return take;
     }
 
     function updateArrowFactoryLobbyBadge() {
-      tickArrowFactoryProduction();
       const cfg = getFactoryConfig();
       const lbl = document.getElementById('welcomeFactoryLabel');
-      if (lbl) lbl.textContent = `${arrowFactoryState.stored} Ready • Lv. ${cfg.level}`;
+      if (lbl) lbl.textContent = `${arrowFactoryState.stored || 0} Crafted • Lv. ${cfg.level}`;
     }
 
     function renderArrowFactoryUI() {
-      tickArrowFactoryProduction();
       const cfg = getFactoryConfig();
       updateArrowFactoryLobbyBadge();
 
@@ -9712,45 +9697,49 @@
       const foodEl = document.getElementById('factoryFoodStat');
       const timerBadge = document.getElementById('factoryNextTimerBadge');
       const btnCraft = document.getElementById('btnCraftArrowNow');
+      const btnCraft5 = document.getElementById('btnCraftArrow5');
       const btnUpg = document.getElementById('btnUpgradeFactory');
       const stylesGrid = document.getElementById('factoryArrowStylesGrid');
 
-      if (sub) sub.textContent = `Lv. ${cfg.level} • Crafts 1 arrow every ${cfg.intervalSec}s (Max ${cfg.cap})`;
-      if (storedEl) storedEl.textContent = `${arrowFactoryState.stored} / ${cfg.cap}`;
+      if (sub) sub.textContent = `Lv. ${cfg.level} • Craft arrows for ${cfg.craftCost} Food each (Max ${cfg.cap})`;
+      if (storedEl) storedEl.textContent = `${arrowFactoryState.stored || 0} / ${cfg.cap}`;
       if (lvEl) lvEl.textContent = `Lv. ${cfg.level}`;
       if (foodEl) foodEl.textContent = foodBank.toLocaleString();
+      if (timerBadge) timerBadge.textContent = `Craft Cost: ${cfg.craftCost} Food`;
 
-      if (timerBadge) {
-        if (arrowFactoryState.stored >= cfg.cap) {
-          timerBadge.textContent = 'Storage Full';
-        } else {
-          const rem = Math.max(1, Math.ceil(cfg.intervalSec - (Date.now() - arrowFactoryState.lastTickAt) / 1000));
-          timerBadge.textContent = `Next arrow: ${rem}s`;
-        }
+      const spaceLeft = Math.max(0, cfg.cap - (arrowFactoryState.stored || 0));
+      if (btnCraft) {
+        const canCraft1 = spaceLeft >= 1 && foodBank >= cfg.craftCost;
+        btnCraft.disabled = !canCraft1;
+        btnCraft.textContent = spaceLeft === 0 ? 'Storage Full' : `Craft +1 Arrow (${cfg.craftCost} Food)`;
+        btnCraft.className = canCraft1
+          ? 'py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
+          : 'py-2.5 px-3 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
       }
 
-      if (btnCraft) {
-        const full = arrowFactoryState.stored >= cfg.cap;
-        const canCraft = !full && foodBank >= 150;
-        btnCraft.disabled = !canCraft;
-        btnCraft.textContent = full ? 'Storage Full' : 'Craft +1 Arrow (150 Food)';
-        btnCraft.className = canCraft
-          ? 'py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
-          : 'py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
+      if (btnCraft5) {
+        const batchCount = Math.min(5, spaceLeft);
+        const batchCost = batchCount * cfg.craftCost;
+        const canCraftBatch = batchCount > 0 && foodBank >= batchCost;
+        btnCraft5.disabled = !canCraftBatch;
+        btnCraft5.textContent = spaceLeft === 0 ? 'Storage Full' : `Craft +${batchCount} Arrows (${batchCost.toLocaleString()} Food)`;
+        btnCraft5.className = canCraftBatch
+          ? 'py-2.5 px-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
+          : 'py-2.5 px-3 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
       }
 
       if (btnUpg) {
         if (cfg.upgradeCost <= 0) {
           btnUpg.disabled = true;
           btnUpg.textContent = 'Max Factory Level';
-          btnUpg.className = 'py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-700 text-xs sm:text-sm font-black cursor-default';
+          btnUpg.className = 'w-full py-2.5 px-4 rounded-xl bg-emerald-100 text-emerald-700 text-xs sm:text-sm font-black cursor-default';
         } else {
           const canUpg = foodBank >= cfg.upgradeCost;
           btnUpg.disabled = !canUpg;
-          btnUpg.textContent = `Upgrade to Lv.${cfg.level + 1} (${cfg.upgradeCost.toLocaleString()} Food)`;
+          btnUpg.textContent = `Upgrade to Lv.${cfg.level + 1} — Cheaper Arrows (${cfg.upgradeCost.toLocaleString()} Food)`;
           btnUpg.className = canUpg
-            ? 'py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
-            : 'py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
+            ? 'w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
+            : 'w-full py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
         }
       }
 
@@ -9859,7 +9848,24 @@
     const arrowFactoryModal = document.getElementById('arrowFactoryModal');
     const btnCloseArrowFactory = document.getElementById('btnCloseArrowFactory');
     const btnCraftArrowNow = document.getElementById('btnCraftArrowNow');
+    const btnCraftArrow5 = document.getElementById('btnCraftArrow5');
     const btnUpgradeFactory = document.getElementById('btnUpgradeFactory');
+
+    function craftArrowsBatch(requestedCount) {
+      const cfg = getFactoryConfig();
+      const spaceLeft = Math.max(0, cfg.cap - (arrowFactoryState.stored || 0));
+      const count = Math.min(requestedCount, spaceLeft);
+      const totalCost = count * cfg.craftCost;
+      if (count <= 0 || foodBank < totalCost) return;
+      foodBank -= totalCost;
+      arrowFactoryState.stored = (arrowFactoryState.stored || 0) + count;
+      saveFoodBank();
+      saveArrowFactoryState();
+      renderArrowFactoryUI();
+      const msg = document.getElementById('factoryStatusMsg');
+      if (msg) msg.textContent = `Crafted +${count} Arrow${count > 1 ? 's' : ''}! (${arrowFactoryState.stored}/${cfg.cap} ready for battle)`;
+      if (typeof playSFX === 'function') playSFX('eat');
+    }
 
     if (btnWelcomeArrowFactory) {
       btnWelcomeArrowFactory.addEventListener('click', () => {
@@ -9878,20 +9884,8 @@
         if (e.target === arrowFactoryModal) arrowFactoryModal.classList.add('hidden');
       });
     }
-    if (btnCraftArrowNow) {
-      btnCraftArrowNow.addEventListener('click', () => {
-        const cfg = getFactoryConfig();
-        if (arrowFactoryState.stored >= cfg.cap || foodBank < 150) return;
-        foodBank -= 150;
-        arrowFactoryState.stored++;
-        saveFoodBank();
-        saveArrowFactoryState();
-        renderArrowFactoryUI();
-        const msg = document.getElementById('factoryStatusMsg');
-        if (msg) msg.textContent = `Crafted +1 Arrow! (${arrowFactoryState.stored}/${cfg.cap} ready for battle)`;
-        if (typeof playSFX === 'function') playSFX('eat');
-      });
-    }
+    if (btnCraftArrowNow) btnCraftArrowNow.addEventListener('click', () => craftArrowsBatch(1));
+    if (btnCraftArrow5) btnCraftArrow5.addEventListener('click', () => craftArrowsBatch(5));
     if (btnUpgradeFactory) {
       btnUpgradeFactory.addEventListener('click', () => {
         const cfg = getFactoryConfig();
