@@ -6177,24 +6177,16 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(`🏹 ${playerArrowAmmo}/${MAX_PLAYER_ARROWS}`, px + w / 2, py + h / 2 + 0.5);
 
-      // Sleek Score & Rank pill centered at the top middle of the screen
-      const isKing = (cachedPlayerRank === 1 && cachedTotalPlayers > 1 && score > 0);
-      const rankLabel = `${isKing ? '👑' : '⭐'} ${score} • #${cachedPlayerRank}/${cachedTotalPlayers}`;
-      ctx.font = 'bold 13px monospace';
-      const rw = Math.max(116, ctx.measureText(rankLabel).width + 26);
-      const rh = 30;
-      const rx = Math.round((canvas.width - rw) / 2);
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
-      ctx.strokeStyle = isKing ? '#facc15' : 'rgba(148, 163, 184, 0.45)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(rx, py, rw, rh, 15);
-      else ctx.rect(rx, py, rw, rh);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = isKing ? '#fde047' : '#f8fafc';
-      ctx.fillText(rankLabel, rx + rw / 2, py + rh / 2 + 0.5);
+      // Clean score number only, centered at the top middle of the screen
+      const scoreText = String(score);
+      ctx.font = '800 26px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.strokeText(scoreText, canvas.width / 2, 28);
+      ctx.fillStyle = '#0f172a';
+      ctx.fillText(scoreText, canvas.width / 2, 28);
       ctx.restore();
     }
 
