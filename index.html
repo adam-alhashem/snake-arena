@@ -545,8 +545,9 @@
         <button id="btnBackToWelcome" data-i18n="backBtn" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
           ← Back
         </button>
-        <button id="btnStartChooseSkin" aria-label="Choose Snake" title="Choose Snake" class="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 hover:from-amber-100 hover:to-yellow-200 border-2 border-amber-400 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center cursor-pointer">
+        <button id="btnStartChooseSkin" aria-label="Buy Golden Emperor Snake for 1 Billion Food" title="Golden Emperor Snake - 1,000,000,000 Food" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 hover:from-amber-100 hover:to-yellow-200 border-2 border-amber-400 shadow-md hover:shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer">
           <canvas id="startGoldenSnakeCanvas" width="176" height="46" class="w-[150px] sm:w-[176px] h-[40px] sm:h-[46px] pointer-events-none"></canvas>
+          <span id="startGoldenSnakePrice" class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs">1,000,000,000 Food</span>
         </button>
       </div>
     </div>
@@ -3251,6 +3252,31 @@
     "boostSpeed": 38,
     "foodMultiplier": 2.5,
     "perkDesc": "\ud83d\udc51 200% Fuel Tank, Super Hyper-Boost & 2.5x Food Bonus!"
+  },
+  {
+    "num": 101,
+    "id": "golden_emperor",
+    "name": "101. Golden Emperor Snake",
+    "shortName": "Golden Emperor",
+    "icon": "\ud83d\udc51",
+    "type": "snake",
+    "bodyColor": "#b45309",
+    "innerColor": "#facc15",
+    "stripeColor": "#fef9c3",
+    "headColor": "#92400e",
+    "category": "Mythic",
+    "scoreLabel": "Gold",
+    "hasWolfTriangles": true,
+    "subtext": "The Legendary 1 Billion Food Golden Dragon-Snake with royal horns & diamond crest",
+    "foodCost": 1000000000,
+    "tier": 6,
+    "tierName": "1 Billion Legend",
+    "stars": "\u2b50\u2b50\u2b50\u2b50\u2b50\u2b50",
+    "quality": "Billionaire Legend",
+    "maxFuel": 300,
+    "boostSpeed": 34,
+    "foodMultiplier": 1.0,
+    "perkDesc": "300% Max Fuel & Ultimate Hyper-Boost Golden Dragon-Snake!"
   }
 ];
 
@@ -3608,7 +3634,52 @@
       pctx.translate(head.x, head.y);
       pctx.rotate(headAngle);
 
-      if (cfg.type === 'snake') {
+      if (cfg.id === 'golden_emperor') {
+        // Royal Golden Dragon-Snake Head with horns & diamond forehead crest
+        pctx.fillStyle = '#fde047';
+        pctx.strokeStyle = '#92400e';
+        pctx.lineWidth = 1;
+        pctx.beginPath();
+        pctx.moveTo(-3, -5); pctx.lineTo(-10, -10.5); pctx.lineTo(0, -6.5); pctx.closePath();
+        pctx.fill(); pctx.stroke();
+        pctx.beginPath();
+        pctx.moveTo(-3, 5); pctx.lineTo(-10, 10.5); pctx.lineTo(0, 6.5); pctx.closePath();
+        pctx.fill(); pctx.stroke();
+
+        pctx.fillStyle = '#b45309';
+        pctx.beginPath();
+        pctx.moveTo(12, 0);
+        pctx.quadraticCurveTo(7, -8.5, -6, -6.8);
+        pctx.quadraticCurveTo(-9, 0, -6, 6.8);
+        pctx.quadraticCurveTo(7, 8.5, 12, 0);
+        pctx.closePath();
+        pctx.fill();
+
+        pctx.fillStyle = '#facc15';
+        pctx.beginPath();
+        pctx.moveTo(9.5, 0);
+        pctx.quadraticCurveTo(5, -5.5, -4, -4.2);
+        pctx.quadraticCurveTo(-6, 0, -4, 4.2);
+        pctx.quadraticCurveTo(5, 5.5, 9.5, 0);
+        pctx.closePath();
+        pctx.fill();
+
+        pctx.fillStyle = '#ffffff';
+        pctx.beginPath();
+        pctx.moveTo(2.5, 0); pctx.lineTo(-1, -2.3); pctx.lineTo(-3.8, 0); pctx.lineTo(-1, 2.3); pctx.closePath();
+        pctx.fill();
+
+        pctx.fillStyle = '#ffffff';
+        pctx.beginPath();
+        pctx.arc(4.5, -3.7, 2.1, 0, Math.PI * 2);
+        pctx.arc(4.5, 3.7, 2.1, 0, Math.PI * 2);
+        pctx.fill();
+        pctx.fillStyle = '#0f172a';
+        pctx.beginPath();
+        pctx.arc(5.2, -3.7, 1.05, 0, Math.PI * 2);
+        pctx.arc(5.2, 3.7, 1.05, 0, Math.PI * 2);
+        pctx.fill();
+      } else if (cfg.type === 'snake') {
         pctx.fillStyle = cfg.headColor || cfg.bodyColor || '#16a34a';
         pctx.beginPath();
         pctx.ellipse(2, 0, 9.5, 7.8, 0, 0, Math.PI * 2);
@@ -5259,7 +5330,52 @@
       let angle = (dirX !== 0 || dirY !== 0) ? Math.atan2(dirY, dirX) : 0;
       ctx.rotate(angle);
 
-      if (cfg.type === 'snake') {
+      if (cfg.id === 'golden_emperor') {
+        // Royal Golden Dragon-Snake Head with horns & diamond forehead crest (in-game)
+        ctx.fillStyle = '#fde047';
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-3, -5); ctx.lineTo(-10, -10.5); ctx.lineTo(0, -6.5); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-3, 5); ctx.lineTo(-10, 10.5); ctx.lineTo(0, 6.5); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#b45309';
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.quadraticCurveTo(7, -8.5, -6, -6.8);
+        ctx.quadraticCurveTo(-9, 0, -6, 6.8);
+        ctx.quadraticCurveTo(7, 8.5, 12, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(9.5, 0);
+        ctx.quadraticCurveTo(5, -5.5, -4, -4.2);
+        ctx.quadraticCurveTo(-6, 0, -4, 4.2);
+        ctx.quadraticCurveTo(5, 5.5, 9.5, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(2.5, 0); ctx.lineTo(-1, -2.3); ctx.lineTo(-3.8, 0); ctx.lineTo(-1, 2.3); ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(4.5, -3.7, 2.1, 0, Math.PI * 2);
+        ctx.arc(4.5, 3.7, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.beginPath();
+        ctx.arc(5.2, -3.7, 1.05, 0, Math.PI * 2);
+        ctx.arc(5.2, 3.7, 1.05, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (cfg.type === 'snake') {
         ctx.fillStyle = cfg.headColor;
         ctx.beginPath();
         ctx.ellipse(1, 0, 8.5, 7, 0, 0, Math.PI * 2);
@@ -6825,9 +6941,9 @@
     ];
 
     function unlockRandomRewardSkin(preferredTiers, tierLabel) {
-      let locked = SKINS_LIST.filter(s => !unlockedSkins.includes(s.id) && s.foodCost > 0 && preferredTiers.includes(s.tier));
+      let locked = SKINS_LIST.filter(s => !unlockedSkins.includes(s.id) && s.foodCost > 0 && s.id !== 'golden_emperor' && preferredTiers.includes(s.tier));
       if (locked.length === 0) {
-        locked = SKINS_LIST.filter(s => !unlockedSkins.includes(s.id) && s.foodCost > 0);
+        locked = SKINS_LIST.filter(s => !unlockedSkins.includes(s.id) && s.foodCost > 0 && s.id !== 'golden_emperor');
       }
       if (locked.length === 0) {
         addFoodBank(3000);
@@ -7968,7 +8084,49 @@
     if (btnJoinWithPlayers) btnJoinWithPlayers.addEventListener('click', () => enterServerFromChoice('full'));
     if (btnJoinEmptyFreeServer) btnJoinEmptyFreeServer.addEventListener('click', () => enterServerFromChoice('empty_free'));
     if (btnJoinSoloServer) btnJoinSoloServer.addEventListener('click', () => enterServerFromChoice('solo'));
-    if (btnStartChooseSkin) btnStartChooseSkin.addEventListener('click', openSkinModal);
+    function updateStartGoldenSnakeUI() {
+      const priceEl = document.getElementById('startGoldenSnakePrice');
+      if (!priceEl) return;
+      const owned = unlockedSkins.includes('golden_emperor');
+      if (owned && currentSkin === 'golden_emperor') {
+        priceEl.textContent = 'Equipped';
+        priceEl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
+      } else if (owned) {
+        priceEl.textContent = 'Owned - Equip';
+        priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
+      } else {
+        priceEl.textContent = '1,000,000,000 Food';
+        priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
+      }
+    }
+    updateStartGoldenSnakeUI();
+
+    if (btnStartChooseSkin) {
+      btnStartChooseSkin.addEventListener('click', () => {
+        const goldenCost = 1000000000;
+        const owned = unlockedSkins.includes('golden_emperor');
+        if (owned) {
+          setSkin('golden_emperor');
+          updateStartGoldenSnakeUI();
+          playSFX('eat');
+          return;
+        }
+        if (foodBank >= goldenCost) {
+          foodBank -= goldenCost;
+          unlockedSkins.push('golden_emperor');
+          saveFoodBank();
+          setSkin('golden_emperor');
+          updateStartGoldenSnakeUI();
+          playSFX('powerup');
+          return;
+        }
+        // Not enough food yet: open Skins modal focused on Golden Emperor Snake
+        currentCategoryFilter = 'All';
+        currentSearchFilter = 'Golden Emperor';
+        if (skinSearchInput) skinSearchInput.value = 'Golden Emperor';
+        openSkinModal();
+      });
+    }
 
     // =========================================================================
     // PLAYER PROFILE SETUP PAGE (NAME, DATE, BOY OR GIRL)
