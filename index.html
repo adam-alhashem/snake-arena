@@ -436,10 +436,7 @@
   <!-- SECOND PAGE: PLAYER PROFILE SETUP (LANGUAGE, NAME, DATE, BOY OR GIRL)     -->
   <!-- ========================================================================= -->
   <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
-    <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5 relative">
-      <button id="btnBackToLangMap" type="button" class="self-start px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition-all cursor-pointer">
-        ← Language Map
-      </button>
+    <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
       <div class="flex flex-col items-center text-center gap-2">
         <div class="text-4xl">🐍</div>
         <h1 data-i18n="profileTitle" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
@@ -9315,7 +9312,6 @@
     const langMapSelectedLabel = document.getElementById('langMapSelectedLabel');
     const btnLangMapContinue = document.getElementById('btnLangMapContinue');
     const btnMapReplayVoice = document.getElementById('btnMapReplayVoice');
-    const btnBackToLangMap = document.getElementById('btnBackToLangMap');
 
     function renderLanguageMapPins() {
       if (!langMapPinsLayer) return;
@@ -9346,7 +9342,8 @@
         btn.appendChild(txt);
 
         btn.addEventListener('click', () => {
-          applyLanguage(item.code, true);
+          applyLanguage(item.code);
+          speakLanguageGreeting(item.code);
           renderLanguageMapPins();
         });
         langMapPinsLayer.appendChild(btn);
@@ -9377,9 +9374,6 @@
       btnMapReplayVoice.addEventListener('click', () => {
         speakLanguageGreeting(currentLang);
       });
-    }
-    if (btnBackToLangMap) {
-      btnBackToLangMap.addEventListener('click', showLanguageMapPage);
     }
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
