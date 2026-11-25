@@ -3561,6 +3561,10 @@
     // MINI LIVE SNAKE SHAPE PREVIEW: Shows exact curved body, stripes, wolf spines & head before taking a snake!
     function renderSnakePreview(previewCanvas, cfg) {
       if (!previewCanvas || !cfg) return;
+      if (cfg.id === 'golden_emperor' && typeof renderStartGoldenSnake === 'function') {
+        renderStartGoldenSnake(previewCanvas, true);
+        return;
+      }
       const pctx = previewCanvas.getContext('2d');
       if (!pctx) return;
 
@@ -5250,17 +5254,30 @@
         });
       }
 
-      // Outer Drop Shadow
-      renderPathWithWraps(cfg.type === 'snake' ? 14 : 15, 'rgba(0, 0, 0, 0.08)', 1.5);
-      // Main Body
-      renderPathWithWraps(cfg.type === 'snake' ? 13 : 13, cfg.bodyColor);
-      // Inner Color
-      renderPathWithWraps(cfg.type === 'snake' ? 8 : 8, cfg.innerColor);
-      // Racing Stripe
-      renderPathWithWraps(2.4, cfg.stripeColor);
+      if (cfg.id === 'golden_emperor') {
+        // Exact Royal Golden Emperor Snake body matching the 3rd-page showcase
+        ctx.save();
+        ctx.shadowColor = 'rgba(245, 158, 11, 0.55)';
+        ctx.shadowBlur = 10;
+        renderPathWithWraps(15.5, 'rgba(120, 53, 15, 0.22)', 1.8);
+        renderPathWithWraps(14, '#92400e', 0);
+        renderPathWithWraps(11, '#facc15', 0);
+        renderPathWithWraps(5.5, '#fef9c3', -0.4);
+        renderPathWithWraps(2, '#ffffff', -0.8);
+        ctx.restore();
+      } else {
+        // Outer Drop Shadow
+        renderPathWithWraps(cfg.type === 'snake' ? 14 : 15, 'rgba(0, 0, 0, 0.08)', 1.5);
+        // Main Body
+        renderPathWithWraps(cfg.type === 'snake' ? 13 : 13, cfg.bodyColor);
+        // Inner Color
+        renderPathWithWraps(cfg.type === 'snake' ? 8 : 8, cfg.innerColor);
+        // Racing Stripe
+        renderPathWithWraps(2.4, cfg.stripeColor);
+      }
 
-      // WHITE TRIANGLES ON WOLF'S BACK (Smooth tangent rotation along curve bends)
-      if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
+      // WHITE TRIANGLES / GOLDEN DIAMOND SCALES ON BACK (Smooth tangent rotation along curve bends)
+      if (cfg.id === 'blue_wolf' || cfg.id === 'golden_emperor' || cfg.hasWolfTriangles) {
         for (let i = segments.length - 1; i >= 0; i--) {
           const seg = segments[i];
           const cx = seg.x * GRID_SIZE + GRID_SIZE / 2;
@@ -5297,28 +5314,43 @@
           ctx.translate(cx, cy);
           ctx.rotate(segAngle);
 
-          // Bold White Triangle on Wolf's Back
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
-          ctx.shadowBlur = 3;
-          ctx.beginPath();
-          ctx.moveTo(5.5, 0);       // Forward sharp tip
-          ctx.lineTo(-4.5, -5.2);   // Left wing
-          ctx.lineTo(-2, 0);        // Inner notch
-          ctx.lineTo(-4.5, 5.2);    // Right wing
-          ctx.closePath();
-          ctx.fill();
+          if (cfg.id === 'golden_emperor') {
+            // Exact cream-gold diamond crest scales matching the 3rd-page golden snake
+            ctx.fillStyle = '#fef9c3';
+            ctx.strokeStyle = '#b45309';
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.moveTo(5, 0);
+            ctx.lineTo(-3.5, -4.2);
+            ctx.lineTo(-1.2, 0);
+            ctx.lineTo(-3.5, 4.2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          } else {
+            // Bold White Triangle on Wolf's Back
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowBlur = 3;
+            ctx.beginPath();
+            ctx.moveTo(5.5, 0);       // Forward sharp tip
+            ctx.lineTo(-4.5, -5.2);   // Left wing
+            ctx.lineTo(-2, 0);        // Inner notch
+            ctx.lineTo(-4.5, 5.2);    // Right wing
+            ctx.closePath();
+            ctx.fill();
 
-          // Small frost cyan accent in triangle core
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#38bdf8';
-          ctx.beginPath();
-          ctx.moveTo(1.5, 0);
-          ctx.lineTo(-3, -2.5);
-          ctx.lineTo(-1.5, 0);
-          ctx.lineTo(-3, 2.5);
-          ctx.closePath();
-          ctx.fill();
+            // Small frost cyan accent in triangle core
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(1.5, 0);
+            ctx.lineTo(-3, -2.5);
+            ctx.lineTo(-1.5, 0);
+            ctx.lineTo(-3, 2.5);
+            ctx.closePath();
+            ctx.fill();
+          }
 
           ctx.restore();
         }
@@ -7907,13 +7939,30 @@
     }
     renderWelcomeSnakesShowcase();
 
-    // Draw a fantastic gleaming Golden Snake on the Start Choice page skin button
-    function renderStartGoldenSnake() {
-      const gc = document.getElementById('startGoldenSnakeCanvas');
+    // Draw a fantastic gleaming Golden Snake on the Start Choice page & Gold Shop preview
+    function renderStartGoldenSnake(targetCanvas, withBackdrop = false) {
+      const gc = targetCanvas || document.getElementById('startGoldenSnakeCanvas');
       if (!gc) return;
       const gctx = gc.getContext('2d');
       if (!gctx) return;
       gctx.clearRect(0, 0, gc.width, gc.height);
+      gctx.save();
+      if (withBackdrop) {
+        const bgGrad = gctx.createLinearGradient(0, 0, gc.width, gc.height);
+        bgGrad.addColorStop(0, '#fffbeb');
+        bgGrad.addColorStop(0.5, '#fef9c3');
+        bgGrad.addColorStop(1, '#fef3c7');
+        gctx.fillStyle = bgGrad;
+        gctx.fillRect(0, 0, gc.width, gc.height);
+      }
+      // Scale cleanly to match the 176x46 golden snake proportions on any canvas size
+      const scaleX = gc.width / 176;
+      const scaleY = gc.height / 46;
+      const scale = Math.min(scaleX, scaleY);
+      const offX = (gc.width - 176 * scale) / 2;
+      const offY = (gc.height - 46 * scale) / 2;
+      gctx.translate(offX, offY);
+      gctx.scale(scale, scale);
 
       const pts = [];
       const steps = 8;
@@ -8081,6 +8130,7 @@
         gctx.stroke();
         gctx.restore();
       });
+      gctx.restore();
     }
     renderStartGoldenSnake();
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
