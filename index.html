@@ -568,6 +568,21 @@
         </div>
       </div>
 
+      <!-- Selected / Clicked Food Details Panel (Shows everything this food does) -->
+      <div id="foodDetailPanel" class="px-5 py-3 border-b border-slate-200 bg-white flex flex-col gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span id="foodDetailDot" class="w-4 h-4 rounded-full inline-block shrink-0" style="background-color:#ef4444; box-shadow:0 0 8px #ef4444;"></span>
+            <span id="foodDetailName" class="text-sm font-black text-slate-900 truncate">Classic Berry</span>
+            <span id="foodDetailLevel" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">Lv. 1</span>
+          </div>
+          <button id="btnEquipInspectedFood" type="button" class="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all cursor-pointer shrink-0">Active</button>
+        </div>
+        <ul id="foodDetailEffects" class="flex flex-wrap gap-1.5 text-[11px] font-bold text-slate-700">
+          <!-- Dynamically filled with what this food does -->
+        </ul>
+      </div>
+
       <!-- 8 Level-Based Food Type Cards -->
       <div id="foodModalGrid" class="p-4 grid grid-cols-2 sm:grid-cols-2 gap-2.5 overflow-y-auto bg-white">
         <!-- Dynamically populated by renderFoodModal() -->
@@ -4681,20 +4696,62 @@
       '#a855f7'  // Neon Violet
     ];
 
-    // Level-Based Food Type System (changes ONLY your food color/name; keeps round dot shape!)
+    // Level-Based Food Type System (changes ONLY your food color/name/perks; keeps round dot shape!)
     const FOOD_TYPES_BY_LEVEL = [
-      { id: 'classic_berry', level: 1, minFood: 0,    name: 'Classic Berry', color: '#ef4444', palette: ['#ef4444', '#f87171', '#dc2626'] },
-      { id: 'citrus_drop',   level: 2, minFood: 25,   name: 'Citrus Drop',   color: '#f97316', palette: ['#f97316', '#fb923c', '#ea580c'] },
-      { id: 'mint_melon',    level: 3, minFood: 75,   name: 'Mint Melon',    color: '#10b981', palette: ['#10b981', '#34d399', '#059669'] },
-      { id: 'blue_berry',    level: 4, minFood: 150,  name: 'Blue Berry',    color: '#3b82f6', palette: ['#3b82f6', '#60a5fa', '#2563eb'] },
-      { id: 'royal_grape',   level: 5, minFood: 300,  name: 'Royal Grape',   color: '#8b5cf6', palette: ['#8b5cf6', '#a78bfa', '#7c3aed'] },
-      { id: 'pink_candy',    level: 6, minFood: 600,  name: 'Pink Candy',    color: '#ec4899', palette: ['#ec4899', '#f472b6', '#db2777'] },
-      { id: 'frost_crystal', level: 7, minFood: 1200, name: 'Frost Crystal', color: '#06b6d4', palette: ['#06b6d4', '#22d3ee', '#0891b2'] },
-      { id: 'solar_gold',    level: 8, minFood: 2500, name: 'Solar Gold',    color: '#eab308', palette: ['#eab308', '#facc15', '#ca8a04'] }
+      {
+        id: 'classic_berry', level: 1, minFood: 0, name: 'Classic Berry', color: '#ef4444',
+        palette: ['#ef4444', '#f87171', '#dc2626'],
+        fuelGain: 25, arrowEvery: 0, shieldEvery: 0, miniPull: false,
+        effects: ['+1 Score & +1 Food per dot', '+25 Boost Fuel per dot', 'Classic ruby glow in-game']
+      },
+      {
+        id: 'citrus_drop', level: 2, minFood: 25, name: 'Citrus Drop', color: '#f97316',
+        palette: ['#f97316', '#fb923c', '#ea580c'],
+        fuelGain: 32, arrowEvery: 0, shieldEvery: 0, miniPull: false,
+        effects: ['+1 Score & +1 Food per dot', '+32 Boost Fuel per dot (charges boost faster)', 'Bright tangerine glow']
+      },
+      {
+        id: 'mint_melon', level: 3, minFood: 75, name: 'Mint Melon', color: '#10b981',
+        palette: ['#10b981', '#34d399', '#059669'],
+        fuelGain: 30, arrowEvery: 0, shieldEvery: 0, miniPull: true,
+        effects: ['+1 Score & +1 Food per dot', '+30 Boost Fuel per dot', 'Mini Magnet: pulls nearby dots 1 tile closer when eating']
+      },
+      {
+        id: 'blue_berry', level: 4, minFood: 150, name: 'Blue Berry', color: '#3b82f6',
+        palette: ['#3b82f6', '#60a5fa', '#2563eb'],
+        fuelGain: 32, arrowEvery: 10, shieldEvery: 0, miniPull: false,
+        effects: ['+1 Score & +1 Food per dot', '+32 Boost Fuel per dot', 'Arrow Charge: +1 free arrow every 10 dots eaten']
+      },
+      {
+        id: 'royal_grape', level: 5, minFood: 300, name: 'Royal Grape', color: '#8b5cf6',
+        palette: ['#8b5cf6', '#a78bfa', '#7c3aed'],
+        fuelGain: 35, arrowEvery: 0, shieldEvery: 15, miniPull: false,
+        effects: ['+1 Score & +1 Food per dot', '+35 Boost Fuel per dot', 'Shield Spark: 2-second mini shield every 15 dots eaten']
+      },
+      {
+        id: 'pink_candy', level: 6, minFood: 600, name: 'Pink Candy', color: '#ec4899',
+        palette: ['#ec4899', '#f472b6', '#db2777'],
+        fuelGain: 42, arrowEvery: 0, shieldEvery: 0, miniPull: true,
+        effects: ['+1 Score & +1 Food per dot', 'Turbo Fuel: +42 Boost Fuel per dot', 'Mini Magnet: pulls nearby dots closer when eating']
+      },
+      {
+        id: 'frost_crystal', level: 7, minFood: 1200, name: 'Frost Crystal', color: '#06b6d4',
+        palette: ['#06b6d4', '#22d3ee', '#0891b2'],
+        fuelGain: 40, arrowEvery: 8, shieldEvery: 0, miniPull: true,
+        effects: ['+1 Score & +1 Food per dot', '+40 Boost Fuel per dot', 'Mini Magnet pull + 1 free arrow every 8 dots']
+      },
+      {
+        id: 'solar_gold', level: 8, minFood: 2500, name: 'Solar Gold', color: '#eab308',
+        palette: ['#eab308', '#facc15', '#ca8a04'],
+        fuelGain: 50, arrowEvery: 6, shieldEvery: 12, miniPull: true,
+        effects: ['+1 Score & +1 Food per dot', 'Max Fuel: +50 Boost Fuel per dot', '+1 free arrow every 6 dots + Mini Shield every 12 dots + Magnet pull']
+      }
     ];
 
     let totalFoodEaten = parseInt(localStorage.getItem('snakeTotalFoodEaten_v1') || '0', 10);
     let selectedFoodTypeId = localStorage.getItem('snakeSelectedFoodType_v1') || '';
+    let inspectedFoodTypeId = '';
+    let runFoodPerkCounter = 0;
 
     function getPlayerFoodLevel() {
       let lv = 1;
@@ -4763,7 +4820,7 @@
           return;
         }
         const now = Date.now();
-        const active = getActiveFoodType();
+        const active = FOOD_TYPES_BY_LEVEL.find(ft => ft.id === inspectedFoodTypeId) || getActiveFoodType();
         const pal = active.palette || ['#ef4444'];
         const w = fc.width;
         const h = fc.height;
@@ -4902,16 +4959,61 @@
 
       const lv = getPlayerFoodLevel();
       const active = getActiveFoodType();
+      const inspected = FOOD_TYPES_BY_LEVEL.find(ft => ft.id === inspectedFoodTypeId) || active;
+      inspectedFoodTypeId = inspected.id;
+
       if (sub) sub.textContent = `Lv. ${lv} • ${active.name} (${totalFoodEaten.toLocaleString()} eaten)`;
-      if (prevTag) prevTag.textContent = `${active.name} • Lv. ${active.level}`;
+      if (prevTag) prevTag.textContent = `${inspected.name} • Lv. ${inspected.level}`;
       if (statLv) statLv.textContent = `Lv. ${lv}`;
       if (statEat) statEat.textContent = totalFoodEaten.toLocaleString();
       if (statUnl) statUnl.textContent = `${lv} / ${FOOD_TYPES_BY_LEVEL.length}`;
       if (hdrDot) {
         const inner = hdrDot.querySelector('span');
         if (inner) {
-          inner.style.backgroundColor = active.color;
-          inner.style.boxShadow = `0 0 12px ${active.color}`;
+          inner.style.backgroundColor = inspected.color;
+          inner.style.boxShadow = `0 0 12px ${inspected.color}`;
+        }
+      }
+
+      // Populate Food Details Panel for whichever food card the player clicked
+      const dDot = document.getElementById('foodDetailDot');
+      const dName = document.getElementById('foodDetailName');
+      const dLv = document.getElementById('foodDetailLevel');
+      const dEffects = document.getElementById('foodDetailEffects');
+      const btnEquipFood = document.getElementById('btnEquipInspectedFood');
+      const inspectedUnlocked = inspected.level <= lv;
+      const inspectedActive = inspected.id === active.id;
+
+      if (dDot) {
+        dDot.style.backgroundColor = inspected.color;
+        dDot.style.boxShadow = `0 0 8px ${inspected.color}`;
+      }
+      if (dName) dName.textContent = inspected.name;
+      if (dLv) dLv.textContent = `Lv. ${inspected.level}`;
+      if (dEffects) {
+        dEffects.innerHTML = '';
+        (inspected.effects || []).forEach(eff => {
+          const li = document.createElement('li');
+          li.className = 'px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/80 text-slate-700';
+          li.textContent = eff;
+          dEffects.appendChild(li);
+        });
+      }
+      if (btnEquipFood) {
+        if (inspectedActive) {
+          btnEquipFood.textContent = 'Equipped';
+          btnEquipFood.disabled = true;
+          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold shrink-0 cursor-default';
+        } else if (inspectedUnlocked) {
+          btnEquipFood.textContent = 'Use This Food';
+          btnEquipFood.disabled = false;
+          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-xs font-extrabold transition-all cursor-pointer shrink-0';
+          btnEquipFood.onclick = () => setPlayerFoodType(inspected.id);
+        } else {
+          const need = Math.max(0, inspected.minFood - totalFoodEaten);
+          btnEquipFood.textContent = `Need ${need.toLocaleString()} more`;
+          btnEquipFood.disabled = true;
+          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-slate-200 text-slate-500 text-xs font-extrabold shrink-0 cursor-not-allowed';
         }
       }
 
@@ -4933,16 +5035,18 @@
       FOOD_TYPES_BY_LEVEL.forEach((ft, idx) => {
         const unlocked = ft.level <= lv;
         const isSelected = ft.id === active.id;
+        const isInspected = ft.id === inspected.id;
         const tierLabel = FOOD_TIER_NAMES[idx] || 'Special';
         const card = document.createElement('button');
         card.type = 'button';
-        card.disabled = !unlocked;
-        card.className = `p-3.5 rounded-2xl border-2 text-left flex flex-col gap-2 transition-all ${
+        card.className = `p-3.5 rounded-2xl border-2 text-left flex flex-col gap-2 transition-all cursor-pointer active:scale-95 ${
           isSelected
-            ? 'border-slate-900 bg-slate-900 text-white shadow-lg scale-[1.01]'
-            : unlocked
-              ? 'border-slate-200 bg-white hover:border-slate-400 hover:shadow-md text-slate-800 cursor-pointer active:scale-95'
-              : 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed opacity-75'
+            ? 'border-slate-900 bg-slate-900 text-white shadow-lg'
+            : isInspected
+              ? 'border-emerald-500 bg-emerald-50/60 text-slate-900 shadow-md ring-2 ring-emerald-200'
+              : unlocked
+                ? 'border-slate-200 bg-white hover:border-slate-400 hover:shadow-md text-slate-800'
+                : 'border-slate-200/80 bg-slate-50 hover:border-slate-300 text-slate-500'
         }`;
 
         // Top row: 3-dot palette cluster + tier pill
@@ -4957,7 +5061,7 @@
           const sz = ci === 1 ? 'w-4 h-4' : 'w-3 h-3';
           d.className = `${sz} rounded-full inline-block`;
           d.style.backgroundColor = col;
-          d.style.boxShadow = unlocked ? `0 0 8px ${col}` : 'none';
+          d.style.boxShadow = `0 0 8px ${col}`;
           dotCluster.appendChild(d);
         });
 
@@ -4967,14 +5071,14 @@
             ? 'bg-emerald-500 text-white'
             : unlocked
               ? 'bg-slate-100 text-slate-600'
-              : 'bg-slate-200/70 text-slate-400'
+              : 'bg-slate-200/80 text-slate-500'
         }`;
         badge.textContent = isSelected ? 'Active' : `Lv. ${ft.level}`;
 
         topRow.appendChild(dotCluster);
         topRow.appendChild(badge);
 
-        // Bottom row: Name + Tier / Unlock requirement
+        // Bottom row: Name + Tier / Tap to see info
         const info = document.createElement('div');
         info.className = 'flex flex-col leading-tight';
         const title = document.createElement('span');
@@ -4983,18 +5087,24 @@
         const meta = document.createElement('span');
         meta.className = `text-[11px] font-semibold mt-0.5 ${isSelected ? 'text-slate-300' : (unlocked ? 'text-slate-500' : 'text-slate-400')}`;
         meta.textContent = isSelected
-          ? `${tierLabel} • Currently active`
+          ? `${tierLabel} • Active (tap for info)`
           : unlocked
-            ? `${tierLabel} • Tap to select`
-            : `Eat ${ft.minFood.toLocaleString()} dots to unlock`;
+            ? `${tierLabel} • Tap to view & use`
+            : `Locked • Tap to see what it does`;
         info.appendChild(title);
         info.appendChild(meta);
 
         card.appendChild(topRow);
         card.appendChild(info);
-        if (unlocked) {
-          card.addEventListener('click', () => setPlayerFoodType(ft.id));
-        }
+        card.addEventListener('click', () => {
+          inspectedFoodTypeId = ft.id;
+          if (unlocked) {
+            setPlayerFoodType(ft.id);
+          } else {
+            renderFoodModal();
+            if (typeof playSFX === 'function') playSFX('eat');
+          }
+        });
         grid.appendChild(card);
       });
     }
@@ -5267,7 +5377,29 @@
                   maxLife: 28
                 });
 
-                fuel = Math.min(currentMaxFuel, fuel + 25);
+                fuel = Math.min(currentMaxFuel, fuel + (activeFt.fuelGain || 25));
+                // Active Food Type in-game perks (Mini Magnet, Arrow Charge, Shield Spark)
+                runFoodPerkCounter++;
+                if (activeFt.miniPull) {
+                  for (let mi = 0; mi < foods.length; mi++) {
+                    const mf = foods[mi];
+                    const ddx = head.x - mf.x;
+                    const ddy = head.y - mf.y;
+                    const dist = Math.abs(ddx) + Math.abs(ddy);
+                    if (dist > 0 && dist <= 5) {
+                      mf.x += Math.sign(ddx);
+                      mf.y += Math.sign(ddy);
+                    }
+                  }
+                }
+                if (activeFt.arrowEvery && runFoodPerkCounter % activeFt.arrowEvery === 0 && playerArrowAmmo < MAX_PLAYER_ARROWS) {
+                  playerArrowAmmo++;
+                  floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE - 8, text: '+1 Arrow', color: '#facc15', life: 30, maxLife: 30 });
+                }
+                if (activeFt.shieldEvery && runFoodPerkCounter % activeFt.shieldEvery === 0) {
+                  spawnShieldTimer = Math.max(spawnShieldTimer, 20);
+                  floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE - 16, text: 'Mini Shield!', color: '#38bdf8', life: 30, maxLife: 30 });
+                }
                 scoreEl.textContent = score;
                 updateFuelDisplay();
                 playerAte = true;
