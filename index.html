@@ -545,9 +545,8 @@
         <button id="btnBackToWelcome" data-i18n="backBtn" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
           ← Back
         </button>
-        <button id="btnStartChooseSkin" class="px-4 py-2 rounded-xl text-xs font-bold bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer">
-          <span>🎨</span>
-          <span data-i18n="chooseSkinBefore">Choose Skin Before Joining</span>
+        <button id="btnStartChooseSkin" aria-label="Choose Snake" title="Choose Snake" class="px-3 py-1.5 rounded-2xl bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 hover:from-amber-100 hover:to-yellow-200 border-2 border-amber-400 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center cursor-pointer">
+          <canvas id="startGoldenSnakeCanvas" width="176" height="46" class="w-[150px] sm:w-[176px] h-[40px] sm:h-[46px] pointer-events-none"></canvas>
         </button>
       </div>
     </div>
@@ -7788,6 +7787,183 @@
       });
     }
     renderWelcomeSnakesShowcase();
+
+    // Draw a fantastic gleaming Golden Snake on the Start Choice page skin button
+    function renderStartGoldenSnake() {
+      const gc = document.getElementById('startGoldenSnakeCanvas');
+      if (!gc) return;
+      const gctx = gc.getContext('2d');
+      if (!gctx) return;
+      gctx.clearRect(0, 0, gc.width, gc.height);
+
+      const pts = [];
+      const steps = 8;
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = 16 + t * 136;
+        const y = 23 + Math.sin(t * Math.PI * 2.2 - 0.3) * 8.5;
+        pts.push({ x, y });
+      }
+
+      // Soft golden aura glow behind the snake
+      gctx.save();
+      gctx.shadowColor = 'rgba(245, 158, 11, 0.55)';
+      gctx.shadowBlur = 10;
+      gctx.lineCap = 'round';
+      gctx.lineJoin = 'round';
+
+      function strokeGold(width, style, yOff = 0) {
+        gctx.save();
+        gctx.lineWidth = width;
+        gctx.strokeStyle = style;
+        gctx.lineCap = 'round';
+        gctx.lineJoin = 'round';
+        gctx.beginPath();
+        gctx.moveTo(pts[0].x, pts[0].y + yOff);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) / 2;
+          const my = (pts[i].y + pts[i + 1].y) / 2 + yOff;
+          gctx.quadraticCurveTo(pts[i].x, pts[i].y + yOff, mx, my);
+        }
+        const last = pts[pts.length - 1];
+        gctx.lineTo(last.x, last.y + yOff);
+        gctx.stroke();
+        gctx.restore();
+      }
+
+      const goldGrad = gctx.createLinearGradient(16, 0, 156, 0);
+      goldGrad.addColorStop(0, '#92400e');
+      goldGrad.addColorStop(0.25, '#d97706');
+      goldGrad.addColorStop(0.55, '#facc15');
+      goldGrad.addColorStop(0.85, '#eab308');
+      goldGrad.addColorStop(1, '#b45309');
+
+      const shineGrad = gctx.createLinearGradient(16, 0, 156, 0);
+      shineGrad.addColorStop(0, '#fde047');
+      shineGrad.addColorStop(0.5, '#fef9c3');
+      shineGrad.addColorStop(1, '#fde047');
+
+      strokeGold(16, 'rgba(120, 53, 15, 0.22)', 2);
+      strokeGold(14.5, '#92400e', 0);
+      strokeGold(11.5, goldGrad, 0);
+      strokeGold(5.8, shineGrad, -0.5);
+      strokeGold(2, '#ffffff', -1);
+      gctx.restore();
+
+      // Golden diamond crest scales along the body
+      for (let i = 1; i < pts.length - 1; i++) {
+        const ang = Math.atan2(pts[i + 1].y - pts[i - 1].y, pts[i + 1].x - pts[i - 1].x);
+        gctx.save();
+        gctx.translate(pts[i].x, pts[i].y);
+        gctx.rotate(ang);
+        gctx.fillStyle = '#fef9c3';
+        gctx.strokeStyle = '#b45309';
+        gctx.lineWidth = 0.8;
+        gctx.beginPath();
+        gctx.moveTo(5, 0);
+        gctx.lineTo(-3.5, -4.2);
+        gctx.lineTo(-1.2, 0);
+        gctx.lineTo(-3.5, 4.2);
+        gctx.closePath();
+        gctx.fill();
+        gctx.stroke();
+        gctx.restore();
+      }
+
+      // Sculpted Royal Golden Dragon-Snake Head
+      const head = pts[pts.length - 1];
+      const neck = pts[pts.length - 2];
+      const headAng = Math.atan2(head.y - neck.y, head.x - neck.x) * 0.45;
+      gctx.save();
+      gctx.translate(head.x, head.y);
+      gctx.rotate(headAng);
+      // Golden horns / crest
+      gctx.fillStyle = '#fde047';
+      gctx.strokeStyle = '#92400e';
+      gctx.lineWidth = 1;
+      gctx.beginPath();
+      gctx.moveTo(-4, -5);
+      gctx.lineTo(-11, -10.5);
+      gctx.lineTo(-1, -6.5);
+      gctx.closePath();
+      gctx.fill();
+      gctx.stroke();
+      gctx.beginPath();
+      gctx.moveTo(-4, 5);
+      gctx.lineTo(-11, 10.5);
+      gctx.lineTo(-1, 6.5);
+      gctx.closePath();
+      gctx.fill();
+      gctx.stroke();
+      // Main head shape
+      gctx.fillStyle = '#b45309';
+      gctx.beginPath();
+      gctx.moveTo(13, 0);
+      gctx.quadraticCurveTo(7.5, -9, -6.5, -7);
+      gctx.quadraticCurveTo(-9.5, 0, -6.5, 7);
+      gctx.quadraticCurveTo(7.5, 9, 13, 0);
+      gctx.closePath();
+      gctx.fill();
+      // Bright gold snout & crown highlight
+      gctx.fillStyle = '#facc15';
+      gctx.beginPath();
+      gctx.moveTo(10.5, 0);
+      gctx.quadraticCurveTo(5.5, -6, -4.5, -4.5);
+      gctx.quadraticCurveTo(-6.5, 0, -4.5, 4.5);
+      gctx.quadraticCurveTo(5.5, 6, 10.5, 0);
+      gctx.closePath();
+      gctx.fill();
+      // Shimmering white forehead gem
+      gctx.fillStyle = '#ffffff';
+      gctx.beginPath();
+      gctx.moveTo(3, 0);
+      gctx.lineTo(-1, -2.5);
+      gctx.lineTo(-4, 0);
+      gctx.lineTo(-1, 2.5);
+      gctx.closePath();
+      gctx.fill();
+      // Radiant emerald-gold eyes
+      gctx.fillStyle = '#ffffff';
+      gctx.beginPath();
+      gctx.arc(4.8, -3.9, 2.2, 0, Math.PI * 2);
+      gctx.arc(4.8, 3.9, 2.2, 0, Math.PI * 2);
+      gctx.fill();
+      gctx.fillStyle = '#0f172a';
+      gctx.beginPath();
+      gctx.arc(5.5, -3.9, 1.1, 0, Math.PI * 2);
+      gctx.arc(5.5, 3.9, 1.1, 0, Math.PI * 2);
+      gctx.fill();
+      gctx.restore();
+
+      // Subtle golden sparkles around the snake
+      const sparkles = [
+        { x: 38, y: 8, r: 2.6 },
+        { x: 96, y: 7, r: 3.1 },
+        { x: 132, y: 38, r: 2.5 },
+        { x: 64, y: 39, r: 2.2 }
+      ];
+      sparkles.forEach(sp => {
+        gctx.save();
+        gctx.translate(sp.x, sp.y);
+        gctx.fillStyle = '#ffffff';
+        gctx.strokeStyle = '#f59e0b';
+        gctx.lineWidth = 0.7;
+        gctx.beginPath();
+        gctx.moveTo(0, -sp.r * 1.4);
+        gctx.lineTo(sp.r * 0.45, -sp.r * 0.45);
+        gctx.lineTo(sp.r * 1.4, 0);
+        gctx.lineTo(sp.r * 0.45, sp.r * 0.45);
+        gctx.lineTo(0, sp.r * 1.4);
+        gctx.lineTo(-sp.r * 0.45, sp.r * 0.45);
+        gctx.lineTo(-sp.r * 1.4, 0);
+        gctx.lineTo(-sp.r * 0.45, -sp.r * 0.45);
+        gctx.closePath();
+        gctx.fill();
+        gctx.stroke();
+        gctx.restore();
+      });
+    }
+    renderStartGoldenSnake();
     if (btnBackToWelcome) btnBackToWelcome.addEventListener('click', showWelcomeBlankPage);
     if (btnJoinWithPlayers) btnJoinWithPlayers.addEventListener('click', () => enterServerFromChoice('full'));
     if (btnJoinEmptyFreeServer) btnJoinEmptyFreeServer.addEventListener('click', () => enterServerFromChoice('empty_free'));
