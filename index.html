@@ -3887,131 +3887,140 @@
       }
     }
 
-    // SMOOTH ROUND SNAKE HEAD with 8 unique distinct styles!
+    // SMOOTH ROUND SNAKE HEAD matched seamlessly to body colors & neck width!
     function drawRoundSnakeHead(tctx, cfg) {
       const { headStyle } = getSnakeVisualStyle(cfg);
-      const baseColor = cfg.headColor || cfg.bodyColor || '#2563eb';
+      const bodyColor = cfg.bodyColor || cfg.headColor || '#2563eb';
       const innerColor = cfg.innerColor || '#60a5fa';
       const accentColor = cfg.stripeColor || '#ffffff';
 
-      // Soft head drop shadow
-      tctx.fillStyle = 'rgba(15, 23, 42, 0.16)';
+      // Soft head drop shadow matching body shadow
+      tctx.fillStyle = 'rgba(15, 23, 42, 0.11)';
       tctx.beginPath();
-      tctx.arc(0.5, 1.5, 9.5, 0, Math.PI * 2);
+      tctx.arc(0, 1.5, 8.6, 0, Math.PI * 2);
       tctx.fill();
 
-      // Back accessories (behind the round head)
+      // Back accessories (behind the round head, matched to bodyColor)
       if (headStyle === 'ears') {
-        tctx.fillStyle = baseColor;
+        tctx.fillStyle = bodyColor;
         tctx.beginPath();
-        tctx.moveTo(-2, -7.5); tctx.lineTo(-7.5, -13); tctx.lineTo(3, -8.2); tctx.closePath();
+        tctx.moveTo(-2, -6.8); tctx.lineTo(-7, -12); tctx.lineTo(2.5, -7.2); tctx.closePath();
         tctx.fill();
         tctx.beginPath();
-        tctx.moveTo(-2, 7.5); tctx.lineTo(-7.5, 13); tctx.lineTo(3, 8.2); tctx.closePath();
+        tctx.moveTo(-2, 6.8); tctx.lineTo(-7, 12); tctx.lineTo(2.5, 7.2); tctx.closePath();
         tctx.fill();
         tctx.fillStyle = innerColor;
         tctx.beginPath();
-        tctx.moveTo(-1.5, -7.8); tctx.lineTo(-5.2, -10.8); tctx.lineTo(1.5, -8.1); tctx.closePath();
+        tctx.moveTo(-1.5, -7.1); tctx.lineTo(-4.8, -9.8); tctx.lineTo(1.2, -7.3); tctx.closePath();
         tctx.fill();
         tctx.beginPath();
-        tctx.moveTo(-1.5, 7.8); tctx.lineTo(-5.2, 10.8); tctx.lineTo(1.5, 8.1); tctx.closePath();
+        tctx.moveTo(-1.5, 7.1); tctx.lineTo(-4.8, 9.8); tctx.lineTo(1.2, 7.3); tctx.closePath();
         tctx.fill();
       } else if (headStyle === 'horns') {
         tctx.fillStyle = accentColor;
-        tctx.strokeStyle = baseColor;
+        tctx.strokeStyle = bodyColor;
         tctx.lineWidth = 1;
         tctx.beginPath();
-        tctx.moveTo(-3, -6); tctx.lineTo(-10.5, -11.5); tctx.lineTo(0.5, -7.5); tctx.closePath();
+        tctx.moveTo(-2.5, -5.5); tctx.lineTo(-9.5, -10.5); tctx.lineTo(0.5, -6.8); tctx.closePath();
         tctx.fill(); tctx.stroke();
         tctx.beginPath();
-        tctx.moveTo(-3, 6); tctx.lineTo(-10.5, 11.5); tctx.lineTo(0.5, 7.5); tctx.closePath();
+        tctx.moveTo(-2.5, 5.5); tctx.lineTo(-9.5, 10.5); tctx.lineTo(0.5, 6.8); tctx.closePath();
         tctx.fill(); tctx.stroke();
       } else if (headStyle === 'antennae') {
-        tctx.strokeStyle = baseColor;
+        tctx.strokeStyle = bodyColor;
         tctx.lineWidth = 1.6;
         tctx.beginPath();
-        tctx.moveTo(4, -5); tctx.lineTo(11, -10);
-        tctx.moveTo(4, 5); tctx.lineTo(11, 10);
+        tctx.moveTo(3.5, -4.5); tctx.lineTo(10, -9.2);
+        tctx.moveTo(3.5, 4.5); tctx.lineTo(10, 9.2);
         tctx.stroke();
         tctx.fillStyle = accentColor;
         tctx.beginPath();
-        tctx.arc(11.5, -10.3, 2.3, 0, Math.PI * 2);
-        tctx.arc(11.5, 10.3, 2.3, 0, Math.PI * 2);
+        tctx.arc(10.5, -9.5, 2.1, 0, Math.PI * 2);
+        tctx.arc(10.5, 9.5, 2.1, 0, Math.PI * 2);
         tctx.fill();
       } else if (headStyle === 'spikes') {
         tctx.fillStyle = accentColor;
-        for (const sy of [-5, 0, 5]) {
+        for (const sy of [-4.5, 0, 4.5]) {
           tctx.beginPath();
-          tctx.moveTo(-6, sy - 2);
-          tctx.lineTo(-12.5, sy);
-          tctx.lineTo(-6, sy + 2);
+          tctx.moveTo(-5.5, sy - 1.8);
+          tctx.lineTo(-11.2, sy);
+          tctx.lineTo(-5.5, sy + 1.8);
           tctx.closePath();
           tctx.fill();
         }
       }
 
-      // Main Smooth ROUND Head
-      tctx.fillStyle = baseColor;
+      // Main Smooth ROUND Head in EXACT bodyColor so it blends seamlessly with the neck!
+      tctx.fillStyle = bodyColor;
       tctx.beginPath();
-      tctx.arc(0.5, 0, 9.2, 0, Math.PI * 2);
+      tctx.arc(0, 0, 8.2, 0, Math.PI * 2);
       tctx.fill();
 
-      // Inner round highlight dome
+      // Inner round dome in EXACT innerColor flowing smoothly from the body's inner core
       tctx.fillStyle = innerColor;
       tctx.beginPath();
-      tctx.arc(-0.5, 0, 6.4, 0, Math.PI * 2);
+      tctx.arc(-0.6, 0, 5.4, 0, Math.PI * 2);
       tctx.fill();
+
+      // Seamless center stripe bridge into the back of the head
+      tctx.strokeStyle = accentColor;
+      tctx.lineWidth = 2.2;
+      tctx.lineCap = 'round';
+      tctx.beginPath();
+      tctx.moveTo(-7.5, 0);
+      tctx.lineTo(-1.5, 0);
+      tctx.stroke();
 
       // Top / Front accessories
       if (headStyle === 'visor') {
         // Sleek glowing cyber visor across the round head
         tctx.fillStyle = '#0f172a';
         tctx.beginPath();
-        tctx.roundRect ? tctx.roundRect(1.2, -6.5, 5.8, 13, 3) : tctx.rect(1.2, -6.5, 5.8, 13);
+        tctx.roundRect ? tctx.roundRect(1, -5.8, 5.2, 11.6, 2.8) : tctx.rect(1, -5.8, 5.2, 11.6);
         tctx.fill();
         tctx.fillStyle = accentColor;
         tctx.beginPath();
-        tctx.roundRect ? tctx.roundRect(2.6, -5.2, 3, 10.4, 1.5) : tctx.rect(2.6, -5.2, 3, 10.4);
+        tctx.roundRect ? tctx.roundRect(2.2, -4.6, 2.8, 9.2, 1.4) : tctx.rect(2.2, -4.6, 2.8, 9.2);
         tctx.fill();
       } else {
         // Expressive round eyes with white glint
         tctx.fillStyle = '#ffffff';
         tctx.beginPath();
-        tctx.arc(4.2, -3.9, 2.7, 0, Math.PI * 2);
-        tctx.arc(4.2, 3.9, 2.7, 0, Math.PI * 2);
+        tctx.arc(3.4, -3.5, 2.5, 0, Math.PI * 2);
+        tctx.arc(3.4, 3.5, 2.5, 0, Math.PI * 2);
         tctx.fill();
 
         tctx.fillStyle = '#0f172a';
         tctx.beginPath();
-        tctx.arc(5.1, -3.9, 1.4, 0, Math.PI * 2);
-        tctx.arc(5.1, 3.9, 1.4, 0, Math.PI * 2);
+        tctx.arc(4.2, -3.5, 1.3, 0, Math.PI * 2);
+        tctx.arc(4.2, 3.5, 1.3, 0, Math.PI * 2);
         tctx.fill();
 
         tctx.fillStyle = '#ffffff';
         tctx.beginPath();
-        tctx.arc(4.6, -4.5, 0.55, 0, Math.PI * 2);
-        tctx.arc(4.6, 3.3, 0.55, 0, Math.PI * 2);
+        tctx.arc(3.8, -4.0, 0.5, 0, Math.PI * 2);
+        tctx.arc(3.8, 3.0, 0.5, 0, Math.PI * 2);
         tctx.fill();
       }
 
       if (headStyle === 'gem') {
         tctx.fillStyle = accentColor;
         tctx.beginPath();
-        tctx.moveTo(1.5, 0); tctx.lineTo(-1.8, -2.5); tctx.lineTo(-4.8, 0); tctx.lineTo(-1.8, 2.5); tctx.closePath();
+        tctx.moveTo(1.2, 0); tctx.lineTo(-1.6, -2.2); tctx.lineTo(-4.2, 0); tctx.lineTo(-1.6, 2.2); tctx.closePath();
         tctx.fill();
       } else if (headStyle === 'crown') {
         tctx.fillStyle = '#facc15';
         tctx.strokeStyle = '#a16207';
         tctx.lineWidth = 0.8;
         tctx.beginPath();
-        tctx.moveTo(-4, -3.5); tctx.lineTo(-0.5, -2.2); tctx.lineTo(-2.5, 0);
-        tctx.lineTo(-0.5, 2.2); tctx.lineTo(-4, 3.5); tctx.lineTo(-5.5, 0); tctx.closePath();
+        tctx.moveTo(-3.5, -3.2); tctx.lineTo(-0.4, -2); tctx.lineTo(-2.2, 0);
+        tctx.lineTo(-0.4, 2); tctx.lineTo(-3.5, 3.2); tctx.lineTo(-5, 0); tctx.closePath();
         tctx.fill(); tctx.stroke();
       } else if (headStyle === 'halo') {
         tctx.strokeStyle = accentColor;
-        tctx.lineWidth = 1.7;
+        tctx.lineWidth = 1.6;
         tctx.beginPath();
-        tctx.arc(-2.5, 0, 5.2, 0, Math.PI * 2);
+        tctx.arc(-2.2, 0, 4.6, 0, Math.PI * 2);
         tctx.stroke();
       }
     }
