@@ -230,6 +230,10 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <!-- Level Sign on top-right of Snakes page -->
+          <div class="flex items-center gap-1 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 text-xs font-mono">
+            <span class="text-indigo-700 font-black">Level <strong id="skinsModalLevelNum">1</strong></span>
+          </div>
           <!-- Food Bank Display -->
           <div class="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-xs font-mono">
             <span class="text-emerald-700 font-bold flex items-center gap-1"><span>🍎</span> <strong id="modalFoodBank">0</strong> Food</span>
@@ -5795,6 +5799,8 @@
         wDot.style.boxShadow = `0 0 8px ${active.color}`;
       }
       if (wLbl) wLbl.textContent = `Lv. ${lv} • ${active.name}`;
+      const skinLvEl = document.getElementById('skinsModalLevelNum');
+      if (skinLvEl) skinLvEl.textContent = String(lv);
 
       if (lvBadge) lvBadge.textContent = `Lv. ${lv} • ${active.name}`;
 
