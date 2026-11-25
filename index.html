@@ -3526,6 +3526,148 @@
       return isPlayerAlive && snake.length > 0;
     }
 
+    // MINI LIVE SNAKE SHAPE PREVIEW: Shows exact curved body, stripes, wolf spines & head before taking a snake!
+    function renderSnakePreview(previewCanvas, cfg) {
+      if (!previewCanvas || !cfg) return;
+      const pctx = previewCanvas.getContext('2d');
+      if (!pctx) return;
+
+      const w = previewCanvas.width;
+      const h = previewCanvas.height;
+      pctx.clearRect(0, 0, w, h);
+
+      // Clean light-grey arena preview backdrop matching the real game floor
+      pctx.fillStyle = '#e2e8f0';
+      pctx.fillRect(0, 0, w, h);
+
+      // Build a smooth S-curved snake body from left tail to right head
+      const pts = [
+        { x: 24,  y: 34 },
+        { x: 52,  y: 42 },
+        { x: 82,  y: 28 },
+        { x: 112, y: 16 },
+        { x: 142, y: 28 }
+      ];
+
+      function strokeCurve(lineWidth, color, yOff = 0) {
+        pctx.save();
+        pctx.lineWidth = lineWidth;
+        pctx.strokeStyle = color;
+        pctx.lineCap = 'round';
+        pctx.lineJoin = 'round';
+        pctx.beginPath();
+        pctx.moveTo(pts[0].x, pts[0].y + yOff);
+        pctx.lineTo((pts[0].x + pts[1].x) / 2, (pts[0].y + pts[1].y) / 2 + yOff);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) / 2;
+          const my = (pts[i].y + pts[i + 1].y) / 2 + yOff;
+          pctx.quadraticCurveTo(pts[i].x, pts[i].y + yOff, mx, my);
+        }
+        const last = pts[pts.length - 1];
+        pctx.lineTo(last.x, last.y + yOff);
+        pctx.stroke();
+        pctx.restore();
+      }
+
+      // Draw exact 4 layered body strokes (shadow, outer, inner, racing stripe)
+      strokeCurve(cfg.type === 'snake' ? 15 : 16, 'rgba(0, 0, 0, 0.09)', 1.5);
+      strokeCurve(14, cfg.bodyColor || '#2563eb', 0);
+      strokeCurve(8.5, cfg.innerColor || '#60a5fa', 0);
+      strokeCurve(2.5, cfg.stripeColor || '#ffffff', 0);
+
+      // Draw white spine triangles if Wolf / Dragon skin has them
+      if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
+        for (let i = 1; i < pts.length - 1; i++) {
+          const prev = pts[i - 1];
+          const next = pts[i + 1];
+          const ang = Math.atan2(next.y - prev.y, next.x - prev.x);
+          pctx.save();
+          pctx.translate(pts[i].x, pts[i].y);
+          pctx.rotate(ang);
+          pctx.fillStyle = '#ffffff';
+          pctx.beginPath();
+          pctx.moveTo(5.5, 0);
+          pctx.lineTo(-4.5, -5);
+          pctx.lineTo(-2, 0);
+          pctx.lineTo(-4.5, 5);
+          pctx.closePath();
+          pctx.fill();
+          pctx.restore();
+        }
+      }
+
+      // Draw exact Head Shape at the front of the preview snake
+      const head = pts[pts.length - 1];
+      const neck = pts[pts.length - 2];
+      const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x) * 0.45;
+
+      pctx.save();
+      pctx.translate(head.x, head.y);
+      pctx.rotate(headAngle);
+
+      if (cfg.type === 'snake') {
+        pctx.fillStyle = cfg.headColor || cfg.bodyColor || '#16a34a';
+        pctx.beginPath();
+        pctx.ellipse(2, 0, 9.5, 7.8, 0, 0, Math.PI * 2);
+        pctx.fill();
+
+        pctx.fillStyle = '#ffffff';
+        pctx.beginPath();
+        pctx.arc(4, -4, 2.6, 0, Math.PI * 2);
+        pctx.arc(4, 4, 2.6, 0, Math.PI * 2);
+        pctx.fill();
+
+        pctx.fillStyle = '#0f172a';
+        pctx.beginPath();
+        pctx.arc(5, -4, 1.35, 0, Math.PI * 2);
+        pctx.arc(5, 4, 1.35, 0, Math.PI * 2);
+        pctx.fill();
+      } else if (cfg.id === 'blue_wolf' || cfg.hasWolfTriangles) {
+        // Wolf Hovercraft shape with ears
+        pctx.fillStyle = '#1e3a8a';
+        pctx.beginPath();
+        if (pctx.roundRect) pctx.roundRect(-9, -7, 20, 14, [4, 8, 8, 4]);
+        else pctx.rect(-9, -7, 20, 14);
+        pctx.fill();
+
+        pctx.fillStyle = '#2563eb';
+        pctx.beginPath();
+        if (pctx.roundRect) pctx.roundRect(-7, -5, 16, 10, [3, 6, 6, 3]);
+        else pctx.rect(-7, -5, 16, 10);
+        pctx.fill();
+
+        // Pointed wolf ears
+        pctx.fillStyle = '#1e3a8a';
+        pctx.beginPath();
+        pctx.moveTo(-2, -7); pctx.lineTo(2, -11); pctx.lineTo(4, -7);
+        pctx.moveTo(-2, 7);  pctx.lineTo(2, 11);  pctx.lineTo(4, 7);
+        pctx.closePath();
+        pctx.fill();
+      } else {
+        // Sleek Hovercar chassis shape
+        pctx.fillStyle = cfg.headColor || cfg.bodyColor || '#7c3aed';
+        pctx.beginPath();
+        if (pctx.roundRect) pctx.roundRect(-9, -7, 20, 14, [4, 8, 8, 4]);
+        else pctx.rect(-9, -7, 20, 14);
+        pctx.fill();
+
+        pctx.fillStyle = cfg.innerColor || '#a78bfa';
+        pctx.beginPath();
+        if (pctx.roundRect) pctx.roundRect(-6, -4.5, 13, 9, [2, 5, 5, 2]);
+        else pctx.rect(-6, -4.5, 13, 9);
+        pctx.fill();
+
+        // Windshield
+        pctx.fillStyle = '#0f172a';
+        pctx.beginPath();
+        if (pctx.roundRect) pctx.roundRect(1, -4, 5, 8, 2);
+        else pctx.rect(1, -4, 5, 8);
+        pctx.fill();
+      }
+
+      pctx.restore();
+    }
+
     function renderSkinsGrid() {
       skinsGrid.innerHTML = '';
       const inGame = isInGame();
@@ -3617,13 +3759,8 @@
             </div>
           </div>
 
-          <!-- Color Swatch Preview Strip -->
-          <div class="w-full h-2 rounded-full overflow-hidden flex border border-slate-200 mb-1.5">
-            <div style="background-color: ${s.bodyColor}; width: 35%;"></div>
-            <div style="background-color: ${s.innerColor}; width: 35%;"></div>
-            <div style="background-color: ${s.stripeColor}; width: 15%;"></div>
-            <div style="background-color: ${s.headColor}; width: 15%;"></div>
-          </div>
+          <!-- Live Snake Shape Preview Canvas -->
+          <canvas class="skin-preview-canvas w-full h-14 rounded-xl bg-slate-200 border border-slate-300/80 mb-2 block" width="180" height="56"></canvas>
 
           <!-- Special Triangle Tag if Wolf/Dragon -->
           ${s.hasWolfTriangles ? '<div class="text-[9px] font-semibold text-blue-600 mb-1 flex items-center gap-0.5"><span>▲</span> White Spines</div>' : ''}
@@ -3653,6 +3790,10 @@
             }
           </div>
         `;
+
+        // Render exact curved snake shape preview on this card's canvas
+        const previewCanvas = card.querySelector('.skin-preview-canvas');
+        if (previewCanvas) renderSnakePreview(previewCanvas, s);
 
         const btnEquip = card.querySelector('.btn-equip');
         if (btnEquip) {
