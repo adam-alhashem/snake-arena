@@ -4558,7 +4558,7 @@
             for (let i = foods.length - 1; i >= 0; i--) {
               if (head.x === foods[i].x && head.y === foods[i].y) {
                 foods.splice(i, 1);
-                score += 10;
+                score += 1;
                 playSFX('eat');
                 recordRewardProgress('bestScore', score);
                 // Award 1 Food per food eaten
@@ -4685,7 +4685,7 @@
         for (let i = foods.length - 1; i >= 0; i--) {
           if (bHead.x === foods[i].x && bHead.y === foods[i].y) {
             foods.splice(i, 1);
-            bot.score += 10;
+            bot.score += 1;
             if (bot.id === 0) bot1ScoreEl.textContent = bot.score;
             if (bot.id === 1) bot2ScoreEl.textContent = bot.score;
             botAte = true;
