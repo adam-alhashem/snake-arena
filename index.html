@@ -7949,6 +7949,139 @@
       }
     ];
 
+    // Generate 500+ endless tiered rewards across Easy, Medium & Hard so there are too many to count!
+    (function populateMassiveRewards() {
+      const rankNames = [
+        'Rookie', 'Scout', 'Hunter', 'Striker', 'Viper', 'Cobra', 'Python', 'Mamba',
+        'Raptor', 'Shadow', 'Phantom', 'Storm', 'Blaze', 'Nova', 'Apex', 'Titan',
+        'Dragon', 'Emperor', 'Monarch', 'Legend', 'Mythic', 'Cosmic', 'Galactic',
+        'Immortal', 'Omega', 'Infinity', 'Celestial', 'Hyper', 'Supreme', 'Godlike'
+      ];
+
+      function makePrize(tierIdx, diff) {
+        const foodBonus = diff === 'easy'
+          ? 200 + tierIdx * 120
+          : diff === 'medium'
+            ? 800 + tierIdx * 350
+            : 2500 + tierIdx * 900;
+
+        if (tierIdx % 12 === 11) {
+          const tiers = diff === 'easy' ? [1, 2] : diff === 'medium' ? [2, 3] : [4, 5];
+          const tLabel = diff === 'easy' ? 'Common/Rare' : diff === 'medium' ? 'Rare/Epic' : 'Legendary/Mythic';
+          return {
+            label: `Free ${tLabel} Skin + ${foodBonus.toLocaleString()} Food`,
+            grant: () => {
+              addFoodBank(foodBonus);
+              const sm = unlockRandomRewardSkin(tiers, tLabel);
+              return `+${foodBonus.toLocaleString()} Food + ${sm}`;
+            }
+          };
+        }
+        if (tierIdx % 7 === 3) {
+          const fuelAdd = diff === 'easy' ? 5 : diff === 'medium' ? 10 : 20;
+          return {
+            label: `+${fuelAdd} Max Fuel + ${foodBonus.toLocaleString()} Food`,
+            grant: () => {
+              rewardsState.perks.bonusFuel = (rewardsState.perks.bonusFuel || 0) + fuelAdd;
+              addFoodBank(foodBonus);
+              setSkin(currentSkin, true);
+              return `+${fuelAdd} Max Fuel & +${foodBonus.toLocaleString()} Food claimed!`;
+            }
+          };
+        }
+        if (tierIdx % 9 === 5) {
+          const shieldSec = diff === 'easy' ? 1 : diff === 'medium' ? 2 : 3;
+          return {
+            label: `+${shieldSec}s Spawn Shield + ${foodBonus.toLocaleString()} Food`,
+            grant: () => {
+              rewardsState.perks.bonusShieldTicks = (rewardsState.perks.bonusShieldTicks || 0) + shieldSec * 10;
+              addFoodBank(foodBonus);
+              return `+${shieldSec}s Spawn Shield & +${foodBonus.toLocaleString()} Food claimed!`;
+            }
+          };
+        }
+        return {
+          label: `+${foodBonus.toLocaleString()} Food`,
+          grant: () => {
+            addFoodBank(foodBonus);
+            return `+${foodBonus.toLocaleString()} Food claimed!`;
+          }
+        };
+      }
+
+      // 1) 150 Score Challenges (5 to 25,000+ score)
+      for (let i = 1; i <= 150; i++) {
+        const target = i <= 25 ? i * 5 : i <= 75 ? 125 + (i - 25) * 25 : 1375 + (i - 75) * 250;
+        const diff = i <= 45 ? 'easy' : i <= 100 ? 'medium' : 'hard';
+        const rName = rankNames[(i - 1) % rankNames.length];
+        const prize = makePrize(i, diff);
+        REWARD_CHALLENGES.push({
+          id: `mass_score_${i}`,
+          difficulty: diff,
+          title: `${rName} Scorer #${i}`,
+          desc: `Reach a score of ${target.toLocaleString()} in one life`,
+          metric: 'bestScore',
+          target: target,
+          rewardLabel: prize.label,
+          grant: prize.grant
+        });
+      }
+
+      // 2) 130 Survival Endurance Challenges (15s to 1 hour+)
+      for (let i = 1; i <= 130; i++) {
+        const target = i <= 30 ? i * 10 : i <= 80 ? 300 + (i - 30) * 20 : 1300 + (i - 80) * 45;
+        const diff = i <= 40 ? 'easy' : i <= 85 ? 'medium' : 'hard';
+        const rName = rankNames[(i + 5) % rankNames.length];
+        const prize = makePrize(i, diff);
+        REWARD_CHALLENGES.push({
+          id: `mass_survive_${i}`,
+          difficulty: diff,
+          title: `${rName} Survivor #${i}`,
+          desc: `Survive ${target.toLocaleString()} seconds in one life`,
+          metric: 'bestSurvivalSec',
+          target: target,
+          rewardLabel: prize.label,
+          grant: prize.grant
+        });
+      }
+
+      // 3) 120 Circle Loop Mastery Challenges (1 to 350 loops)
+      for (let i = 1; i <= 120; i++) {
+        const target = i <= 30 ? i : i <= 80 ? 30 + (i - 30) * 3 : 180 + (i - 80) * 5;
+        const diff = i <= 35 ? 'easy' : i <= 80 ? 'medium' : 'hard';
+        const rName = rankNames[(i + 11) % rankNames.length];
+        const prize = makePrize(i, diff);
+        REWARD_CHALLENGES.push({
+          id: `mass_circle_${i}`,
+          difficulty: diff,
+          title: `${rName} Looper #${i}`,
+          desc: `Perform ${target.toLocaleString()} circle loops in one life`,
+          metric: 'bestCircles',
+          target: target,
+          rewardLabel: prize.label,
+          grant: prize.grant
+        });
+      }
+
+      // 4) 110 King Crown Reign Challenges (5s to 2,500s as #1 King)
+      for (let i = 1; i <= 110; i++) {
+        const target = i <= 30 ? i * 5 : i <= 75 ? 150 + (i - 30) * 15 : 825 + (i - 75) * 50;
+        const diff = i <= 30 ? 'easy' : i <= 70 ? 'medium' : 'hard';
+        const rName = rankNames[(i + 17) % rankNames.length];
+        const prize = makePrize(i, diff);
+        REWARD_CHALLENGES.push({
+          id: `mass_king_${i}`,
+          difficulty: diff,
+          title: `${rName} Monarch #${i}`,
+          desc: `Hold the #1 King Crown for ${target.toLocaleString()} seconds total`,
+          metric: 'kingSeconds',
+          target: target,
+          rewardLabel: prize.label,
+          grant: prize.grant
+        });
+      }
+    })();
+
     function unlockRandomRewardSkin(preferredTiers, tierLabel) {
       let locked = SKINS_LIST.filter(s => !unlockedSkins.includes(s.id) && s.foodCost > 0 && s.id !== 'golden_emperor' && preferredTiers.includes(s.tier));
       if (locked.length === 0) {
@@ -8072,22 +8205,62 @@
       showRewardToast(resultMsg);
     }
 
+    let rewardsVisibleLimit = 60;
+
+    function claimAllReadyRewards() {
+      let claimedCount = 0;
+      REWARD_CHALLENGES.forEach(ch => {
+        if (rewardsState.claimed[ch.id]) return;
+        const cur = rewardsState.progress[ch.metric] || 0;
+        if (cur >= ch.target) {
+          rewardsState.claimed[ch.id] = true;
+          ch.grant();
+          claimedCount++;
+        }
+      });
+      if (claimedCount > 0) {
+        saveRewardsState();
+        updateRewardsBadges();
+        renderRewardsModal();
+        showRewardToast(`Claimed ${claimedCount} rewards at once!`);
+      }
+    }
+
     function renderRewardsModal() {
       if (!rewardsList || !rewardsPerksBar) return;
       const p = rewardsState.perks || {};
+      const totalRewards = REWARD_CHALLENGES.length;
+      const totalClaimed = REWARD_CHALLENGES.filter(c => !!rewardsState.claimed[c.id]).length;
+      const readyCount = REWARD_CHALLENGES.filter(c => !rewardsState.claimed[c.id] && (rewardsState.progress[c.metric] || 0) >= c.target).length;
+
       rewardsPerksBar.innerHTML = `
+        <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 border border-indigo-200 font-black">Total: ${totalRewards.toLocaleString()}+ Rewards</span>
+        <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">Claimed: ${totalClaimed}</span>
         <span class="px-2 py-0.5 rounded bg-white border border-slate-200">⚡ Bonus Fuel: +${p.bonusFuel || 0}</span>
         <span class="px-2 py-0.5 rounded bg-white border border-slate-200">🛡️ Shield: +${Math.round((p.bonusShieldTicks || 0) / 10)}s${p.doubleShield ? ' (2×!)' : ''}</span>
         <span class="px-2 py-0.5 rounded bg-white border border-slate-200">🧲 Magnet: ${p.magnetStronger ? 'Super' : (p.magnetUnlocked ? 'Unlocked' : 'Locked')}</span>
         ${p.championBadge ? '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">👑 Champion Badge</span>' : ''}
+        ${readyCount >= 2 ? `<button id="btnClaimAllRewards" type="button" class="px-2.5 py-0.5 rounded bg-amber-500 hover:bg-amber-600 text-white font-black shadow-xs cursor-pointer">Claim All Ready (${readyCount})</button>` : ''}
       `;
+      const btnClaimAll = document.getElementById('btnClaimAllRewards');
+      if (btnClaimAll) btnClaimAll.addEventListener('click', claimAllReadyRewards);
 
-      const filtered = currentRewardFilter === 'all'
+      const filtered = (currentRewardFilter === 'all'
         ? REWARD_CHALLENGES
-        : REWARD_CHALLENGES.filter(c => c.difficulty === currentRewardFilter);
+        : REWARD_CHALLENGES.filter(c => c.difficulty === currentRewardFilter)
+      ).slice().sort((a, b) => {
+        const aClaimed = !!rewardsState.claimed[a.id];
+        const bClaimed = !!rewardsState.claimed[b.id];
+        const aReady = !aClaimed && (rewardsState.progress[a.metric] || 0) >= a.target;
+        const bReady = !bClaimed && (rewardsState.progress[b.metric] || 0) >= b.target;
+        if (aReady !== bReady) return aReady ? -1 : 1;
+        if (aClaimed !== bClaimed) return aClaimed ? 1 : -1;
+        return 0;
+      });
 
+      const visibleList = filtered.slice(0, rewardsVisibleLimit);
       rewardsList.innerHTML = '';
-      filtered.forEach(ch => {
+      visibleList.forEach(ch => {
         const cur = Math.min(ch.target, rewardsState.progress[ch.metric] || 0);
         const pct = Math.round((cur / ch.target) * 100);
         const isDone = cur >= ch.target;
@@ -8141,10 +8314,24 @@
       rewardsList.querySelectorAll('.claim-reward-btn').forEach(btn => {
         btn.addEventListener('click', () => claimReward(btn.getAttribute('data-claim-id')));
       });
+
+      if (filtered.length > rewardsVisibleLimit) {
+        const remaining = filtered.length - rewardsVisibleLimit;
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.type = 'button';
+        loadMoreBtn.className = 'w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold shadow-sm transition-all cursor-pointer';
+        loadMoreBtn.textContent = `Load More Rewards (${remaining.toLocaleString()} more remaining)`;
+        loadMoreBtn.addEventListener('click', () => {
+          rewardsVisibleLimit += 60;
+          renderRewardsModal();
+        });
+        rewardsList.appendChild(loadMoreBtn);
+      }
     }
 
     function openRewardsModal() {
       if (!rewardsModal) return;
+      rewardsVisibleLimit = 60;
       renderRewardsModal();
       rewardsModal.classList.remove('hidden');
     }
