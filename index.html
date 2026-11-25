@@ -362,10 +362,84 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- FIRST PAGE: PLAYER PROFILE SETUP (LANGUAGE, NAME, DATE, BOY OR GIRL)      -->
+  <!-- PAGE 0 (VERY FIRST PAGE): INTERACTIVE WORLD MAP LANGUAGE PICKER           -->
   <!-- ========================================================================= -->
-  <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-    <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
+  <div id="languageMapPage" class="fixed inset-0 z-[70] bg-gradient-to-b from-sky-100 via-sky-50 to-white flex flex-col items-center justify-between p-4 sm:p-6 overflow-y-auto" dir="ltr">
+    <!-- Top Header -->
+    <div class="text-center flex flex-col items-center gap-1 mt-1">
+      <h1 id="langMapTitle" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Choose Your Language</h1>
+      <p id="langMapSub" class="text-xs sm:text-sm font-semibold text-slate-500">Tap a region on the world map to pick your language</p>
+    </div>
+
+    <!-- Interactive Stylized World Map with 14 Geographic Language Pins -->
+    <div id="worldMapStage" class="relative w-full max-w-5xl aspect-[16/9] min-h-[280px] max-h-[64vh] my-3 rounded-3xl bg-gradient-to-b from-sky-200/90 via-cyan-100/80 to-sky-200/90 border-2 border-sky-300 shadow-xl overflow-hidden select-none">
+      <!-- Stylized World Continents SVG -->
+      <svg viewBox="0 0 1000 520" preserveAspectRatio="none" class="w-full h-full block pointer-events-none">
+        <!-- Subtle map latitude/longitude lines -->
+        <g stroke="rgba(14, 116, 144, 0.12)" stroke-width="1" fill="none">
+          <line x1="0" y1="130" x2="1000" y2="130" />
+          <line x1="0" y1="260" x2="1000" y2="260" />
+          <line x1="0" y1="390" x2="1000" y2="390" />
+          <line x1="200" y1="0" x2="200" y2="520" />
+          <line x1="400" y1="0" x2="400" y2="520" />
+          <line x1="600" y1="0" x2="600" y2="520" />
+          <line x1="800" y1="0" x2="800" y2="520" />
+        </g>
+        <!-- Continents -->
+        <g fill="#bbf7d0" stroke="#4ade80" stroke-width="2.2" stroke-linejoin="round">
+          <!-- North America -->
+          <path d="M 65 88 C 110 55, 220 50, 295 85 C 320 115, 290 165, 255 198 C 232 225, 215 245, 232 272 L 210 278 C 185 255, 168 232, 145 210 C 102 180, 62 140, 65 88 Z" />
+          <!-- Greenland -->
+          <path d="M 325 32 C 360 22, 405 32, 412 62 C 398 85, 355 88, 330 68 Z" />
+          <!-- South America -->
+          <path d="M 238 282 C 275 275, 325 302, 342 342 C 350 385, 315 445, 282 486 C 260 478, 250 432, 240 385 C 228 340, 222 302, 238 282 Z" />
+          <!-- Europe -->
+          <path d="M 435 128 C 455 88, 515 72, 578 88 C 598 112, 592 148, 568 172 C 535 186, 488 192, 452 178 C 435 166, 428 145, 435 128 Z" />
+          <!-- UK / Ireland -->
+          <path d="M 420 118 C 430 112, 440 122, 436 138 C 428 142, 418 134, 420 118 Z" />
+          <!-- Africa -->
+          <path d="M 448 202 C 495 192, 558 202, 588 238 C 605 278, 582 352, 545 415 C 518 422, 495 390, 485 342 C 472 295, 435 270, 438 232 Z" />
+          <!-- Middle East / Arabia -->
+          <path d="M 572 195 C 612 190, 646 212, 642 252 C 622 272, 592 268, 578 242 Z" />
+          <!-- Asia & Russia -->
+          <path d="M 582 78 C 668 52, 805 56, 895 95 C 918 128, 888 188, 845 232 C 808 265, 760 282, 718 275 C 682 298, 660 292, 646 258 C 632 222, 608 196, 578 178 C 570 142, 570 105, 582 78 Z" />
+          <!-- Japan -->
+          <path d="M 884 162 C 896 156, 906 172, 898 198 C 888 208, 876 202, 878 182 Z" />
+          <!-- Australia / Oceania -->
+          <path d="M 780 348 C 825 335, 882 350, 896 392 C 892 432, 845 452, 795 438 C 768 420, 762 375, 780 348 Z" />
+        </g>
+      </svg>
+
+      <!-- Language Pins Layer (Populated by renderLanguageMapPins) -->
+      <div id="langMapPinsLayer" class="absolute inset-0"></div>
+    </div>
+
+    <!-- Bottom Selected Language & Continue Bar -->
+    <div class="w-full max-w-xl bg-white rounded-2xl border-2 border-slate-200 shadow-lg px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <button id="btnMapReplayVoice" type="button" title="Hear language greeting" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center shrink-0 active:scale-95 transition-all cursor-pointer">
+          Play
+        </button>
+        <div class="flex flex-col leading-tight min-w-0">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Language</span>
+          <span id="langMapSelectedLabel" class="text-sm sm:text-base font-black text-slate-900 truncate">English</span>
+        </div>
+      </div>
+
+      <button id="btnLangMapContinue" type="button" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer shrink-0">
+        Continue →
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SECOND PAGE: PLAYER PROFILE SETUP (LANGUAGE, NAME, DATE, BOY OR GIRL)     -->
+  <!-- ========================================================================= -->
+  <div id="profileSetupPage" class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
+    <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5 relative">
+      <button id="btnBackToLangMap" type="button" class="self-start px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition-all cursor-pointer">
+        ← Language Map
+      </button>
       <div class="flex flex-col items-center text-center gap-2">
         <div class="text-4xl">🐍</div>
         <h1 data-i18n="profileTitle" class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
@@ -9216,6 +9290,98 @@
       });
     }
 
+    // =========================================================================
+    // WORLD MAP LANGUAGE PICKER PAGE (VERY FIRST PAGE BEFORE PROFILE)
+    // =========================================================================
+    const WORLD_MAP_LANGS = [
+      { code: 'en', label: 'English',   region: 'USA / UK',    x: 20, y: 30 },
+      { code: 'pt', label: 'Português', region: 'Brazil',      x: 29, y: 69 },
+      { code: 'es', label: 'Español',   region: 'Spain',       x: 45, y: 34 },
+      { code: 'fr', label: 'Français',  region: 'France',      x: 48, y: 26 },
+      { code: 'de', label: 'Deutsch',   region: 'Germany',     x: 52, y: 21 },
+      { code: 'it', label: 'Italiano',  region: 'Italy',       x: 52, y: 33 },
+      { code: 'tr', label: 'Türkçe',    region: 'Turkey',      x: 58, y: 34 },
+      { code: 'ar', label: 'العربية',    region: 'Middle East', x: 60, y: 47 },
+      { code: 'ru', label: 'Русский',   region: 'Russia',      x: 69, y: 19 },
+      { code: 'ur', label: 'اردو',      region: 'Pakistan',    x: 68, y: 42 },
+      { code: 'hi', label: 'हिन्दी',     region: 'India',       x: 72, y: 50 },
+      { code: 'zh', label: '中文',       region: 'China',       x: 79, y: 36 },
+      { code: 'ko', label: '한국어',     region: 'Korea',       x: 84, y: 33 },
+      { code: 'ja', label: '日本語',     region: 'Japan',       x: 90, y: 36 }
+    ];
+
+    const languageMapPage = document.getElementById('languageMapPage');
+    const langMapPinsLayer = document.getElementById('langMapPinsLayer');
+    const langMapSelectedLabel = document.getElementById('langMapSelectedLabel');
+    const btnLangMapContinue = document.getElementById('btnLangMapContinue');
+    const btnMapReplayVoice = document.getElementById('btnMapReplayVoice');
+    const btnBackToLangMap = document.getElementById('btnBackToLangMap');
+
+    function renderLanguageMapPins() {
+      if (!langMapPinsLayer) return;
+      langMapPinsLayer.innerHTML = '';
+      const activeItem = WORLD_MAP_LANGS.find(l => l.code === currentLang) || WORLD_MAP_LANGS[0];
+      if (langMapSelectedLabel) {
+        langMapSelectedLabel.textContent = `${activeItem.label} (${activeItem.region})`;
+      }
+
+      WORLD_MAP_LANGS.forEach(item => {
+        const isSelected = (item.code === currentLang);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.style.left = `${item.x}%`;
+        btn.style.top = `${item.y}%`;
+        btn.style.transform = 'translate(-50%, -50%)';
+        btn.className = `absolute px-2 sm:px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-extrabold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95 ${
+          isSelected
+            ? 'bg-slate-900 text-white border-2 border-emerald-400 scale-110 z-20 ring-4 ring-emerald-400/35'
+            : 'bg-white/95 hover:bg-emerald-50 text-slate-800 border border-slate-300 hover:border-emerald-400 z-10'
+        }`;
+
+        const pinDot = document.createElement('span');
+        pinDot.className = `w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-emerald-400' : 'bg-sky-500'}`;
+        const txt = document.createElement('span');
+        txt.textContent = item.label;
+        btn.appendChild(pinDot);
+        btn.appendChild(txt);
+
+        btn.addEventListener('click', () => {
+          applyLanguage(item.code, true);
+          renderLanguageMapPins();
+        });
+        langMapPinsLayer.appendChild(btn);
+      });
+    }
+
+    function showLanguageMapPage() {
+      isRunning = false;
+      isPaused = false;
+      setBoosting(false);
+      if (gameLoop) clearInterval(gameLoop);
+      if (spawnTimerInterval) clearInterval(spawnTimerInterval);
+      hideDeathModal();
+      if (profileSetupPage) profileSetupPage.classList.add('hidden');
+      if (welcomeBlankPage) welcomeBlankPage.classList.add('hidden');
+      if (startChoicePage) startChoicePage.classList.add('hidden');
+      renderLanguageMapPins();
+      if (languageMapPage) languageMapPage.classList.remove('hidden');
+    }
+
+    if (btnLangMapContinue) {
+      btnLangMapContinue.addEventListener('click', () => {
+        if (languageMapPage) languageMapPage.classList.add('hidden');
+        showProfileSetupPage();
+      });
+    }
+    if (btnMapReplayVoice) {
+      btnMapReplayVoice.addEventListener('click', () => {
+        speakLanguageGreeting(currentLang);
+      });
+    }
+    if (btnBackToLangMap) {
+      btnBackToLangMap.addEventListener('click', showLanguageMapPage);
+    }
+
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
     updateSoundButtonUI();
@@ -9225,8 +9391,8 @@
     updateFoodBankUI();
     startRenderLoop();
 
-    // Show the Player Profile Setup page first before the lobby/playing page
-    showProfileSetupPage();
+    // Show the World Map Language Picker first before the Player Profile page
+    showLanguageMapPage();
   </script>
 </body>
 </html>
