@@ -554,14 +554,6 @@
           </div>
         </button>
       </div>
-
-      <!-- Arena Floor Theme Swatches -->
-      <div class="flex items-center justify-center gap-2 px-3 py-1.5 rounded-2xl bg-slate-100/90 border border-slate-200">
-        <span class="text-[10px] font-extrabold uppercase tracking-wide text-slate-500">Floor</span>
-        <div id="arenaThemeBar" class="flex items-center gap-1.5">
-          <!-- Populated by renderArenaThemeBar() -->
-        </div>
-      </div>
     </div>
 
     <!-- Bottom-Right Column: Square Snakes Sign directly above Play button -->
@@ -766,6 +758,14 @@
           </p>
           <span data-i18n="choiceSoloBtn" class="mt-1 px-3 py-1 rounded-full bg-indigo-600 text-white text-xs font-bold">Play Solo →</span>
         </button>
+      </div>
+
+      <!-- Arena Floor Theme Swatches on the Third Page -->
+      <div class="flex items-center justify-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100/90 border border-slate-200">
+        <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Floor</span>
+        <div id="arenaThemeBar" class="flex items-center gap-1.5">
+          <!-- Populated by renderArenaThemeBar() -->
+        </div>
       </div>
 
       <!-- Bottom actions: Back + Choose Skin -->
@@ -3792,6 +3792,186 @@
       if (typeof renderFoodTypePicker === 'function') renderFoodTypePicker();
 
 
+    // =========================================================================
+    // ARENA FLOOR THEME PICKER & LUCKY SPIN WHEEL (LOBBY)
+    // =========================================================================
+    function renderArenaThemeBar() {
+      const bar = document.getElementById('arenaThemeBar');
+      if (!bar) return;
+      bar.innerHTML = '';
+      ARENA_THEMES.forEach(th => {
+        const active = th.id === selectedArenaThemeId;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.title = th.name;
+        btn.className = `w-6 h-6 rounded-full border-2 transition-all cursor-pointer ${active ? 'border-slate-900 scale-115 ring-2 ring-emerald-400' : 'border-white hover:scale-105'}`;
+        btn.style.backgroundColor = th.bg;
+        btn.addEventListener('click', () => {
+          selectedArenaThemeId = th.id;
+          try { localStorage.setItem('snakeArenaTheme_v1', th.id); } catch (e) {}
+          renderArenaThemeBar();
+          if (typeof playSFX === 'function') playSFX('eat');
+        });
+        bar.appendChild(btn);
+      });
+    }
+    renderArenaThemeBar();
+
+    const SPIN_PRIZES = [
+      { label: '+500 Food',      color: '#ef4444', grant: () => { addFoodBank(500); return 'Won +500 Food!'; } },
+      { label: '+5 Arrows',      color: '#f97316', grant: () => { pendingSpinStartArrows += 5; return 'Won +5 Starting Arrows for your next match!'; } },
+      { label: '+1,500 Food',    color: '#eab308', grant: () => { addFoodBank(1500); return 'Won +1,500 Food!'; } },
+      { label: 'Extra Shield',   color: '#10b981', grant: () => { pendingSpinExtraShield += 50; return 'Won +5s Extra Shield for your next match!'; } },
+      { label: '+3,000 Food',    color: '#06b6d4', grant: () => { addFoodBank(3000); return 'Won +3,000 Food!'; } },
+      { label: 'Mystery Skin',   color: '#6366f1', grant: () => unlockRandomRewardSkin([1, 2, 3], 'Lucky Spin') },
+      { label: '+5,000 Food',    color: '#a855f7', grant: () => { addFoodBank(5000); return 'Won +5,000 Food!'; } },
+      { label: '+10,000 Food',   color: '#ec4899', grant: () => { addFoodBank(10000); return 'JACKPOT! Won +10,000 Food!'; } }
+    ];
+    const SPIN_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 1 spin every 24 hours (daily)
+    let spinWheelAngle = 0;
+    let isSpinningWheel = false;
+
+    function getSpinRemainingMs() {
+      const nextAt = parseInt(localStorage.getItem('snakeNextSpinAt_v1') || '0', 10);
+      return Math.max(0, nextAt - Date.now());
+    }
+
+    function updateSpinButtonLabel() {
+      const lbl = document.getElementById('welcomeSpinLabel');
+      const btnNow = document.getElementById('btnSpinNow');
+      const rem = getSpinRemainingMs();
+      if (rem <= 0) {
+        if (lbl) lbl.textContent = 'Ready';
+        if (btnNow && !isSpinningWheel) {
+          btnNow.disabled = false;
+          btnNow.textContent = 'Spin Now';
+          btnNow.className = 'w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:brightness-110 text-white text-base font-black shadow-md active:scale-95 transition-all cursor-pointer';
+        }
+      } else {
+        const totalSecs = Math.ceil(rem / 1000);
+        const hrs = Math.floor(totalSecs / 3600);
+        const mins = Math.floor((totalSecs % 3600) / 60);
+        const secs = totalSecs % 60;
+        const txt = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        if (lbl) lbl.textContent = txt;
+        if (btnNow && !isSpinningWheel) {
+          btnNow.disabled = true;
+          btnNow.textContent = `Next Daily Spin in ${txt}`;
+          btnNow.className = 'w-full py-3 rounded-2xl bg-slate-200 text-slate-500 text-base font-black cursor-not-allowed';
+        }
+      }
+    }
+
+    function drawSpinWheel() {
+      const wc = document.getElementById('spinWheelCanvas');
+      if (!wc) return;
+      const wctx = wc.getContext('2d');
+      if (!wctx) return;
+      const cx = wc.width / 2;
+      const cy = wc.height / 2;
+      const r = cx - 8;
+      const n = SPIN_PRIZES.length;
+      const slice = (Math.PI * 2) / n;
+
+      wctx.clearRect(0, 0, wc.width, wc.height);
+      wctx.save();
+      wctx.translate(cx, cy);
+      wctx.rotate(spinWheelAngle);
+
+      for (let i = 0; i < n; i++) {
+        const startA = i * slice - Math.PI / 2;
+        const endA = startA + slice;
+        wctx.beginPath();
+        wctx.moveTo(0, 0);
+        wctx.arc(0, 0, r, startA, endA);
+        wctx.closePath();
+        wctx.fillStyle = SPIN_PRIZES[i].color;
+        wctx.fill();
+        wctx.strokeStyle = '#ffffff';
+        wctx.lineWidth = 2;
+        wctx.stroke();
+
+        wctx.save();
+        wctx.rotate(startA + slice / 2);
+        wctx.fillStyle = '#ffffff';
+        wctx.font = '800 11px system-ui, sans-serif';
+        wctx.textAlign = 'right';
+        wctx.textBaseline = 'middle';
+        wctx.fillText(SPIN_PRIZES[i].label, r - 12, 0);
+        wctx.restore();
+      }
+
+      // Center cap
+      wctx.beginPath();
+      wctx.arc(0, 0, 22, 0, Math.PI * 2);
+      wctx.fillStyle = '#0f172a';
+      wctx.fill();
+      wctx.strokeStyle = '#ffffff';
+      wctx.lineWidth = 3;
+      wctx.stroke();
+      wctx.restore();
+    }
+
+    function spinWheelNow() {
+      if (isSpinningWheel || getSpinRemainingMs() > 0) return;
+      isSpinningWheel = true;
+      const resEl = document.getElementById('spinResultText');
+      if (resEl) resEl.textContent = 'Spinning...';
+      const btnNow = document.getElementById('btnSpinNow');
+      if (btnNow) { btnNow.disabled = true; btnNow.textContent = 'Spinning...'; }
+
+      const winIdx = Math.floor(Math.random() * SPIN_PRIZES.length);
+      const slice = (Math.PI * 2) / SPIN_PRIZES.length;
+      const targetOffset = (Math.PI * 2) - (winIdx * slice + slice / 2);
+      const startAngle = spinWheelAngle;
+      const totalRot = Math.PI * 10 + ((targetOffset - (startAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
+      const startT = performance.now();
+      const dur = 3400;
+
+      function anim(now) {
+        const t = Math.min(1, (now - startT) / dur);
+        const ease = 1 - Math.pow(1 - t, 3);
+        spinWheelAngle = startAngle + totalRot * ease;
+        drawSpinWheel();
+        if (t < 1) {
+          requestAnimationFrame(anim);
+        } else {
+          isSpinningWheel = false;
+          try { localStorage.setItem('snakeNextSpinAt_v1', String(Date.now() + SPIN_COOLDOWN_MS)); } catch (e) {}
+          const prize = SPIN_PRIZES[winIdx];
+          const msg = prize.grant();
+          if (resEl) resEl.textContent = msg;
+          if (typeof playSFX === 'function') playSFX('powerup');
+          updateSpinButtonLabel();
+        }
+      }
+      requestAnimationFrame(anim);
+    }
+
+    const btnWelcomeSpin = document.getElementById('btnWelcomeSpin');
+    const spinWheelModal = document.getElementById('spinWheelModal');
+    const btnCloseSpinModal = document.getElementById('btnCloseSpinModal');
+    const btnSpinNow = document.getElementById('btnSpinNow');
+    if (btnWelcomeSpin) {
+      btnWelcomeSpin.addEventListener('click', () => {
+        if (spinWheelModal) spinWheelModal.classList.remove('hidden');
+        drawSpinWheel();
+        updateSpinButtonLabel();
+      });
+    }
+    if (btnCloseSpinModal) {
+      btnCloseSpinModal.addEventListener('click', () => {
+        if (spinWheelModal) spinWheelModal.classList.add('hidden');
+      });
+    }
+    if (spinWheelModal) {
+      spinWheelModal.addEventListener('click', (e) => {
+        if (e.target === spinWheelModal && !isSpinningWheel) spinWheelModal.classList.add('hidden');
+      });
+    }
+    if (btnSpinNow) btnSpinNow.addEventListener('click', spinWheelNow);
+    updateSpinButtonLabel();
+    setInterval(updateSpinButtonLabel, 1000);
     }
 
     function addFoodBank(amount) {
