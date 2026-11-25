@@ -476,10 +476,20 @@
         <h1 data-i18n="gameTitle" class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
       </div>
 
-      <!-- Sound Toggle stays right here in the center -->
-      <button id="btnWelcomeSound" title="Toggle Arcade Sound Effects" class="px-3 py-2 rounded-xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
-        🔊
-      </button>
+      <!-- Sound Toggle & Food Button in the center -->
+      <div class="flex items-center justify-center gap-3">
+        <button id="btnWelcomeSound" title="Toggle Arcade Sound Effects" class="px-3.5 py-2.5 rounded-xl text-xs font-extrabold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 active:scale-95 transition-all cursor-pointer">
+          🔊
+        </button>
+
+        <button id="btnWelcomeFood" class="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 hover:from-emerald-100 hover:to-sky-100 border-2 border-emerald-300 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer">
+          <span id="welcomeFoodDot" class="w-4 h-4 rounded-full inline-block shrink-0" style="background-color:#ef4444; box-shadow:0 0 8px #ef4444;"></span>
+          <div class="flex flex-col text-start leading-tight">
+            <span class="text-sm font-black text-slate-900">Food</span>
+            <span id="welcomeFoodLabel" class="text-[10px] font-bold text-emerald-700">Lv. 1 • Classic Berry</span>
+          </div>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom-Right Column: Square Snakes Sign directly above Play button -->
@@ -496,6 +506,36 @@
         <span>▶</span>
         <span data-i18n="play">Play</span>
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- DEDICATED FOOD TYPE MODAL (Level-Based, Changes Only Your Food)           -->
+  <!-- ========================================================================= -->
+  <div id="foodTypeModal" class="fixed inset-0 z-[66] bg-slate-900/55 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[86vh]">
+      <div class="px-5 py-4 bg-gradient-to-r from-emerald-50 via-teal-50 to-sky-50 border-b border-emerald-200/80 flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 leading-tight">Your Food</h2>
+          <p id="foodModalSubtitle" class="text-xs font-semibold text-emerald-700">Lv. 1 • Classic Berry (0 eaten)</p>
+        </div>
+        <button id="btnCloseFoodModal" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 text-xl font-bold flex items-center justify-center transition-all cursor-pointer" aria-label="Close food modal">&times;</button>
+      </div>
+
+      <div class="px-5 py-3 border-b border-slate-100 bg-slate-50/70">
+        <div class="flex items-center justify-between text-xs mb-1.5">
+          <span id="foodModalProgressLabel" class="font-bold text-slate-700">Next level progress</span>
+          <span id="foodModalProgressCount" class="font-mono font-bold text-emerald-700">0 / 25</span>
+        </div>
+        <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+          <div id="foodModalProgressBar" class="h-full rounded-full bg-emerald-500 transition-all" style="width: 0%;"></div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-1.5">Same round glowing dot shape in-game. Pick any unlocked food type to change only your food.</p>
+      </div>
+
+      <div id="foodModalGrid" class="p-4 grid grid-cols-2 gap-2.5 overflow-y-auto bg-white">
+        <!-- Dynamically populated by renderFoodModal() -->
+      </div>
     </div>
   </div>
 
@@ -4649,7 +4689,95 @@
         }
       });
       renderFoodTypePicker();
+      renderFoodModal();
       if (typeof playSFX === 'function') playSFX('eat');
+    }
+
+    function renderFoodModal() {
+      const grid = document.getElementById('foodModalGrid');
+      const sub = document.getElementById('foodModalSubtitle');
+      const pLbl = document.getElementById('foodModalProgressLabel');
+      const pCnt = document.getElementById('foodModalProgressCount');
+      const pBar = document.getElementById('foodModalProgressBar');
+      if (!grid) return;
+
+      const lv = getPlayerFoodLevel();
+      const active = getActiveFoodType();
+      if (sub) sub.textContent = `Lv. ${lv} • ${active.name} (${totalFoodEaten.toLocaleString()} eaten)`;
+
+      const curType = FOOD_TYPES_BY_LEVEL[Math.min(lv - 1, FOOD_TYPES_BY_LEVEL.length - 1)];
+      const nextType = FOOD_TYPES_BY_LEVEL.find(ft => ft.level === lv + 1);
+      if (nextType) {
+        const span = Math.max(1, nextType.minFood - curType.minFood);
+        const prog = Math.max(0, Math.min(1, (totalFoodEaten - curType.minFood) / span));
+        if (pLbl) pLbl.textContent = `Next: Lv. ${nextType.level} ${nextType.name}`;
+        if (pCnt) pCnt.textContent = `${totalFoodEaten.toLocaleString()} / ${nextType.minFood.toLocaleString()}`;
+        if (pBar) pBar.style.width = `${Math.round(prog * 100)}%`;
+      } else {
+        if (pLbl) pLbl.textContent = 'Max Food Level Unlocked';
+        if (pCnt) pCnt.textContent = `${totalFoodEaten.toLocaleString()} eaten`;
+        if (pBar) pBar.style.width = '100%';
+      }
+
+      grid.innerHTML = '';
+      FOOD_TYPES_BY_LEVEL.forEach(ft => {
+        const unlocked = ft.level <= lv;
+        const isSelected = ft.id === active.id;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.disabled = !unlocked;
+        card.className = `p-3 rounded-xl border-2 text-left flex items-center gap-3 transition-all ${
+          isSelected
+            ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+            : unlocked
+              ? 'border-slate-200 bg-white hover:border-emerald-400 hover:bg-emerald-50/40 text-slate-800 cursor-pointer'
+              : 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed opacity-75'
+        }`;
+
+        const dotWrap = document.createElement('div');
+        dotWrap.className = 'w-10 h-10 rounded-full flex items-center justify-center shrink-0';
+        dotWrap.style.backgroundColor = isSelected ? 'rgba(255,255,255,0.12)' : '#f1f5f9';
+        const dot = document.createElement('span');
+        dot.className = 'w-5 h-5 rounded-full inline-block';
+        dot.style.backgroundColor = ft.color;
+        dot.style.boxShadow = unlocked ? `0 0 10px ${ft.color}` : 'none';
+        dotWrap.appendChild(dot);
+
+        const info = document.createElement('div');
+        info.className = 'flex flex-col leading-tight min-w-0';
+        const title = document.createElement('span');
+        title.className = 'text-xs font-extrabold truncate';
+        title.textContent = ft.name;
+        const meta = document.createElement('span');
+        meta.className = `text-[10px] font-bold mt-0.5 ${isSelected ? 'text-emerald-300' : (unlocked ? 'text-emerald-600' : 'text-slate-400')}`;
+        meta.textContent = isSelected
+          ? 'Selected'
+          : unlocked
+            ? `Lv. ${ft.level} • Tap to use`
+            : `Unlocks at Lv. ${ft.level} (${ft.minFood.toLocaleString()} eaten)`;
+        info.appendChild(title);
+        info.appendChild(meta);
+
+        card.appendChild(dotWrap);
+        card.appendChild(info);
+        if (unlocked) {
+          card.addEventListener('click', () => setPlayerFoodType(ft.id));
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    function openFoodModal() {
+      const m = document.getElementById('foodTypeModal');
+      if (!m) return;
+      renderFoodTypePicker();
+      renderFoodModal();
+      m.classList.remove('hidden');
+    }
+
+    function closeFoodModal() {
+      const m = document.getElementById('foodTypeModal');
+      if (m) m.classList.add('hidden');
     }
 
     function renderFoodTypePicker() {
@@ -4660,6 +4788,14 @@
 
       const lv = getPlayerFoodLevel();
       const active = getActiveFoodType();
+      const wDot = document.getElementById('welcomeFoodDot');
+      const wLbl = document.getElementById('welcomeFoodLabel');
+      if (wDot) {
+        wDot.style.backgroundColor = active.color;
+        wDot.style.boxShadow = `0 0 8px ${active.color}`;
+      }
+      if (wLbl) wLbl.textContent = `Lv. ${lv} • ${active.name}`;
+
       if (lvBadge) lvBadge.textContent = `Lv. ${lv} • ${active.name}`;
 
       const nextType = FOOD_TYPES_BY_LEVEL.find(ft => ft.level === lv + 1);
@@ -8167,6 +8303,17 @@
     }
     if (btnWelcomePlay) btnWelcomePlay.addEventListener('click', showStartChoicePage);
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
+    const btnWelcomeFood = document.getElementById('btnWelcomeFood');
+    const btnCloseFoodModal = document.getElementById('btnCloseFoodModal');
+    const foodTypeModalEl = document.getElementById('foodTypeModal');
+    if (btnWelcomeFood) btnWelcomeFood.addEventListener('click', openFoodModal);
+    if (btnCloseFoodModal) btnCloseFoodModal.addEventListener('click', closeFoodModal);
+    if (foodTypeModalEl) {
+      foodTypeModalEl.addEventListener('click', (e) => {
+        if (e.target === foodTypeModalEl) closeFoodModal();
+      });
+    }
+    if (typeof renderFoodTypePicker === 'function') renderFoodTypePicker();
 
     // Draw 3 fantastic showcase snakes on the Lobby "Snakes" button
     function renderWelcomeSnakesShowcase() {
