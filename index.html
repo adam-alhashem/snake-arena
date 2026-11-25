@@ -539,53 +539,80 @@
         </div>
       </div>
 
-      <!-- Stats & Level Progress Strip -->
-      <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/90 flex flex-col gap-2.5">
-        <div class="grid grid-cols-3 gap-2 text-center">
-          <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Food Level</div>
-            <div id="foodStatLevel" class="text-sm sm:text-base font-black text-slate-900">Lv. 1</div>
+      <!-- VIEW 1: Food Lab List Page -->
+      <div id="foodListView" class="flex-1 flex flex-col overflow-hidden">
+        <!-- Stats & Level Progress Strip -->
+        <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/90 flex flex-col gap-2.5">
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">Food Level</div>
+              <div id="foodStatLevel" class="text-sm sm:text-base font-black text-slate-900">Lv. 1</div>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">Total Eaten</div>
+              <div id="foodStatEaten" class="text-sm sm:text-base font-black text-emerald-600">0</div>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
+              <div class="text-[10px] font-bold text-slate-400 uppercase">Unlocked</div>
+              <div id="foodStatUnlocked" class="text-sm sm:text-base font-black text-indigo-600">1 / 8</div>
+            </div>
           </div>
-          <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Total Eaten</div>
-            <div id="foodStatEaten" class="text-sm sm:text-base font-black text-emerald-600">0</div>
-          </div>
-          <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
-            <div class="text-[10px] font-bold text-slate-400 uppercase">Unlocked</div>
-            <div id="foodStatUnlocked" class="text-sm sm:text-base font-black text-indigo-600">1 / 8</div>
+
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span id="foodModalProgressLabel" class="font-extrabold text-slate-700">Next: Lv. 2 Citrus Drop</span>
+              <span id="foodModalProgressCount" class="font-mono font-bold text-emerald-700">0 / 25</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+              <div id="foodModalProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-500 transition-all duration-300" style="width: 0%;"></div>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1.5">Click any food to open its page and see what it can do.</p>
           </div>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between text-xs mb-1">
-            <span id="foodModalProgressLabel" class="font-extrabold text-slate-700">Next: Lv. 2 Citrus Drop</span>
-            <span id="foodModalProgressCount" class="font-mono font-bold text-emerald-700">0 / 25</span>
-          </div>
-          <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
-            <div id="foodModalProgressBar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-500 transition-all duration-300" style="width: 0%;"></div>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1.5">Same round glowing dot shape in-game. Switching here changes only your food.</p>
+        <!-- 8 Level-Based Food Type Cards -->
+        <div id="foodModalGrid" class="p-4 grid grid-cols-2 gap-2.5 overflow-y-auto bg-white flex-1">
+          <!-- Dynamically populated by renderFoodModal() -->
         </div>
       </div>
 
-      <!-- Selected / Clicked Food Details Panel (Shows everything this food does) -->
-      <div id="foodDetailPanel" class="px-5 py-3 border-b border-slate-200 bg-white flex flex-col gap-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <span id="foodDetailDot" class="w-4 h-4 rounded-full inline-block shrink-0" style="background-color:#ef4444; box-shadow:0 0 8px #ef4444;"></span>
-            <span id="foodDetailName" class="text-sm font-black text-slate-900 truncate">Classic Berry</span>
-            <span id="foodDetailLevel" class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black">Lv. 1</span>
+      <!-- VIEW 2: Dedicated Food Ability Detail Page (Opens when you click a food type) -->
+      <div id="foodDetailView" class="hidden flex-1 flex flex-col justify-between p-5 bg-white overflow-y-auto gap-4">
+        <div class="flex flex-col gap-4">
+          <div class="flex items-center justify-between gap-2">
+            <button id="btnBackToFoodList" type="button" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition-all cursor-pointer">
+              ← Back to Foods
+            </button>
+            <span id="foodDetailLevel" class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-black">Lv. 1 • Starter</span>
           </div>
-          <button id="btnEquipInspectedFood" type="button" class="px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition-all cursor-pointer shrink-0">Active</button>
-        </div>
-        <ul id="foodDetailEffects" class="flex flex-wrap gap-1.5 text-[11px] font-bold text-slate-700">
-          <!-- Dynamically filled with what this food does -->
-        </ul>
-      </div>
 
-      <!-- 8 Level-Based Food Type Cards -->
-      <div id="foodModalGrid" class="p-4 grid grid-cols-2 sm:grid-cols-2 gap-2.5 overflow-y-auto bg-white">
-        <!-- Dynamically populated by renderFoodModal() -->
+          <!-- Big Food Title & Glowing Dot Trio -->
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4">
+            <div class="flex flex-col">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Food Type</span>
+              <h3 id="foodDetailName" class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">Classic Berry</h3>
+              <span id="foodDetailUnlockNote" class="text-xs font-semibold text-emerald-600 mt-0.5">Unlocked</span>
+            </div>
+            <div id="foodDetailDotTrio" class="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs shrink-0">
+              <!-- 3 glowing dots -->
+            </div>
+          </div>
+
+          <!-- What This Food Can Do -->
+          <div class="flex flex-col gap-2">
+            <h4 class="text-xs font-black uppercase tracking-wider text-slate-500">What This Food Can Do</h4>
+            <ul id="foodDetailEffects" class="flex flex-col gap-2">
+              <!-- Dynamically filled ability rows -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Bottom Action Button -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button id="btnEquipInspectedFood" type="button" class="w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-black shadow-md transition-all cursor-pointer">
+            Use This Food
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -4975,45 +5002,74 @@
         }
       }
 
-      // Populate Food Details Panel for whichever food card the player clicked
-      const dDot = document.getElementById('foodDetailDot');
+      // Populate Dedicated Food Detail Page for the clicked food type
       const dName = document.getElementById('foodDetailName');
       const dLv = document.getElementById('foodDetailLevel');
+      const dUnlock = document.getElementById('foodDetailUnlockNote');
+      const dTrio = document.getElementById('foodDetailDotTrio');
       const dEffects = document.getElementById('foodDetailEffects');
       const btnEquipFood = document.getElementById('btnEquipInspectedFood');
+      const inspectedIdx = FOOD_TYPES_BY_LEVEL.findIndex(ft => ft.id === inspected.id);
+      const inspectedTier = FOOD_TIER_NAMES[inspectedIdx] || 'Special';
       const inspectedUnlocked = inspected.level <= lv;
       const inspectedActive = inspected.id === active.id;
 
-      if (dDot) {
-        dDot.style.backgroundColor = inspected.color;
-        dDot.style.boxShadow = `0 0 8px ${inspected.color}`;
-      }
       if (dName) dName.textContent = inspected.name;
-      if (dLv) dLv.textContent = `Lv. ${inspected.level}`;
+      if (dLv) dLv.textContent = `Lv. ${inspected.level} • ${inspectedTier}`;
+      if (dUnlock) {
+        if (inspectedActive) {
+          dUnlock.textContent = 'Currently active in-game';
+          dUnlock.className = 'text-xs font-bold text-emerald-600 mt-0.5';
+        } else if (inspectedUnlocked) {
+          dUnlock.textContent = 'Unlocked and ready to use';
+          dUnlock.className = 'text-xs font-bold text-emerald-600 mt-0.5';
+        } else {
+          const need = Math.max(0, inspected.minFood - totalFoodEaten);
+          dUnlock.textContent = `Locked • Eat ${need.toLocaleString()} more dots to unlock`;
+          dUnlock.className = 'text-xs font-bold text-amber-600 mt-0.5';
+        }
+      }
+      if (dTrio) {
+        dTrio.innerHTML = '';
+        (inspected.palette || [inspected.color]).forEach((col, ci) => {
+          const d = document.createElement('span');
+          const sz = ci === 1 ? 'w-6 h-6' : 'w-4 h-4';
+          d.className = `${sz} rounded-full inline-block`;
+          d.style.backgroundColor = col;
+          d.style.boxShadow = `0 0 10px ${col}`;
+          dTrio.appendChild(d);
+        });
+      }
       if (dEffects) {
         dEffects.innerHTML = '';
         (inspected.effects || []).forEach(eff => {
           const li = document.createElement('li');
-          li.className = 'px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/80 text-slate-700';
-          li.textContent = eff;
+          li.className = 'px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold flex items-center gap-2.5';
+          const bullet = document.createElement('span');
+          bullet.className = 'w-2.5 h-2.5 rounded-full shrink-0';
+          bullet.style.backgroundColor = inspected.color;
+          const txt = document.createElement('span');
+          txt.textContent = eff;
+          li.appendChild(bullet);
+          li.appendChild(txt);
           dEffects.appendChild(li);
         });
       }
       if (btnEquipFood) {
         if (inspectedActive) {
-          btnEquipFood.textContent = 'Equipped';
+          btnEquipFood.textContent = 'Currently Active';
           btnEquipFood.disabled = true;
-          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-extrabold shrink-0 cursor-default';
+          btnEquipFood.className = 'w-full py-3 rounded-2xl bg-emerald-600 text-white text-sm font-black shadow-sm cursor-default';
         } else if (inspectedUnlocked) {
-          btnEquipFood.textContent = 'Use This Food';
+          btnEquipFood.textContent = `Use ${inspected.name}`;
           btnEquipFood.disabled = false;
-          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-xs font-extrabold transition-all cursor-pointer shrink-0';
+          btnEquipFood.className = 'w-full py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-black shadow-md active:scale-95 transition-all cursor-pointer';
           btnEquipFood.onclick = () => setPlayerFoodType(inspected.id);
         } else {
           const need = Math.max(0, inspected.minFood - totalFoodEaten);
-          btnEquipFood.textContent = `Need ${need.toLocaleString()} more`;
+          btnEquipFood.textContent = `Locked — Eat ${need.toLocaleString()} More Dots`;
           btnEquipFood.disabled = true;
-          btnEquipFood.className = 'px-3 py-1 rounded-lg bg-slate-200 text-slate-500 text-xs font-extrabold shrink-0 cursor-not-allowed';
+          btnEquipFood.className = 'w-full py-3 rounded-2xl bg-slate-200 text-slate-500 text-sm font-black cursor-not-allowed';
         }
       }
 
@@ -5097,21 +5153,39 @@
         card.appendChild(topRow);
         card.appendChild(info);
         card.addEventListener('click', () => {
-          inspectedFoodTypeId = ft.id;
-          if (unlocked) {
-            setPlayerFoodType(ft.id);
-          } else {
-            renderFoodModal();
-            if (typeof playSFX === 'function') playSFX('eat');
-          }
+          openFoodDetailPage(ft.id);
         });
         grid.appendChild(card);
       });
     }
 
+    function openFoodDetailPage(typeId) {
+      inspectedFoodTypeId = typeId;
+      const listV = document.getElementById('foodListView');
+      const detailV = document.getElementById('foodDetailView');
+      if (listV) listV.classList.add('hidden');
+      if (detailV) detailV.classList.remove('hidden');
+      renderFoodModal();
+      if (typeof playSFX === 'function') playSFX('eat');
+    }
+
+    function showFoodListPage() {
+      const listV = document.getElementById('foodListView');
+      const detailV = document.getElementById('foodDetailView');
+      inspectedFoodTypeId = getActiveFoodType().id;
+      if (detailV) detailV.classList.add('hidden');
+      if (listV) listV.classList.remove('hidden');
+      renderFoodModal();
+    }
+
     function openFoodModal() {
       const m = document.getElementById('foodTypeModal');
       if (!m) return;
+      inspectedFoodTypeId = getActiveFoodType().id;
+      const listV = document.getElementById('foodListView');
+      const detailV = document.getElementById('foodDetailView');
+      if (detailV) detailV.classList.add('hidden');
+      if (listV) listV.classList.remove('hidden');
       renderFoodTypePicker();
       renderFoodModal();
       m.classList.remove('hidden');
@@ -8675,9 +8749,11 @@
     if (btnWelcomeSkin) btnWelcomeSkin.addEventListener('click', openSkinModal);
     const btnWelcomeFood = document.getElementById('btnWelcomeFood');
     const btnCloseFoodModal = document.getElementById('btnCloseFoodModal');
+    const btnBackToFoodList = document.getElementById('btnBackToFoodList');
     const foodTypeModalEl = document.getElementById('foodTypeModal');
     if (btnWelcomeFood) btnWelcomeFood.addEventListener('click', openFoodModal);
     if (btnCloseFoodModal) btnCloseFoodModal.addEventListener('click', closeFoodModal);
+    if (btnBackToFoodList) btnBackToFoodList.addEventListener('click', showFoodListPage);
     if (foodTypeModalEl) {
       foodTypeModalEl.addEventListener('click', (e) => {
         if (e.target === foodTypeModalEl) closeFoodModal();
