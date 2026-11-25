@@ -3539,6 +3539,8 @@
       if (!canUseGoldenFreeTry()) return false;
       skinBeforeGoldenTry = (currentSkin && currentSkin !== 'golden_emperor') ? currentSkin : 'blue_wolf';
       isGoldenFreeTryActive = true;
+      goldenFreeTryUsed = true;
+      try { localStorage.setItem('snakeGoldenFreeTryUsed_v1', '1'); } catch (e) {}
       setSkin('golden_emperor', true);
       if (typeof updateStartGoldenSnakeUI === 'function') updateStartGoldenSnakeUI();
       if (typeof renderSkinsGrid === 'function') renderSkinsGrid();
@@ -4228,7 +4230,10 @@
       if (!skin) return;
 
       currentSkin = skin.id;
-      localStorage.setItem('snakeEquippedSkin', currentSkin);
+      // Never persist a temporary Free Try of Golden Emperor into localStorage!
+      if (currentSkin !== 'golden_emperor' || unlockedSkins.includes('golden_emperor')) {
+        localStorage.setItem('snakeEquippedSkin', currentSkin);
+      }
 
       // Apply Good Snake Perks + Permanent Reward Fuel Upgrades!
       const rewardBonusFuel = (typeof rewardsState !== 'undefined' && rewardsState.perks) ? (rewardsState.perks.bonusFuel || 0) : 0;
@@ -9572,6 +9577,12 @@
       btnMapReplayVoice.addEventListener('click', () => {
         speakLanguageGreeting(currentLang);
       });
+    }
+
+    // Never let an unowned Golden Emperor remain equipped from an old session
+    if (currentSkin === 'golden_emperor' && !unlockedSkins.includes('golden_emperor')) {
+      currentSkin = 'blue_wolf';
+      try { localStorage.setItem('snakeEquippedSkin', 'blue_wolf'); } catch (e) {}
     }
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
