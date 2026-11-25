@@ -3337,6 +3337,34 @@
     if (!unlockedSkins.includes('blue_wolf')) unlockedSkins.push('blue_wolf');
     if (!unlockedSkins.includes('purple_car')) unlockedSkins.push('purple_car');
 
+    // One-time Free Try for the 1 Billion Food Golden Emperor Snake
+    let goldenFreeTryUsed = localStorage.getItem('snakeGoldenFreeTryUsed_v1') === '1';
+    let isGoldenFreeTryActive = false;
+    let skinBeforeGoldenTry = 'blue_wolf';
+
+    function activateGoldenFreeTry() {
+      if (goldenFreeTryUsed || isGoldenFreeTryActive || unlockedSkins.includes('golden_emperor')) return false;
+      skinBeforeGoldenTry = (currentSkin && currentSkin !== 'golden_emperor') ? currentSkin : 'blue_wolf';
+      isGoldenFreeTryActive = true;
+      setSkin('golden_emperor', true);
+      if (typeof updateStartGoldenSnakeUI === 'function') updateStartGoldenSnakeUI();
+      if (typeof renderSkinsGrid === 'function') renderSkinsGrid();
+      if (typeof playSFX === 'function') playSFX('powerup');
+      return true;
+    }
+
+    function endGoldenFreeTryIfActive() {
+      if (!isGoldenFreeTryActive) return;
+      isGoldenFreeTryActive = false;
+      goldenFreeTryUsed = true;
+      localStorage.setItem('snakeGoldenFreeTryUsed_v1', '1');
+      if (!unlockedSkins.includes('golden_emperor')) {
+        setSkin(skinBeforeGoldenTry || 'blue_wolf', true);
+      }
+      if (typeof updateStartGoldenSnakeUI === 'function') updateStartGoldenSnakeUI();
+      if (typeof renderSkinsGrid === 'function') renderSkinsGrid();
+    }
+
     let floatingTexts = [];
 
     // Server Room & Persistent Live World System
@@ -3859,15 +3887,17 @@
             </div>
 
             ${
-              isEquipped
-                ? `<button class="w-full py-1 text-xs rounded-md font-bold bg-purple-600 text-white shadow-xs cursor-default">✓ EQUIPPED</button>`
-                : isUnlocked
-                  ? (inGame
-                      ? `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed" title="Skin locked while in game">🔒 Locked In-Game</button>`
-                      : `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200 transition-all">Equip</button>`)
-                  : canAfford
-                    ? `<button class="btn-unlock w-full py-1 text-xs rounded-md font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all flex items-center justify-center gap-1"><span>🔓 Unlock</span></button>`
-                    : `<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">🔒 Need 🍎 ${(s.foodCost - foodBank).toLocaleString()} more</button>`
+              (s.id === 'golden_emperor' && isGoldenFreeTryActive)
+                ? `<button class="w-full py-1 text-xs rounded-md font-bold bg-amber-500 text-white shadow-xs cursor-default">FREE TRY ACTIVE (1 GAME)</button>`
+                : isEquipped
+                  ? `<button class="w-full py-1 text-xs rounded-md font-bold bg-purple-600 text-white shadow-xs cursor-default">✓ EQUIPPED</button>`
+                  : isUnlocked
+                    ? (inGame
+                        ? `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed" title="Skin locked while in game">🔒 Locked In-Game</button>`
+                        : `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200 transition-all">Equip</button>`)
+                    : canAfford
+                      ? `<button class="btn-unlock w-full py-1 text-xs rounded-md font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all flex items-center justify-center gap-1"><span>🔓 Unlock</span></button>`
+                      : `${(s.id === 'golden_emperor' && !goldenFreeTryUsed && !inGame) ? `<button class="btn-golden-try w-full py-1 text-xs rounded-md font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-all mb-1 cursor-pointer">Try Free (1 Game)</button>` : ''}<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">🔒 Need 🍎 ${(s.foodCost - foodBank).toLocaleString()} more</button>`
             }
           </div>
         `;
@@ -3875,6 +3905,20 @@
         // Render exact curved snake shape preview on this card's canvas
         const previewCanvas = card.querySelector('.skin-preview-canvas');
         if (previewCanvas) renderSnakePreview(previewCanvas, s);
+
+        const btnGoldenTry = card.querySelector('.btn-golden-try');
+        if (btnGoldenTry) {
+          btnGoldenTry.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isInGame()) {
+              showSkinLockedNotification(btnGoldenTry);
+              return;
+            }
+            if (activateGoldenFreeTry()) {
+              closeSkinModal();
+            }
+          });
+        }
 
         const btnEquip = card.querySelector('.btn-equip');
         if (btnEquip) {
@@ -4976,6 +5020,7 @@
     }
 
     function showDeathModal(reason, finalScore) {
+      endGoldenFreeTryIfActive();
       if (deathReasonText) deathReasonText.textContent = reason || (currentLang === 'ar' ? 'لقد اصطدمت!' : 'You Crashed!');
       if (deathCurrentServer) {
         deathCurrentServer.textContent = currentLang === 'ar'
@@ -5099,6 +5144,10 @@
     }
 
     function enterServerFromChoice(mode) {
+      if (isGoldenFreeTryActive) {
+        goldenFreeTryUsed = true;
+        localStorage.setItem('snakeGoldenFreeTryUsed_v1', '1');
+      }
       let joinText = '';
       if (mode === 'full') {
         botCount = MAX_SERVER_PLAYERS - 1;
@@ -8141,12 +8190,18 @@
       const priceEl = document.getElementById('startGoldenSnakePrice');
       if (!priceEl) return;
       const owned = unlockedSkins.includes('golden_emperor');
-      if (owned && currentSkin === 'golden_emperor') {
+      if (isGoldenFreeTryActive) {
+        priceEl.textContent = 'Free Try Active';
+        priceEl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
+      } else if (owned && currentSkin === 'golden_emperor') {
         priceEl.textContent = 'Equipped';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
       } else if (owned) {
         priceEl.textContent = 'Owned - Equip';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
+      } else if (!goldenFreeTryUsed) {
+        priceEl.textContent = '1 Free Try • 1B Food';
+        priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
       } else {
         priceEl.textContent = '1,000,000,000 Food';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
@@ -8162,6 +8217,13 @@
           setSkin('golden_emperor');
           updateStartGoldenSnakeUI();
           playSFX('eat');
+          return;
+        }
+        if (isGoldenFreeTryActive) {
+          return;
+        }
+        if (!goldenFreeTryUsed) {
+          activateGoldenFreeTry();
           return;
         }
         if (foodBank >= goldenCost) {
