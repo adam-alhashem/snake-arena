@@ -416,14 +416,9 @@
 
     <!-- Bottom Selected Language & Continue Bar -->
     <div class="w-full max-w-xl bg-white rounded-2xl border-2 border-slate-200 shadow-lg px-4 py-3 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <button id="btnMapReplayVoice" type="button" title="Hear language greeting" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs flex items-center justify-center shrink-0 active:scale-95 transition-all cursor-pointer">
-          Play
-        </button>
-        <div class="flex flex-col leading-tight min-w-0">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Language</span>
-          <span id="langMapSelectedLabel" class="text-sm sm:text-base font-black text-slate-900 truncate">English</span>
-        </div>
+      <div class="flex flex-col leading-tight min-w-0">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Language</span>
+        <span id="langMapSelectedLabel" class="text-sm sm:text-base font-black text-slate-900 truncate">English</span>
       </div>
 
       <button id="btnLangMapContinue" type="button" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm sm:text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer shrink-0">
@@ -9514,7 +9509,6 @@
     const langMapPinsLayer = document.getElementById('langMapPinsLayer');
     const langMapSelectedLabel = document.getElementById('langMapSelectedLabel');
     const btnLangMapContinue = document.getElementById('btnLangMapContinue');
-    const btnMapReplayVoice = document.getElementById('btnMapReplayVoice');
 
     function renderLanguageMapPins() {
       if (!langMapPinsLayer) return;
@@ -9571,11 +9565,6 @@
       btnLangMapContinue.addEventListener('click', () => {
         if (languageMapPage) languageMapPage.classList.add('hidden');
         showProfileSetupPage();
-      });
-    }
-    if (btnMapReplayVoice) {
-      btnMapReplayVoice.addEventListener('click', () => {
-        speakLanguageGreeting(currentLang);
       });
     }
 
