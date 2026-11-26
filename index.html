@@ -535,6 +535,9 @@
         <button id="btnOpenEditProfile"type="button"class="w-full px-3 py-2 rounded-lg text-left text-xs font-extrabold text-slate-800 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer">
           Edit Profile
         </button>
+        <button id="btnOpenMyStats"type="button"class="w-full px-3 py-2 rounded-lg text-left text-xs font-extrabold text-indigo-700 hover:bg-indigo-50 active:scale-95 transition-all cursor-pointer">
+          My Stats
+        </button>
       </div>
     </div>
     <!-- Top-Right: NO ADS sign + compact Lucky Spin button right underneath (between NO ADS and Snakes) -->
@@ -961,6 +964,47 @@
   </div>
 
   <!-- ========================================================================= -->
+  <!-- HALL OF FAME / MY STATS MODAL                                             -->
+  <!-- ========================================================================= -->
+  <div id="myStatsModal" class="fixed inset-0 z-[67] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col p-5 gap-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 leading-tight">My Stats</h2>
+          <p id="myStatsPlayerSub" class="text-xs font-semibold text-indigo-600">Lifetime Snake Arena Records</p>
+        </div>
+        <button id="btnCloseMyStats" type="button" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xl font-bold flex items-center justify-center cursor-pointer">&times;</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5 text-center">
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-amber-700 uppercase">Best Score</div>
+          <div id="statBestScore" class="text-xl font-black text-amber-900">0</div>
+        </div>
+        <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-emerald-700 uppercase">Total Dots Eaten</div>
+          <div id="statTotalDots" class="text-xl font-black text-emerald-900">0</div>
+        </div>
+        <div class="bg-rose-50 border border-rose-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-rose-700 uppercase">Total Kills</div>
+          <div id="statTotalKills" class="text-xl font-black text-rose-900">0</div>
+        </div>
+        <div class="bg-sky-50 border border-sky-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-sky-700 uppercase">Current Money</div>
+          <div id="statMoneyNow" class="text-xl font-black text-sky-900">$0</div>
+        </div>
+        <div class="bg-cyan-50 border border-cyan-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-cyan-700 uppercase">Pets Owned</div>
+          <div id="statPetsOwned" class="text-xl font-black text-cyan-900">0 / 10</div>
+        </div>
+        <div class="bg-purple-50 border border-purple-200 rounded-2xl p-3">
+          <div class="text-[10px] font-bold text-purple-700 uppercase">Skins Unlocked</div>
+          <div id="statSkinsOwned" class="text-xl font-black text-purple-900">1 / 101</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
   <!-- BLANK START / SERVER JOIN CHOICE PAGE                                     -->
   <!-- ========================================================================= -->
   <div id="startChoicePage"class="fixed inset-0 z-50 bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
@@ -1040,6 +1084,9 @@
         </button>
         <button id="btnPrepTurbo"type="button"class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-orange-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
           Turbo Start ($150)
+        </button>
+        <button id="btnPrepBattleRoyale"type="button"class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-rose-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
+          Battle Royale: OFF
         </button>
       </div>
 
@@ -5185,6 +5232,88 @@
     let orbPetEnabled = localStorage.getItem('snakeOrbPetEnabled_v1') !== '0';
     let prepShieldArmed = false;
     let prepTurboArmed = false;
+    let battleRoyaleMode = false;
+    let brInset = 0;
+    let nextBrShrinkAt = 0;
+    let pinataOrb = null;
+    let nextPinataAt = Date.now() + 75000;
+    let totalLifetimeKills = parseInt(localStorage.getItem('snakeTotalKills_v1') || '0', 10);
+
+    function spawnPinataOrb() {
+      const px = Math.floor(COLS * 0.25 + Math.random() * COLS * 0.5);
+      const py = Math.floor(ROWS * 0.25 + Math.random() * ROWS * 0.5);
+      pinataOrb = { x: px, y: py, dx: Math.random() < 0.5 ? 1 : -1, dy: Math.random() < 0.5 ? 1 : -1, tick: 0 };
+      triggerCenterBanner('RAINBOW PINATA APPEARED!', '#ec4899', 2200);
+      if (typeof playSFX === 'function') playSFX('powerup');
+    }
+
+    function popPinataOrb() {
+      if (!pinataOrb) return;
+      const px = pinataOrb.x;
+      const py = pinataOrb.y;
+      pinataOrb = null;
+      nextPinataAt = Date.now() + 75000;
+      const rainbow = ['#ef4444', '#f97316', '#facc15', '#10b981', '#06b6d4', '#a855f7', '#ec4899'];
+      for (let i = 0; i < 10 && foods.length < 450; i++) {
+        const ox = Math.max(2, Math.min(COLS - 3, px + Math.floor(Math.random() * 5) - 2));
+        const oy = Math.max(2, Math.min(ROWS - 3, py + Math.floor(Math.random() * 5) - 2));
+        foods.push({ x: ox, y: oy, color: rainbow[i % rainbow.length], isLoot: true });
+      }
+      addFoodBank(150);
+      if (typeof addFactoryMaterials === 'function') addFactoryMaterials(2, 2);
+      matchSticks += 2;
+      matchFeathers += 2;
+      triggerCenterBanner('PINATA POPPED! +$150', '#ec4899', 2300);
+      if (typeof playSFX === 'function') playSFX('powerup');
+    }
+
+    function drawPinataOrb(vMinX, vMaxX, vMinY, vMaxY) {
+      if (!pinataOrb) return;
+      const cx = pinataOrb.x * GRID_SIZE + GRID_SIZE / 2;
+      const cy = pinataOrb.y * GRID_SIZE + GRID_SIZE / 2;
+      if (cx < vMinX || cx > vMaxX || cy < vMinY || cy > vMaxY) return;
+      const t = Date.now() / 220;
+      const cols = ['#ef4444', '#facc15', '#10b981', '#06b6d4', '#a855f7', '#ec4899'];
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t);
+      for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, 12.5, (i * Math.PI) / 3, ((i + 1) * Math.PI) / 3);
+        ctx.closePath();
+        ctx.fillStyle = cols[i];
+        ctx.fill();
+      }
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, 12.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(-3.5, -3.5, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBattleRoyaleRing() {
+      if (!battleRoyaleMode || brInset <= 0) return;
+      const left = brInset * GRID_SIZE;
+      const top = brInset * GRID_SIZE;
+      const safeW = (COLS - brInset * 2) * GRID_SIZE;
+      const safeH = (ROWS - brInset * 2) * GRID_SIZE;
+      ctx.save();
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.14)';
+      ctx.fillRect(0, 0, WORLD_WIDTH, top);
+      ctx.fillRect(0, top + safeH, WORLD_WIDTH, WORLD_HEIGHT - (top + safeH));
+      ctx.fillRect(0, top, left, safeH);
+      ctx.fillRect(left + safeW, top, WORLD_WIDTH - (left + safeW), safeH);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(left, top, safeW, safeH);
+      ctx.restore();
+    }
 
     function triggerMeteorShower() {
       nextMeteorShowerAt = Date.now() + 90000;
@@ -5261,6 +5390,16 @@
       const bob = Math.sin(Date.now() / 160) * 1.8;
       ctx.save();
       ctx.translate(ox, oy + bob);
+      // Evolved Lv.2+ orbiting glow ring
+      if ((pet.level || 1) >= 2) {
+        ctx.strokeStyle = pet.color;
+        ctx.lineWidth = 1.6;
+        ctx.globalAlpha = 0.65;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12.5 + Math.sin(Date.now() / 180) * 1.2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
       // Soft glowing aura
       ctx.shadowColor = pet.color;
       ctx.shadowBlur = 14;
@@ -5508,6 +5647,10 @@
       meteorRings = [];
       freezeTraps = [];
       freezeTrapCooldownUntil = 0;
+      brInset = 0;
+      nextBrShrinkAt = Date.now() + 6000;
+      pinataOrb = null;
+      nextPinataAt = Date.now() + 75000;
       spawnArenaPortals();
       floorSticks = [];
       floorFeathers = [];
@@ -6690,6 +6833,45 @@
       if (isRunning && !isPaused && Date.now() >= nextMeteorShowerAt) {
         triggerMeteorShower();
       }
+      // 7. RAINBOW PINATA ORB EVENT (Every 75 seconds)
+      if (isRunning && !isPaused && !pinataOrb && Date.now() >= nextPinataAt) {
+        spawnPinataOrb();
+      }
+      if (pinataOrb && isRunning && !isPaused) {
+        pinataOrb.tick++;
+        if (pinataOrb.tick % 4 === 0) {
+          pinataOrb.x += pinataOrb.dx;
+          pinataOrb.y += pinataOrb.dy;
+          if (pinataOrb.x <= 4 || pinataOrb.x >= COLS - 5) pinataOrb.dx *= -1;
+          if (pinataOrb.y <= 4 || pinataOrb.y >= ROWS - 5) pinataOrb.dy *= -1;
+        }
+        if (isPlayerAlive && snake.length > 0 && Math.abs(snake[0].x - pinataOrb.x) <= 1 && Math.abs(snake[0].y - pinataOrb.y) <= 1) {
+          popPinataOrb();
+        }
+        if (pinataOrb) {
+          for (let ai = arrows.length - 1; ai >= 0; ai--) {
+            if (Math.abs(arrows[ai].x - pinataOrb.x) <= 1 && Math.abs(arrows[ai].y - pinataOrb.y) <= 1) {
+              arrows.splice(ai, 1);
+              popPinataOrb();
+              break;
+            }
+          }
+        }
+      }
+      // 8. BATTLE ROYALE SHRINKING RING
+      if (battleRoyaleMode && isRunning && !isPaused) {
+        const maxInset = Math.floor(Math.min(COLS, ROWS) * 0.28);
+        if (Date.now() >= nextBrShrinkAt && brInset < maxInset) {
+          brInset++;
+          nextBrShrinkAt = Date.now() + 2600;
+        }
+        if (brInset > 0 && isPlayerAlive && snake.length > 0 && spawnShieldTimer <= 0) {
+          const ph = snake[0];
+          if (ph.x < brInset || ph.x >= COLS - brInset || ph.y < brInset || ph.y >= ROWS - brInset) {
+            handlePlayerDeath('Caught outside the Battle Royale ring!');
+          }
+        }
+      }
 
       const king = getCurrentKing();
       updateLeaderboard(king.id);
@@ -7705,7 +7887,9 @@
         drawArenaChest(vMinX, vMaxX, vMinY, vMaxY);
         drawFloorMaterials(vMinX, vMaxX, vMinY, vMaxY);
         drawFreezeTraps(vMinX, vMaxX, vMinY, vMaxY);
+        drawPinataOrb(vMinX, vMaxX, vMinY, vMaxY);
         drawMeteorRings();
+        drawBattleRoyaleRing();
 
         // Draw Bots (Frustum culled for smooth 60 FPS with 100 snakes)
         bots.forEach(bot => {
@@ -7760,6 +7944,19 @@
                 alpha: 0.92
               });
             }
+          }
+          // King's Golden Sparkle Trail when holding #1 King rank
+          if (cachedPlayerRank === 1 && cachedTotalPlayers > 1 && score > 0 && thrusterParticles.length < 95 && Math.random() < 0.65) {
+            const kTail = snake[snake.length - 1];
+            thrusterParticles.push({
+              x: kTail.x * GRID_SIZE + GRID_SIZE / 2 + (Math.random() - 0.5) * 8,
+              y: kTail.y * GRID_SIZE + GRID_SIZE / 2 + (Math.random() - 0.5) * 8,
+              vx: (Math.random() - 0.5) * 1.6,
+              vy: (Math.random() - 0.5) * 1.6,
+              size: 2.8 + Math.random() * 2,
+              color: Math.random() < 0.5 ? '#facc15' : '#fef9c3',
+              alpha: 0.95
+            });
           }
           drawConnectedBody(snake, pSkin);
           const pHead = snake[0];
@@ -8048,6 +8245,37 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`Arrows ${playerArrowAmmo}/${MAX_PLAYER_ARROWS}`, px + w / 2, py + h / 2 + 0.5);
+
+      // Tiny Ability Ready Circles (E = Dash, Q = Freeze Trap) right next to ammo pill
+      const nowHud = Date.now();
+      const abilities = [
+        { key: 'E', ready: nowHud >= dashCooldownUntil, rem: Math.max(0, dashCooldownUntil - nowHud), max: 5000, col: '#f59e0b', cx: px + w + 20 },
+        { key: 'Q', ready: nowHud >= freezeTrapCooldownUntil, rem: Math.max(0, freezeTrapCooldownUntil - nowHud), max: 10000, col: '#06b6d4', cx: px + w + 50 }
+      ];
+      abilities.forEach(ab => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(ab.cx, py + h / 2, 12.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+        ctx.fill();
+        ctx.strokeStyle = ab.ready ? ab.col : 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        if (!ab.ready) {
+          const pct = 1 - (ab.rem / ab.max);
+          ctx.beginPath();
+          ctx.arc(ab.cx, py + h / 2, 12.5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+          ctx.strokeStyle = ab.col;
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        }
+        ctx.fillStyle = ab.ready ? '#ffffff' : '#94a3b8';
+        ctx.font = '900 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ab.key, ab.cx, py + h / 2 + 0.5);
+        ctx.restore();
+      });
 
       // Clean score number only, centered at the top middle of the screen
       const isDarkFloor = getActiveArenaTheme().dark;
@@ -9692,6 +9920,8 @@
       }
       lastKillTime = now;
       matchKills++;
+      totalLifetimeKills++;
+      try { localStorage.setItem('snakeTotalKills_v1', String(totalLifetimeKills)); } catch (e) {}
       screenShake = Math.min(12, 6 + killStreak * 1.5);
       playSFX('kill');
       pushElimFeed(`You eliminated ${enemyName || 'Rival'}`, '#f59e0b');
@@ -10188,9 +10418,17 @@
       try { localStorage.setItem('snakePetsState_v1', JSON.stringify(petsState)); } catch (e) {}
     }
 
+    function getPetLevel(petId) {
+      if (!petsState.levels || typeof petsState.levels !== 'object') petsState.levels = {};
+      return Math.max(1, petsState.levels[petId] || 1);
+    }
+
     function getEquippedPet() {
       if (!petsState.equipped) return null;
-      return PETS_CATALOG.find(p =>p.id === petsState.equipped) || null;
+      const base = PETS_CATALOG.find(p =>p.id === petsState.equipped);
+      if (!base) return null;
+      const lv = getPetLevel(base.id);
+      return Object.assign({}, base, { level: lv, bonusMoney: (base.bonusMoney || 0) + (lv - 1) });
     }
 
     function updateOrbPetUI() {
@@ -10294,8 +10532,8 @@
       if (moneyEl) moneyEl.textContent = foodBank.toLocaleString();
       if (countEl) countEl.textContent = `${petsState.owned.length} / ${PETS_CATALOG.length} Owned`;
       if (eq) {
-        if (nameEl) nameEl.textContent = `${eq.name} (${eq.rarity})`;
-        if (perkEl) perkEl.textContent = eq.perk;
+        if (nameEl) nameEl.textContent = `${eq.name} • Lv. ${eq.level} (${eq.rarity})`;
+        if (perkEl) perkEl.textContent = `${eq.perk}${eq.level > 1 ? ` (+$${eq.level - 1} Evo Bonus)` : ''}`;
         if (btnUnequip) btnUnequip.classList.remove('hidden');
       } else {
         if (nameEl) nameEl.textContent = 'No Pet Equipped';
@@ -10326,7 +10564,7 @@
           info.className = 'flex flex-col leading-tight min-w-0';
           const nm = document.createElement('span');
           nm.className = 'text-xs font-black truncate';
-          nm.textContent = owned ? p.name : '???';
+          nm.textContent = owned ? `${p.name} (Lv.${getPetLevel(p.id)})` : '???';
           const rk = document.createElement('span');
           rk.className = `text-[10px] font-bold ${isEq ? 'text-cyan-300' : 'text-slate-400'}`;
           rk.textContent = isEq ? `${p.rarity} • Active` : owned ? `${p.rarity} • Tap to Equip` : `${p.rarity} • Hatch Egg`;
@@ -10358,13 +10596,14 @@
       saveFoodBank();
       const pool = PETS_CATALOG.filter(p =>allowedRarities.includes(p.rarity));
       const hatched = pool[Math.floor(Math.random() * pool.length)];
+      if (!petsState.levels || typeof petsState.levels !== 'object') petsState.levels = {};
       const isNew = !petsState.owned.includes(hatched.id);
       if (isNew) {
         petsState.owned.push(hatched.id);
+        petsState.levels[hatched.id] = 1;
       } else {
-        // Duplicate refund bonus!
-        const refund = Math.round(cost * 0.4);
-        addFoodBank(refund);
+        // Pet Evolution! Duplicate hatch levels up your pet!
+        petsState.levels[hatched.id] = (petsState.levels[hatched.id] || 1) + 1;
       }
       petsState.equipped = hatched.id;
       savePetsState();
@@ -10373,7 +10612,7 @@
       if (msgEl) {
         msgEl.textContent = isNew
           ? `Hatched NEW ${hatched.rarity} Pet: ${hatched.name}!`
-          : `Hatched ${hatched.name} (Owned: +$${Math.round(cost * 0.4).toLocaleString()} Money back!)`;
+          : `LEVEL UP! ${hatched.name} evolved to Lv. ${petsState.levels[hatched.id]} (+$${petsState.levels[hatched.id] - 1} bonus Money/dot)!`;
       }
     }
 
@@ -10441,6 +10680,63 @@
           prepShieldArmed = true;
           saveFoodBank();
           updatePrepBoostButtonsUI();
+
+    const btnPrepBattleRoyale = document.getElementById('btnPrepBattleRoyale');
+    function updateBattleRoyaleBtnUI() {
+      if (!btnPrepBattleRoyale) return;
+      btnPrepBattleRoyale.textContent = battleRoyaleMode ? 'Battle Royale: ON' : 'Battle Royale: OFF';
+      btnPrepBattleRoyale.className = battleRoyaleMode
+        ? 'px-3 py-2 rounded-2xl border-2 border-rose-500 bg-rose-600 text-white text-xs font-black shadow-sm cursor-pointer'
+        : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-rose-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
+    }
+    if (btnPrepBattleRoyale) {
+      btnPrepBattleRoyale.addEventListener('click', () => {
+        battleRoyaleMode = !battleRoyaleMode;
+        updateBattleRoyaleBtnUI();
+        if (typeof playSFX === 'function') playSFX('eat');
+      });
+    }
+    updateBattleRoyaleBtnUI();
+
+    // Wire My Stats Modal from Profile Dropdown
+    const btnOpenMyStats = document.getElementById('btnOpenMyStats');
+    const myStatsModal = document.getElementById('myStatsModal');
+    const btnCloseMyStats = document.getElementById('btnCloseMyStats');
+    function openMyStatsModal() {
+      if (!myStatsModal) return;
+      const pSub = document.getElementById('myStatsPlayerSub');
+      const sBest = document.getElementById('statBestScore');
+      const sDots = document.getElementById('statTotalDots');
+      const sKills = document.getElementById('statTotalKills');
+      const sMon = document.getElementById('statMoneyNow');
+      const sPets = document.getElementById('statPetsOwned');
+      const sSkins = document.getElementById('statSkinsOwned');
+      if (pSub) pSub.textContent = `${(playerProfile && playerProfile.name) ? playerProfile.name : 'Player'} • Lifetime Records`;
+      if (sBest) sBest.textContent = personalBestScore.toLocaleString();
+      if (sDots) sDots.textContent = totalFoodEaten.toLocaleString();
+      if (sKills) sKills.textContent = totalLifetimeKills.toLocaleString();
+      if (sMon) sMon.textContent = `$${foodBank.toLocaleString()}`;
+      if (sPets) sPets.textContent = `${petsState.owned.length} / ${PETS_CATALOG.length}`;
+      if (sSkins) sSkins.textContent = `${unlockedSkins.length} / ${SKINS_LIST.length}`;
+      myStatsModal.classList.remove('hidden');
+    }
+    if (btnOpenMyStats) {
+      btnOpenMyStats.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (profileMenuDropdown) profileMenuDropdown.classList.add('hidden');
+        openMyStatsModal();
+      });
+    }
+    if (btnCloseMyStats) {
+      btnCloseMyStats.addEventListener('click', () => {
+        if (myStatsModal) myStatsModal.classList.add('hidden');
+      });
+    }
+    if (myStatsModal) {
+      myStatsModal.addEventListener('click', (e) => {
+        if (e.target === myStatsModal) myStatsModal.classList.add('hidden');
+      });
+    }
           if (typeof playSFX === 'function') playSFX('powerup');
         }
       });
