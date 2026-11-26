@@ -1204,15 +1204,15 @@
     "scoreLabel": "Fuel",
     "hasWolfTriangles": false,
     "subtext": "Purple Hovercar (Hovercars) with Fuel fuel & high-speed agility",
-    "foodCost": 0,
-    "tier": 1,
-    "tierName": "Starter",
-    "stars": "\u2b50",
-    "quality": "Standard",
-    "maxFuel": 100,
-    "boostSpeed": 50,
-    "foodMultiplier": 1.0,
-    "perkDesc": "Standard agility & 100% fuel tank"
+    "foodCost": 10000,
+    "tier": 2,
+    "tierName": "Good Snake",
+    "stars": "\u2b50\u2b50",
+    "quality": "Good",
+    "maxFuel": 120,
+    "boostSpeed": 48,
+    "foodMultiplier": 1.2,
+    "perkDesc": "+20% Fuel Tank & fast agility"
   },
   {
     "num": 2,
@@ -1229,15 +1229,15 @@
     "scoreLabel": "Apples",
     "hasWolfTriangles": false,
     "subtext": "Green Snake (Snakes) with Apples fuel & high-speed agility",
-    "foodCost": 10000,
-    "tier": 2,
-    "tierName": "Good Snake",
-    "stars": "\u2b50\u2b50",
-    "quality": "Good",
-    "maxFuel": 120,
-    "boostSpeed": 48,
-    "foodMultiplier": 1.2,
-    "perkDesc": "+20% Fuel Tank & 1.2x Food Bonus"
+    "foodCost": 0,
+    "tier": 1,
+    "tierName": "Starter",
+    "stars": "\u2b50",
+    "quality": "Standard",
+    "maxFuel": 100,
+    "boostSpeed": 50,
+    "foodMultiplier": 1.0,
+    "perkDesc": "Free Starter Green Snake with 100% fuel tank"
   },
   {
     "num": 3,
@@ -3769,9 +3769,18 @@
       localStorage.setItem('snakeFoodBankResetV1', '1');
     }
     let foodBank = parseInt(localStorage.getItem('snakeFoodBank') || '0', 10);
-    let unlockedSkins = JSON.parse(localStorage.getItem('snakeUnlockedSkins') || '["blue_wolf", "purple_car"]');
+    let unlockedSkins = JSON.parse(localStorage.getItem('snakeUnlockedSkins') || '["blue_wolf", "classic_snake"]');
+    if (!localStorage.getItem('snakeStarterGreenV1')) {
+      unlockedSkins = unlockedSkins.filter(id => id !== 'purple_car');
+      if (currentSkin === 'purple_car') {
+        currentSkin = 'classic_snake';
+        try { localStorage.setItem('snakeEquippedSkin', 'classic_snake'); } catch (e) {}
+      }
+      try { localStorage.setItem('snakeStarterGreenV1', '1'); } catch (e) {}
+    }
     if (!unlockedSkins.includes('blue_wolf')) unlockedSkins.push('blue_wolf');
-    if (!unlockedSkins.includes('purple_car')) unlockedSkins.push('purple_car');
+    if (!unlockedSkins.includes('classic_snake')) unlockedSkins.push('classic_snake');
+    try { localStorage.setItem('snakeUnlockedSkins', JSON.stringify(unlockedSkins)); } catch (e) {}
 
     // One-time Free Try for the 1 Billion Food Golden Emperor Snake (owner local copy only)
     const isOwnerLocal = (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
