@@ -1304,15 +1304,15 @@
     "scoreLabel": "Moon Shards",
     "hasWolfTriangles": true,
     "subtext": "Fierce Arctic Blue Wolf with white spine triangles on his back & icy thrusters",
-    "foodCost": 0,
-    "tier": 1,
-    "tierName": "Starter",
-    "stars": "\u2b50",
-    "quality": "Standard",
-    "maxFuel": 100,
-    "boostSpeed": 50,
-    "foodMultiplier": 1.0,
-    "perkDesc": "Standard agility & 100% fuel tank"
+    "foodCost": 11500,
+    "tier": 2,
+    "tierName": "Good Snake",
+    "stars": "\u2b50\u2b50",
+    "quality": "Good",
+    "maxFuel": 120,
+    "boostSpeed": 48,
+    "foodMultiplier": 1.2,
+    "perkDesc": "+20% Fuel Tank & fast agility"
   },
   {
     "num": 6,
@@ -3747,7 +3747,7 @@
       }
     ];
 
-    let currentSkin = localStorage.getItem('snakeEquippedSkin') || 'blue_wolf';
+    let currentSkin = localStorage.getItem('snakeEquippedSkin') || 'classic_snake';
     let snake = [];
     let dx = 1;
     let dy = 0;
@@ -3769,16 +3769,15 @@
       localStorage.setItem('snakeFoodBankResetV1', '1');
     }
     let foodBank = parseInt(localStorage.getItem('snakeFoodBank') || '0', 10);
-    let unlockedSkins = JSON.parse(localStorage.getItem('snakeUnlockedSkins') || '["blue_wolf", "classic_snake"]');
-    if (!localStorage.getItem('snakeStarterGreenV1')) {
-      unlockedSkins = unlockedSkins.filter(id => id !== 'purple_car');
-      if (currentSkin === 'purple_car') {
+    let unlockedSkins = JSON.parse(localStorage.getItem('snakeUnlockedSkins') || '["classic_snake"]');
+    if (!localStorage.getItem('snakeOnlyGreenStarterV2')) {
+      unlockedSkins = unlockedSkins.filter(id => id !== 'purple_car' && id !== 'blue_wolf');
+      if (currentSkin === 'purple_car' || currentSkin === 'blue_wolf') {
         currentSkin = 'classic_snake';
         try { localStorage.setItem('snakeEquippedSkin', 'classic_snake'); } catch (e) {}
       }
-      try { localStorage.setItem('snakeStarterGreenV1', '1'); } catch (e) {}
+      try { localStorage.setItem('snakeOnlyGreenStarterV2', '1'); } catch (e) {}
     }
-    if (!unlockedSkins.includes('blue_wolf')) unlockedSkins.push('blue_wolf');
     if (!unlockedSkins.includes('classic_snake')) unlockedSkins.push('classic_snake');
     try { localStorage.setItem('snakeUnlockedSkins', JSON.stringify(unlockedSkins)); } catch (e) {}
 
