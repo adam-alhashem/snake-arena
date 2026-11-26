@@ -4482,7 +4482,7 @@
                         : `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200 transition-all">Equip</button>`)
                     : canAfford
                       ? `<button class="btn-unlock w-full py-1 text-xs rounded-md font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all flex items-center justify-center gap-1"><span>🔓 Unlock</span></button>`
-                      : `${(s.id === 'golden_emperor' && canUseGoldenFreeTry() && !inGame) ? `<button class="btn-golden-try w-full py-1 text-xs rounded-md font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-all mb-1 cursor-pointer">Try Free (1 Game)</button>` : ''}<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">🔒 Need $${(s.foodCost - foodBank).toLocaleString()} more</button>`
+                      : `${(s.id === 'golden_emperor' && canUseGoldenFreeTry() && !inGame) ? `<button class="btn-golden-try w-full py-1 text-xs rounded-md font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-all mb-1 cursor-pointer">Try Free (1 Game)</button>` : ''}<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">$${s.foodCost.toLocaleString()}</button>`
             }
           </div>
         `;
