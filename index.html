@@ -234,9 +234,9 @@
           <div class="flex items-center gap-1 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 text-xs font-mono">
             <span class="text-indigo-700 font-black">Level <strong id="skinsModalLevelNum">1</strong></span>
           </div>
-          <!-- Food Bank Display -->
+          <!-- Money Bank Display -->
           <div class="flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 text-xs font-mono">
-            <span class="text-emerald-700 font-bold flex items-center gap-1"><span>🍎</span> <strong id="modalFoodBank">0</strong> Food</span>
+            <span class="text-emerald-700 font-bold flex items-center gap-1">$<strong id="modalFoodBank">0</strong> Money</span>
           </div>
           <button id="btnCloseSkinModal" class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 text-xl font-bold flex items-center justify-center transition-all" aria-label="Close modal">&times;</button>
         </div>
@@ -547,8 +547,8 @@
 
       <button id="btnOrbPetToggle" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-50 to-teal-50 hover:from-cyan-100 hover:to-teal-100 border-2 border-cyan-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
         <span class="w-3 h-3 rounded-full bg-cyan-400 shrink-0" style="box-shadow:0 0 8px #22d3ee;"></span>
-        <span class="text-xs font-black text-slate-900 leading-none">Orb Pet</span>
-        <span id="orbPetStatusBadge" class="px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none">2,000 Food</span>
+        <span class="text-xs font-black text-slate-900 leading-none">Pets</span>
+        <span id="orbPetStatusBadge" class="px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none">Hatch Eggs</span>
       </button>
     </div>
 
@@ -806,7 +806,7 @@
           </button>
         </div>
         <button id="btnUpgradeFactory" type="button" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">
-          Upgrade Storage & Styles (1,000 Food)
+          Upgrade Storage & Styles ($1,000)
         </button>
 
         <p id="factoryStatusMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]">Collect Sticks and Feathers on the arena floor, then combine 1 Stick + 1 Feather here to craft an Arrow!</p>
@@ -837,6 +837,83 @@
       <button id="btnClaimDailyStreak" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md active:scale-95 transition-all cursor-pointer">
         Claim Today's Bonus
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PETS & EGG HATCHERY MODAL (See Your Pet + Hatch Eggs with Money)          -->
+  <!-- ========================================================================= -->
+  <div id="petsModal" class="fixed inset-0 z-[67] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-cyan-950 to-slate-900 text-white flex items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg sm:text-xl font-black tracking-tight leading-tight">Pets &amp; Egg Hatchery</h2>
+          <p id="petsHeaderSub" class="text-xs font-semibold text-cyan-300">Hatch eggs with Money to collect glowing companion pets</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-mono font-black">
+            $<span id="petsModalMoney">0</span>
+          </div>
+          <button id="btnClosePetsModal" type="button" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center cursor-pointer">&times;</button>
+        </div>
+      </div>
+
+      <!-- Equipped Pet Live Preview -->
+      <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-3.5">
+          <canvas id="petLivePreviewCanvas" width="84" height="84" class="w-[74px] h-[74px] rounded-2xl bg-slate-900 border-2 border-cyan-400/60 shadow-md shrink-0"></canvas>
+          <div class="flex flex-col leading-tight">
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Companion Pet</span>
+            <span id="activePetName" class="text-base sm:text-lg font-black text-slate-900">No Pet Equipped</span>
+            <span id="activePetPerk" class="text-xs font-semibold text-cyan-700 mt-0.5">Hatch an egg below to get your first pet!</span>
+          </div>
+        </div>
+        <button id="btnUnequipPet" type="button" class="hidden px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-extrabold cursor-pointer shrink-0">
+          Rest Pet
+        </button>
+      </div>
+
+      <!-- Egg Hatchery + Pet Collection -->
+      <div class="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto bg-white">
+        <!-- Hatch Eggs Row -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-500">Hatch Eggs</span>
+            <span id="eggHatchResultMsg" class="text-xs font-extrabold text-emerald-600"></span>
+          </div>
+          <div class="grid grid-cols-3 gap-2.5">
+            <button id="btnHatchBasicEgg" type="button" class="p-3 rounded-2xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white hover:border-sky-400 hover:shadow-md active:scale-95 transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+              <div class="w-10 h-12 rounded-[50%_50%_45%_45%] bg-gradient-to-b from-sky-300 via-sky-400 to-blue-500 border-2 border-white shadow-md"></div>
+              <span class="text-xs font-black text-slate-900">Basic Egg</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">$500</span>
+            </button>
+
+            <button id="btnHatchRoyalEgg" type="button" class="p-3 rounded-2xl border-2 border-purple-200 bg-gradient-to-b from-purple-50 to-white hover:border-purple-400 hover:shadow-md active:scale-95 transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+              <div class="w-10 h-12 rounded-[50%_50%_45%_45%] bg-gradient-to-b from-fuchsia-300 via-purple-500 to-indigo-600 border-2 border-white shadow-md"></div>
+              <span class="text-xs font-black text-slate-900">Royal Egg</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">$2,500</span>
+            </button>
+
+            <button id="btnHatchMythicEgg" type="button" class="p-3 rounded-2xl border-2 border-amber-300 bg-gradient-to-b from-amber-50 to-white hover:border-amber-500 hover:shadow-md active:scale-95 transition-all flex flex-col items-center gap-1.5 cursor-pointer">
+              <div class="w-10 h-12 rounded-[50%_50%_45%_45%] bg-gradient-to-b from-yellow-200 via-amber-400 to-orange-600 border-2 border-white shadow-md"></div>
+              <span class="text-xs font-black text-slate-900">Mythic Egg</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">$10,000</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pet Collection Grid -->
+        <div class="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black uppercase tracking-wider text-slate-500">Your Pet Collection</span>
+            <span id="petsCollectedCount" class="text-xs font-bold text-slate-500">0 / 10 Owned</span>
+          </div>
+          <div id="petsCollectionGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <!-- Populated by renderPetsModal() -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -902,10 +979,10 @@
         </div>
 
         <button id="btnPrepShield" type="button" class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
-          Start Shield (200 Food)
+          Start Shield ($200)
         </button>
         <button id="btnPrepTurbo" type="button" class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-orange-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
-          Turbo Start (150 Food)
+          Turbo Start ($150)
         </button>
       </div>
 
@@ -917,7 +994,7 @@
         <button id="btnStartChooseSkin" aria-label="Buy Golden Emperor Snake for 1 Billion Food" title="Golden Emperor Snake - 1,000,000,000 Food" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-100 hover:from-amber-100 hover:to-yellow-200 border-2 border-amber-400 shadow-md hover:shadow-lg active:scale-95 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer">
           <canvas id="startGoldenSnakeCanvas" width="176" height="46" class="w-[150px] sm:w-[176px] h-[40px] sm:h-[46px] pointer-events-none"></canvas>
           <span data-i18n="chooseSkin" class="text-xs sm:text-sm font-black text-amber-900 tracking-tight leading-none">Snakes</span>
-          <span id="startGoldenSnakePrice" class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs">1,000,000,000 Food</span>
+          <span id="startGoldenSnakePrice" class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs">$1,000,000,000</span>
         </button>
       </div>
     </div>
@@ -4355,7 +4432,7 @@
         // Food cost label
         const foodCostLabel = (s.foodCost === 0)
           ? '<span class="text-emerald-600 font-bold">FREE STARTER</span>'
-          : `<span class="${isUnlocked ? 'text-slate-500 font-medium' : (canAfford ? 'text-emerald-700 font-extrabold' : 'text-slate-400 font-bold')}">🍎 ${s.foodCost.toLocaleString()} Food</span>`;
+          : `<span class="${isUnlocked ? 'text-slate-500 font-medium' : (canAfford ? 'text-emerald-700 font-extrabold' : 'text-slate-400 font-bold')}">$${s.foodCost.toLocaleString()}</span>`;
 
         card.innerHTML = `
           <!-- Top Row: Number, Stars & Category -->
@@ -4373,7 +4450,7 @@
             <div class="min-w-0">
               <div class="font-bold text-xs text-slate-800 truncate flex items-center gap-1">
                 <span>${s.shortName}</span>
-                ${s.tier === 5 ? '<span title="Apex 10,000 Food Snake!">👑</span>' : ''}
+                ${s.tier === 5 ? '<span title="Apex $10,000 Money Snake!">👑</span>' : ''}
               </div>
               <div class="text-[10px] text-purple-600 font-semibold">${s.tierName}</div>
             </div>
@@ -4408,7 +4485,7 @@
                         : `<button class="btn-equip w-full py-1 text-xs rounded-md font-bold bg-purple-50 text-purple-700 hover:bg-purple-600 hover:text-white border border-purple-200 transition-all">Equip</button>`)
                     : canAfford
                       ? `<button class="btn-unlock w-full py-1 text-xs rounded-md font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all flex items-center justify-center gap-1"><span>🔓 Unlock</span></button>`
-                      : `${(s.id === 'golden_emperor' && canUseGoldenFreeTry() && !inGame) ? `<button class="btn-golden-try w-full py-1 text-xs rounded-md font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-all mb-1 cursor-pointer">Try Free (1 Game)</button>` : ''}<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">🔒 Need 🍎 ${(s.foodCost - foodBank).toLocaleString()} more</button>`
+                      : `${(s.id === 'golden_emperor' && canUseGoldenFreeTry() && !inGame) ? `<button class="btn-golden-try w-full py-1 text-xs rounded-md font-extrabold bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-all mb-1 cursor-pointer">Try Free (1 Game)</button>` : ''}<button class="w-full py-1 text-xs rounded-md font-bold bg-slate-100 text-slate-400 cursor-not-allowed">🔒 Need $${(s.foodCost - foodBank).toLocaleString()} more</button>`
             }
           </div>
         `;
@@ -5110,22 +5187,49 @@
     }
 
     function drawOrbPet() {
-      if (!orbPetOwned || !orbPetEnabled || !isPlayerAlive || snake.length === 0) return;
+      const pet = (typeof getEquippedPet === 'function') ? getEquippedPet() : null;
+      if (!pet || !isPlayerAlive || snake.length === 0) return;
       const head = snake[0];
       const ang = Date.now() / 320;
-      const ox = head.x * GRID_SIZE + GRID_SIZE / 2 + Math.cos(ang) * 24;
-      const oy = head.y * GRID_SIZE + GRID_SIZE / 2 + Math.sin(ang) * 24;
+      const ox = head.x * GRID_SIZE + GRID_SIZE / 2 + Math.cos(ang) * 26;
+      const oy = head.y * GRID_SIZE + GRID_SIZE / 2 + Math.sin(ang) * 26;
+      const bob = Math.sin(Date.now() / 160) * 1.8;
       ctx.save();
-      ctx.shadowColor = '#22d3ee';
-      ctx.shadowBlur = 12;
-      ctx.fillStyle = '#06b6d4';
+      ctx.translate(ox, oy + bob);
+      // Soft glowing aura
+      ctx.shadowColor = pet.color;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = pet.color;
       ctx.beginPath();
-      ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+      ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
+      // Inner lighter dome
+      ctx.fillStyle = pet.accent || '#ffffff';
+      ctx.globalAlpha = 0.45;
+      ctx.beginPath();
+      ctx.arc(-1.5, -1.5, 4.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      // Cute eyes
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(ox - 1.5, oy - 1.5, 2.2, 0, Math.PI * 2);
+      ctx.arc(-2.6, -1, 2.2, 0, Math.PI * 2);
+      ctx.arc(2.6, -1, 2.2, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(-2.2, -1, 1.1, 0, Math.PI * 2);
+      ctx.arc(3.0, -1, 1.1, 0, Math.PI * 2);
+      ctx.fill();
+      // Mini crown for Legendary/Mythic pets
+      if (pet.rarity === 'Legendary' || pet.rarity === 'Mythic') {
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.moveTo(-4, -8); ctx.lineTo(-2, -12); ctx.lineTo(0, -9); ctx.lineTo(2, -12); ctx.lineTo(4, -8);
+        ctx.closePath();
+        ctx.fill();
+      }
       ctx.restore();
     }
 
@@ -6224,21 +6328,24 @@
               triggerCenterBanner('CHEST OPENED! +2 STICKS & FEATHERS', '#d97706', 2200);
             }
 
-            // Orb Pet Companion: auto-collect dots, Sticks & Feathers within 2 tiles!
-            if (orbPetOwned && orbPetEnabled) {
+            // Active Companion Pet: auto-collect dots, Sticks & Feathers within pet's radius!
+            const activePetObj = (typeof getEquippedPet === 'function') ? getEquippedPet() : null;
+            if (activePetObj) {
+              const pr = activePetObj.radius || 2;
+              const pBonus = activePetObj.bonusMoney || 0;
               for (let oi = foods.length - 1; oi >= 0; oi--) {
-                if (Math.abs(head.x - foods[oi].x) <= 2 && Math.abs(head.y - foods[oi].y) <= 2) {
+                if (Math.abs(head.x - foods[oi].x) <= pr && Math.abs(head.y - foods[oi].y) <= pr) {
                   foods.splice(oi, 1);
                   score += 1;
                   matchDotsEaten++;
                   checkPersonalBest(score);
-                  addFoodBank(1);
+                  addFoodBank(1 + pBonus);
                   if (scoreEl) scoreEl.textContent = score;
                   spawnFood();
                 }
               }
               for (let si = floorSticks.length - 1; si >= 0; si--) {
-                if (Math.abs(head.x - floorSticks[si].x) <= 2 && Math.abs(head.y - floorSticks[si].y) <= 2) {
+                if (Math.abs(head.x - floorSticks[si].x) <= pr && Math.abs(head.y - floorSticks[si].y) <= pr) {
                   floorSticks.splice(si, 1);
                   matchSticks++;
                   if (typeof addFactoryMaterials === 'function') addFactoryMaterials(1, 0);
@@ -6246,7 +6353,7 @@
                 }
               }
               for (let fi = floorFeathers.length - 1; fi >= 0; fi--) {
-                if (Math.abs(head.x - floorFeathers[fi].x) <= 2 && Math.abs(head.y - floorFeathers[fi].y) <= 2) {
+                if (Math.abs(head.x - floorFeathers[fi].x) <= pr && Math.abs(head.y - floorFeathers[fi].y) <= pr) {
                   floorFeathers.splice(fi, 1);
                   matchFeathers++;
                   if (typeof addFactoryMaterials === 'function') addFactoryMaterials(0, 1);
@@ -6307,12 +6414,13 @@
                   }
                 }
                 const activeFt = getActiveFoodType();
-                const foodEarned = 1;
-                addFoodBank(foodEarned);
+                const petBonusM = (typeof getEquippedPet === 'function' && getEquippedPet()) ? (getEquippedPet().bonusMoney || 0) : 0;
+                const moneyEarned = 1 + petBonusM;
+                addFoodBank(moneyEarned);
                 floatingTexts.push({
                   x: head.x * GRID_SIZE + GRID_SIZE / 2,
                   y: head.y * GRID_SIZE + GRID_SIZE / 2,
-                  text: `+${foodEarned} ${activeFt.name}`,
+                  text: `+$${moneyEarned}`,
                   color: activeFt.color || '#10b981',
                   life: 28,
                   maxLife: 28
@@ -8541,12 +8649,12 @@
         desc: 'Survive 3 minutes (180s) in one life',
         metric: 'bestSurvivalSec',
         target: 180,
-        rewardLabel: '🔥 +60 Max Fuel + 2,500 Food',
+        rewardLabel: '🔥 +60 Max Fuel + $2,500 Money',
         grant: () => {
           rewardsState.perks.bonusFuel = (rewardsState.perks.bonusFuel || 0) + 60;
           addFoodBank(2500);
           setSkin(currentSkin, true);
-          return '🔥 +60 Max Fuel & +2,500 Food claimed!';
+          return '🔥 +60 Max Fuel & +$2,500 Money claimed!';
         }
       },
       // HARD
@@ -8587,11 +8695,11 @@
         desc: 'Survive 6 minutes (360s) in one life',
         metric: 'bestSurvivalSec',
         target: 360,
-        rewardLabel: '🎁 Free Mythic Apex Skin + 10,000 Food',
+        rewardLabel: '🎁 Free Mythic Apex Skin + $10,000 Money',
         grant: () => {
           addFoodBank(10000);
           const skinMsg = unlockRandomRewardSkin([5, 4], 'Mythic Apex');
-          return `🎉 +10,000 Food + ${skinMsg}`;
+          return `🎉 +$10,000 Money + ${skinMsg}`;
         }
       }
     ];
@@ -8616,42 +8724,42 @@
           const tiers = diff === 'easy' ? [1, 2] : diff === 'medium' ? [2, 3] : [4, 5];
           const tLabel = diff === 'easy' ? 'Common/Rare' : diff === 'medium' ? 'Rare/Epic' : 'Legendary/Mythic';
           return {
-            label: `Free ${tLabel} Skin + ${foodBonus.toLocaleString()} Food`,
+            label: `Free ${tLabel} Skin + $${foodBonus.toLocaleString()} Money`,
             grant: () => {
               addFoodBank(foodBonus);
               const sm = unlockRandomRewardSkin(tiers, tLabel);
-              return `+${foodBonus.toLocaleString()} Food + ${sm}`;
+              return `+$${foodBonus.toLocaleString()} Money + ${sm}`;
             }
           };
         }
         if (tierIdx % 7 === 3) {
           const fuelAdd = diff === 'easy' ? 5 : diff === 'medium' ? 10 : 20;
           return {
-            label: `+${fuelAdd} Max Fuel + ${foodBonus.toLocaleString()} Food`,
+            label: `+${fuelAdd} Max Fuel + $${foodBonus.toLocaleString()} Money`,
             grant: () => {
               rewardsState.perks.bonusFuel = (rewardsState.perks.bonusFuel || 0) + fuelAdd;
               addFoodBank(foodBonus);
               setSkin(currentSkin, true);
-              return `+${fuelAdd} Max Fuel & +${foodBonus.toLocaleString()} Food claimed!`;
+              return `+${fuelAdd} Max Fuel & +$${foodBonus.toLocaleString()} Money claimed!`;
             }
           };
         }
         if (tierIdx % 9 === 5) {
           const shieldSec = diff === 'easy' ? 1 : diff === 'medium' ? 2 : 3;
           return {
-            label: `+${shieldSec}s Spawn Shield + ${foodBonus.toLocaleString()} Food`,
+            label: `+${shieldSec}s Spawn Shield + $${foodBonus.toLocaleString()} Money`,
             grant: () => {
               rewardsState.perks.bonusShieldTicks = (rewardsState.perks.bonusShieldTicks || 0) + shieldSec * 10;
               addFoodBank(foodBonus);
-              return `+${shieldSec}s Spawn Shield & +${foodBonus.toLocaleString()} Food claimed!`;
+              return `+${shieldSec}s Spawn Shield & +$${foodBonus.toLocaleString()} Money claimed!`;
             }
           };
         }
         return {
-          label: `+${foodBonus.toLocaleString()} Food`,
+          label: `+$${foodBonus.toLocaleString()} Money`,
           grant: () => {
             addFoodBank(foodBonus);
-            return `+${foodBonus.toLocaleString()} Food claimed!`;
+            return `+$${foodBonus.toLocaleString()} Money claimed!`;
           }
         };
       }
@@ -8736,7 +8844,7 @@
       }
       if (locked.length === 0) {
         addFoodBank(3000);
-        return 'All skins owned! Received +3,000 Bonus Food 🍎';
+        return 'All skins owned! Received +$3,000 Bonus Money';
       }
       const won = locked[Math.floor(Math.random() * locked.length)];
       unlockedSkins.push(won.id);
@@ -9693,14 +9801,14 @@
     renderArenaThemeBar();
 
     const SPIN_PRIZES = [
-      { label: '+500 Food',      color: '#ef4444', grant: () => { addFoodBank(500); return 'Won +500 Food!'; } },
+      { label: '+$500 Money',      color: '#ef4444', grant: () => { addFoodBank(500); return 'Won +$500 Money!'; } },
       { label: '+5 Arrows',      color: '#f97316', grant: () => { pendingSpinStartArrows += 5; return 'Won +5 Starting Arrows for your next match!'; } },
-      { label: '+1,500 Food',    color: '#eab308', grant: () => { addFoodBank(1500); return 'Won +1,500 Food!'; } },
+      { label: '+$1,500 Money',    color: '#eab308', grant: () => { addFoodBank(1500); return 'Won +$1,500 Money!'; } },
       { label: 'Extra Shield',   color: '#10b981', grant: () => { pendingSpinExtraShield += 50; return 'Won +5s Extra Shield for your next match!'; } },
-      { label: '+3,000 Food',    color: '#06b6d4', grant: () => { addFoodBank(3000); return 'Won +3,000 Food!'; } },
+      { label: '+$3,000 Money',    color: '#06b6d4', grant: () => { addFoodBank(3000); return 'Won +$3,000 Money!'; } },
       { label: 'Mystery Skin',   color: '#6366f1', grant: () => unlockRandomRewardSkin([1, 2, 3], 'Lucky Spin') },
-      { label: '+5,000 Food',    color: '#a855f7', grant: () => { addFoodBank(5000); return 'Won +5,000 Food!'; } },
-      { label: '+10,000 Food',   color: '#ec4899', grant: () => { addFoodBank(10000); return 'JACKPOT! Won +10,000 Food!'; } }
+      { label: '+$5,000 Money',    color: '#a855f7', grant: () => { addFoodBank(5000); return 'Won +$5,000 Money!'; } },
+      { label: '+$10,000 Money',   color: '#ec4899', grant: () => { addFoodBank(10000); return 'JACKPOT! Won +$10,000 Money!'; } }
     ];
     let spinWheelAngle = 0;
     let isSpinningWheel = false;
@@ -9850,12 +9958,12 @@
     // =========================================================================
     const DAILY_STREAK_REWARDS = [
       { day: 1, label: '+2 Sticks & +2 Feathers', grant: () => { addFactoryMaterials(2, 2); return 'Claimed Day 1: +2 Sticks & +2 Feathers!'; } },
-      { day: 2, label: '+500 Food',               grant: () => { addFoodBank(500); return 'Claimed Day 2: +500 Food!'; } },
+      { day: 2, label: '+$500 Money',               grant: () => { addFoodBank(500); return 'Claimed Day 2: +$500 Money!'; } },
       { day: 3, label: '+4 Sticks & +4 Feathers', grant: () => { addFactoryMaterials(4, 4); return 'Claimed Day 3: +4 Sticks & +4 Feathers!'; } },
-      { day: 4, label: '+1,500 Food',             grant: () => { addFoodBank(1500); return 'Claimed Day 4: +1,500 Food!'; } },
+      { day: 4, label: '+$1,500 Money',             grant: () => { addFoodBank(1500); return 'Claimed Day 4: +$1,500 Money!'; } },
       { day: 5, label: '+6 Sticks & +6 Feathers', grant: () => { addFactoryMaterials(6, 6); return 'Claimed Day 5: +6 Sticks & +6 Feathers!'; } },
-      { day: 6, label: '+3,500 Food',             grant: () => { addFoodBank(3500); return 'Claimed Day 6: +3,500 Food!'; } },
-      { day: 7, label: 'Mystery Skin + 5K Food',  grant: () => { addFoodBank(5000); return 'Day 7 Jackpot! +5,000 Food + ' + unlockRandomRewardSkin([2, 3, 4], 'Daily Streak'); } }
+      { day: 6, label: '+$3,500 Money',             grant: () => { addFoodBank(3500); return 'Claimed Day 6: +$3,500 Money!'; } },
+      { day: 7, label: 'Mystery Skin + $5K Money',  grant: () => { addFoodBank(5000); return 'Day 7 Jackpot! +$5,000 Money + ' + unlockRandomRewardSkin([2, 3, 4], 'Daily Streak'); } }
     ];
 
     let streakState = (() => {
@@ -9943,60 +10051,274 @@
     }
     renderDailyStreakUI();
 
-    // Orb Pet Companion Lobby Toggle / Unlock
+    // =========================================================================
+    // PETS & EGG HATCHERY SYSTEM (10 Collectible Pets + Egg Hatching with Money)
+    // =========================================================================
+    const PETS_CATALOG = [
+      { id: 'aqua_orb',     name: 'Aqua Orb',        rarity: 'Common',    color: '#06b6d4', accent: '#cffafe', radius: 2, bonusMoney: 0, perk: 'Collects dots & materials within 2 tiles' },
+      { id: 'mint_sprite',  name: 'Mint Sprite',     rarity: 'Common',    color: '#10b981', accent: '#d1fae5', radius: 2, bonusMoney: 0, perk: 'Collects dots & materials within 2 tiles' },
+      { id: 'ruby_spark',   name: 'Ruby Spark',      rarity: 'Common',    color: '#ef4444', accent: '#fee2e2', radius: 2, bonusMoney: 0, perk: 'Collects dots & materials within 2 tiles' },
+      { id: 'solar_fly',    name: 'Solar Firefly',   rarity: 'Rare',      color: '#eab308', accent: '#fef9c3', radius: 2, bonusMoney: 1, perk: '2-tile collector + +$1 bonus Money per dot' },
+      { id: 'frost_wisp',   name: 'Frost Wisp',      rarity: 'Rare',      color: '#38bdf8', accent: '#e0f2fe', radius: 3, bonusMoney: 0, perk: 'Wide 3-tile auto-collector' },
+      { id: 'plasma_pup',   name: 'Plasma Pup',      rarity: 'Epic',      color: '#a855f7', accent: '#f3e8ff', radius: 3, bonusMoney: 2, perk: '3-tile collector + +$2 bonus Money per dot' },
+      { id: 'blaze_fox',    name: 'Blaze Fox',       rarity: 'Epic',      color: '#f97316', accent: '#ffedd5', radius: 3, bonusMoney: 2, perk: '3-tile collector + +$2 bonus Money per dot' },
+      { id: 'star_dragon',  name: 'Starlight Dragon',rarity: 'Legendary', color: '#6366f1', accent: '#e0e7ff', radius: 4, bonusMoney: 3, perk: '4-tile collector + +$3 bonus Money per dot' },
+      { id: 'em_phoenix',   name: 'Emerald Phoenix', rarity: 'Legendary', color: '#22c55e', accent: '#dcfce7', radius: 4, bonusMoney: 4, perk: '4-tile collector + +$4 bonus Money per dot' },
+      { id: 'gold_king_pet',name: 'Golden Emperor Pet', rarity: 'Mythic', color: '#facc15', accent: '#ffffff', radius: 4, bonusMoney: 5, perk: '4-tile collector + +$5 bonus Money per dot' }
+    ];
+
+    let petsState = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakePetsState_v1') || 'null');
+        if (s && typeof s === 'object' && Array.isArray(s.owned)) return s;
+      } catch (e) {}
+      // Migrate previous Orb Pet owner automatically!
+      if (orbPetOwned) return { owned: ['aqua_orb'], equipped: orbPetEnabled ? 'aqua_orb' : '' };
+      return { owned: [], equipped: '' };
+    })();
+
+    function savePetsState() {
+      try { localStorage.setItem('snakePetsState_v1', JSON.stringify(petsState)); } catch (e) {}
+    }
+
+    function getEquippedPet() {
+      if (!petsState.equipped) return null;
+      return PETS_CATALOG.find(p => p.id === petsState.equipped) || null;
+    }
+
     function updateOrbPetUI() {
       const badge = document.getElementById('orbPetStatusBadge');
-      if (!badge) return;
-      if (!orbPetOwned) {
-        badge.textContent = '2,000 Food';
-        badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none';
-      } else if (orbPetEnabled) {
-        badge.textContent = 'ON';
-        badge.className = 'px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black leading-none';
-      } else {
-        badge.textContent = 'OFF';
-        badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-400 text-white text-[9px] font-black leading-none';
+      const eq = getEquippedPet();
+      if (badge) {
+        if (eq) {
+          badge.textContent = eq.name;
+          badge.className = 'px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black leading-none';
+        } else if (petsState.owned.length > 0) {
+          badge.textContent = `${petsState.owned.length} Owned`;
+          badge.className = 'px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-black leading-none';
+        } else {
+          badge.textContent = 'Hatch Eggs';
+          badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none';
+        }
       }
     }
+
+    let petPreviewRafId = null;
+    function startPetPreviewLoop() {
+      if (petPreviewRafId) return;
+      const pc = document.getElementById('petLivePreviewCanvas');
+      if (!pc) return;
+      const pctx = pc.getContext('2d');
+      if (!pctx) return;
+
+      function frame() {
+        const m = document.getElementById('petsModal');
+        if (!m || m.classList.contains('hidden')) {
+          petPreviewRafId = null;
+          return;
+        }
+        const pet = getEquippedPet();
+        const w = pc.width;
+        const h = pc.height;
+        pctx.fillStyle = '#0f172a';
+        pctx.fillRect(0, 0, w, h);
+
+        if (pet) {
+          const bob = Math.sin(Date.now() / 220) * 5;
+          pctx.save();
+          pctx.translate(w / 2, h / 2 + bob);
+          pctx.shadowColor = pet.color;
+          pctx.shadowBlur = 18;
+          pctx.fillStyle = pet.color;
+          pctx.beginPath();
+          pctx.arc(0, 0, 20, 0, Math.PI * 2);
+          pctx.fill();
+          pctx.shadowBlur = 0;
+
+          pctx.fillStyle = pet.accent || '#ffffff';
+          pctx.globalAlpha = 0.45;
+          pctx.beginPath();
+          pctx.arc(-4, -4, 11, 0, Math.PI * 2);
+          pctx.fill();
+          pctx.globalAlpha = 1;
+
+          // Cute eyes
+          pctx.fillStyle = '#ffffff';
+          pctx.beginPath();
+          pctx.arc(-6.5, -2, 5, 0, Math.PI * 2);
+          pctx.arc(6.5, -2, 5, 0, Math.PI * 2);
+          pctx.fill();
+          pctx.fillStyle = '#0f172a';
+          pctx.beginPath();
+          pctx.arc(-5.5, -2, 2.5, 0, Math.PI * 2);
+          pctx.arc(7.5, -2, 2.5, 0, Math.PI * 2);
+          pctx.fill();
+
+          if (pet.rarity === 'Legendary' || pet.rarity === 'Mythic') {
+            pctx.fillStyle = '#facc15';
+            pctx.beginPath();
+            pctx.moveTo(-9, -18); pctx.lineTo(-5, -27); pctx.lineTo(0, -21); pctx.lineTo(5, -27); pctx.lineTo(9, -18);
+            pctx.closePath();
+            pctx.fill();
+          }
+          pctx.restore();
+        } else {
+          pctx.fillStyle = '#475569';
+          pctx.font = '800 11px system-ui, sans-serif';
+          pctx.textAlign = 'center';
+          pctx.textBaseline = 'middle';
+          pctx.fillText('NO PET', w / 2, h / 2);
+        }
+        petPreviewRafId = requestAnimationFrame(frame);
+      }
+      petPreviewRafId = requestAnimationFrame(frame);
+    }
+
+    function renderPetsModal() {
+      updateOrbPetUI();
+      const moneyEl = document.getElementById('petsModalMoney');
+      const nameEl = document.getElementById('activePetName');
+      const perkEl = document.getElementById('activePetPerk');
+      const btnUnequip = document.getElementById('btnUnequipPet');
+      const countEl = document.getElementById('petsCollectedCount');
+      const grid = document.getElementById('petsCollectionGrid');
+      const eq = getEquippedPet();
+
+      if (moneyEl) moneyEl.textContent = foodBank.toLocaleString();
+      if (countEl) countEl.textContent = `${petsState.owned.length} / ${PETS_CATALOG.length} Owned`;
+      if (eq) {
+        if (nameEl) nameEl.textContent = `${eq.name} (${eq.rarity})`;
+        if (perkEl) perkEl.textContent = eq.perk;
+        if (btnUnequip) btnUnequip.classList.remove('hidden');
+      } else {
+        if (nameEl) nameEl.textContent = 'No Pet Equipped';
+        if (perkEl) perkEl.textContent = petsState.owned.length > 0 ? 'Tap any owned pet below to equip it!' : 'Hatch an egg below to get your first pet!';
+        if (btnUnequip) btnUnequip.classList.add('hidden');
+      }
+
+      if (grid) {
+        grid.innerHTML = '';
+        PETS_CATALOG.forEach(p => {
+          const owned = petsState.owned.includes(p.id);
+          const isEq = petsState.equipped === p.id;
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.disabled = !owned;
+          card.className = `p-3 rounded-2xl border-2 text-left flex items-center gap-2.5 transition-all ${
+            isEq ? 'border-slate-900 bg-slate-900 text-white shadow-md'
+            : owned ? 'border-slate-200 bg-white hover:border-cyan-400 text-slate-800 cursor-pointer active:scale-95'
+            : 'border-slate-100 bg-slate-50 text-slate-400 opacity-65 cursor-not-allowed'
+          }`;
+
+          const orb = document.createElement('span');
+          orb.className = 'w-7 h-7 rounded-full shrink-0 border-2 border-white';
+          orb.style.backgroundColor = owned ? p.color : '#cbd5e1';
+          if (owned) orb.style.boxShadow = `0 0 10px ${p.color}`;
+
+          const info = document.createElement('div');
+          info.className = 'flex flex-col leading-tight min-w-0';
+          const nm = document.createElement('span');
+          nm.className = 'text-xs font-black truncate';
+          nm.textContent = owned ? p.name : '???';
+          const rk = document.createElement('span');
+          rk.className = `text-[10px] font-bold ${isEq ? 'text-cyan-300' : 'text-slate-400'}`;
+          rk.textContent = isEq ? `${p.rarity} • Active` : owned ? `${p.rarity} • Tap to Equip` : `${p.rarity} • Hatch Egg`;
+          info.appendChild(nm);
+          info.appendChild(rk);
+
+          card.appendChild(orb);
+          card.appendChild(info);
+          if (owned) {
+            card.addEventListener('click', () => {
+              petsState.equipped = p.id;
+              savePetsState();
+              renderPetsModal();
+              if (typeof playSFX === 'function') playSFX('eat');
+            });
+          }
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    function hatchEgg(cost, allowedRarities, eggLabel) {
+      const msgEl = document.getElementById('eggHatchResultMsg');
+      if (foodBank < cost) {
+        if (msgEl) msgEl.textContent = `Need $${(cost - foodBank).toLocaleString()} more Money!`;
+        return;
+      }
+      foodBank -= cost;
+      saveFoodBank();
+      const pool = PETS_CATALOG.filter(p => allowedRarities.includes(p.rarity));
+      const hatched = pool[Math.floor(Math.random() * pool.length)];
+      const isNew = !petsState.owned.includes(hatched.id);
+      if (isNew) {
+        petsState.owned.push(hatched.id);
+      } else {
+        // Duplicate refund bonus!
+        const refund = Math.round(cost * 0.4);
+        addFoodBank(refund);
+      }
+      petsState.equipped = hatched.id;
+      savePetsState();
+      renderPetsModal();
+      if (typeof playSFX === 'function') playSFX('powerup');
+      if (msgEl) {
+        msgEl.textContent = isNew
+          ? `Hatched NEW ${hatched.rarity} Pet: ${hatched.name}!`
+          : `Hatched ${hatched.name} (Owned: +$${Math.round(cost * 0.4).toLocaleString()} Money back!)`;
+      }
+    }
+
     const btnOrbPetToggle = document.getElementById('btnOrbPetToggle');
+    const petsModal = document.getElementById('petsModal');
+    const btnClosePetsModal = document.getElementById('btnClosePetsModal');
+    const btnUnequipPet = document.getElementById('btnUnequipPet');
+    const btnHatchBasicEgg = document.getElementById('btnHatchBasicEgg');
+    const btnHatchRoyalEgg = document.getElementById('btnHatchRoyalEgg');
+    const btnHatchMythicEgg = document.getElementById('btnHatchMythicEgg');
+
     if (btnOrbPetToggle) {
       btnOrbPetToggle.addEventListener('click', () => {
-        if (!orbPetOwned) {
-          if (foodBank >= 2000) {
-            foodBank -= 2000;
-            orbPetOwned = true;
-            orbPetEnabled = true;
-            try {
-              localStorage.setItem('snakeOrbPetOwned_v1', '1');
-              localStorage.setItem('snakeOrbPetEnabled_v1', '1');
-            } catch (e) {}
-            saveFoodBank();
-            if (typeof playSFX === 'function') playSFX('powerup');
-          } else {
-            if (typeof playSFX === 'function') playSFX('eat');
-          }
-        } else {
-          orbPetEnabled = !orbPetEnabled;
-          try { localStorage.setItem('snakeOrbPetEnabled_v1', orbPetEnabled ? '1' : '0'); } catch (e) {}
-          if (typeof playSFX === 'function') playSFX('eat');
-        }
-        updateOrbPetUI();
+        if (petsModal) petsModal.classList.remove('hidden');
+        renderPetsModal();
+        startPetPreviewLoop();
       });
     }
+    if (btnClosePetsModal) {
+      btnClosePetsModal.addEventListener('click', () => {
+        if (petsModal) petsModal.classList.add('hidden');
+      });
+    }
+    if (petsModal) {
+      petsModal.addEventListener('click', (e) => {
+        if (e.target === petsModal) petsModal.classList.add('hidden');
+      });
+    }
+    if (btnUnequipPet) {
+      btnUnequipPet.addEventListener('click', () => {
+        petsState.equipped = '';
+        savePetsState();
+        renderPetsModal();
+      });
+    }
+    if (btnHatchBasicEgg) btnHatchBasicEgg.addEventListener('click', () => hatchEgg(500, ['Common', 'Rare'], 'Basic Egg'));
+    if (btnHatchRoyalEgg) btnHatchRoyalEgg.addEventListener('click', () => hatchEgg(2500, ['Rare', 'Epic'], 'Royal Egg'));
+    if (btnHatchMythicEgg) btnHatchMythicEgg.addEventListener('click', () => hatchEgg(10000, ['Legendary', 'Mythic'], 'Mythic Egg'));
     updateOrbPetUI();
 
-    // Prep Boost Buttons on 3rd Page (Start Shield & Turbo Start)
+    // Prep Boost Buttons on 3rd Page (Start Shield & Turbo Start with Money)
     function updatePrepBoostButtonsUI() {
       const bShield = document.getElementById('btnPrepShield');
       const bTurbo = document.getElementById('btnPrepTurbo');
       if (bShield) {
-        bShield.textContent = prepShieldArmed ? 'Start Shield: ARMED' : 'Start Shield (200 Food)';
+        bShield.textContent = prepShieldArmed ? 'Start Shield: ARMED' : 'Start Shield ($200)';
         bShield.className = prepShieldArmed
           ? 'px-3 py-2 rounded-2xl border-2 border-sky-500 bg-sky-600 text-white text-xs font-black shadow-sm cursor-pointer'
           : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
       }
       if (bTurbo) {
-        bTurbo.textContent = prepTurboArmed ? 'Turbo Start: ARMED' : 'Turbo Start (150 Food)';
+        bTurbo.textContent = prepTurboArmed ? 'Turbo Start: ARMED' : 'Turbo Start ($150)';
         bTurbo.className = prepTurboArmed
           ? 'px-3 py-2 rounded-2xl border-2 border-orange-500 bg-orange-500 text-white text-xs font-black shadow-sm cursor-pointer'
           : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-orange-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
@@ -10152,7 +10474,7 @@
         } else {
           const canUpg = foodBank >= cfg.upgradeCost;
           btnUpg.disabled = !canUpg;
-          btnUpg.textContent = `Upgrade Storage & Style to Lv.${cfg.level + 1} (${cfg.upgradeCost.toLocaleString()} Food)`;
+          btnUpg.textContent = `Upgrade Storage & Style to Lv.${cfg.level + 1} ($${cfg.upgradeCost.toLocaleString()})`;
           btnUpg.className = canUpg
             ? 'w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer'
             : 'w-full py-2.5 px-4 rounded-xl bg-slate-200 text-slate-400 text-xs sm:text-sm font-black cursor-not-allowed';
@@ -10692,10 +11014,10 @@
         priceEl.textContent = 'Owned - Equip';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-600 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
       } else if (canUseGoldenFreeTry()) {
-        priceEl.textContent = '1 Free Try • 1B Food';
+        priceEl.textContent = '1 Free Try • $1B';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
       } else {
-        priceEl.textContent = '1,000,000,000 Food';
+        priceEl.textContent = '$1,000,000,000';
         priceEl.className = 'px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] sm:text-xs font-black tracking-tight shadow-2xs';
       }
     }
