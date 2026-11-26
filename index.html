@@ -446,13 +446,22 @@
   <div id="profileSetupPage"class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
     <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
       <div class="flex flex-col items-center text-center gap-2">
-        <svg viewBox="0 0 64 64" class="w-14 h-14 drop-shadow-sm">
-          <circle cx="32" cy="32" r="30" fill="#ecfdf5" stroke="#34d399" stroke-width="2.5"/>
-          <path d="M16 42 C16 28, 30 28, 32 36 C34 44, 48 44, 48 30 C48 20, 38 16, 30 18" fill="none" stroke="#15803d" stroke-width="9" stroke-linecap="round"/>
-          <path d="M16 42 C16 28, 30 28, 32 36 C34 44, 48 44, 48 30 C48 20, 38 16, 30 18" fill="none" stroke="#22c55e" stroke-width="5.5" stroke-linecap="round"/>
-          <circle cx="26" cy="19" r="7.5" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
-          <circle cx="23.5" cy="17.5" r="2.2" fill="#ffffff"/><circle cx="23" cy="17.5" r="1.1" fill="#0f172a"/>
-          <circle cx="28.5" cy="17.5" r="2.2" fill="#ffffff"/><circle cx="28" cy="17.5" r="1.1" fill="#0f172a"/>
+        <svg viewBox="0 0 96 96" class="w-16 h-16 drop-shadow-md">
+          <defs>
+            <linearGradient id="profBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#065f46"/><stop offset="100%" stop-color="#022c22"/></linearGradient>
+            <linearGradient id="profSnake" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4ade80"/><stop offset="55%" stop-color="#16a34a"/><stop offset="100%" stop-color="#15803d"/></linearGradient>
+          </defs>
+          <circle cx="48" cy="48" r="44" fill="url(#profBg)" stroke="#facc15" stroke-width="3.5"/>
+          <circle cx="48" cy="48" r="39" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="#052e16" stroke-width="14" stroke-linecap="round"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="url(#profSnake)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="#bbf7d0" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="3 7"/>
+          <circle cx="48" cy="31" r="13.5" fill="#16a34a" stroke="#052e16" stroke-width="2.4"/>
+          <circle cx="48" cy="29.5" r="9" fill="#4ade80" opacity="0.45"/>
+          <circle cx="42.5" cy="30" r="3.6" fill="#ffffff"/><circle cx="53.5" cy="30" r="3.6" fill="#ffffff"/>
+          <circle cx="43.2" cy="30" r="1.9" fill="#0f172a"/><circle cx="54.2" cy="30" r="1.9" fill="#0f172a"/>
+          <circle cx="42.2" cy="28.8" r="0.9" fill="#ffffff"/><circle cx="53.2" cy="28.8" r="0.9" fill="#ffffff"/>
+          <polygon points="39,19 42,10 48,15.5 54,10 57,19" fill="#facc15" stroke="#92400e" stroke-width="1.6" stroke-linejoin="round"/>
         </svg>
         <h1 data-i18n="profileTitle"class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Player Profile</h1>
         <p data-i18n="profileSub"class="text-xs sm:text-sm text-slate-500 font-medium">Enter your details to continue to the game</p>
@@ -590,15 +599,22 @@
 
     <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full px-28 sm:px-0">
       <div class="flex flex-col items-center gap-2">
-        <svg viewBox="0 0 80 80" class="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md">
-          <circle cx="40" cy="40" r="37" fill="#ecfdf5" stroke="#10b981" stroke-width="3"/>
-          <path d="M18 54 C18 36, 36 36, 40 46 C44 56, 62 54, 62 36 C62 22, 48 18, 36 22" fill="none" stroke="#15803d" stroke-width="11" stroke-linecap="round"/>
-          <path d="M18 54 C18 36, 36 36, 40 46 C44 56, 62 54, 62 36 C62 22, 48 18, 36 22" fill="none" stroke="#22c55e" stroke-width="7" stroke-linecap="round"/>
-          <path d="M18 54 C18 36, 36 36, 40 46 C44 56, 62 54, 62 36 C62 22, 48 18, 36 22" fill="none" stroke="#bbf7d0" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/>
-          <circle cx="31" cy="23" r="9.5" fill="#16a34a" stroke="#14532d" stroke-width="2"/>
-          <circle cx="28" cy="21" r="2.8" fill="#ffffff"/><circle cx="27.3" cy="21" r="1.4" fill="#0f172a"/>
-          <circle cx="34" cy="21" r="2.8" fill="#ffffff"/><circle cx="33.3" cy="21" r="1.4" fill="#0f172a"/>
-          <polygon points="27,13 31,7 35,13" fill="#facc15" stroke="#b45309" stroke-width="1.2"/>
+        <svg viewBox="0 0 96 96" class="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-lg">
+          <defs>
+            <linearGradient id="lobbyBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#065f46"/><stop offset="100%" stop-color="#022c22"/></linearGradient>
+            <linearGradient id="lobbySnake" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4ade80"/><stop offset="55%" stop-color="#16a34a"/><stop offset="100%" stop-color="#15803d"/></linearGradient>
+          </defs>
+          <circle cx="48" cy="48" r="44" fill="url(#lobbyBg)" stroke="#facc15" stroke-width="3.5"/>
+          <circle cx="48" cy="48" r="39" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.5"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="#052e16" stroke-width="14" stroke-linecap="round"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="url(#lobbySnake)" stroke-width="10" stroke-linecap="round"/>
+          <path d="M24 68 C24 54, 42 54, 52 60 C66 68, 74 56, 70 44 C66 34, 48 38, 46 30" fill="none" stroke="#bbf7d0" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="3 7"/>
+          <circle cx="48" cy="31" r="13.5" fill="#16a34a" stroke="#052e16" stroke-width="2.4"/>
+          <circle cx="48" cy="29.5" r="9" fill="#4ade80" opacity="0.45"/>
+          <circle cx="42.5" cy="30" r="3.6" fill="#ffffff"/><circle cx="53.5" cy="30" r="3.6" fill="#ffffff"/>
+          <circle cx="43.2" cy="30" r="1.9" fill="#0f172a"/><circle cx="54.2" cy="30" r="1.9" fill="#0f172a"/>
+          <circle cx="42.2" cy="28.8" r="0.9" fill="#ffffff"/><circle cx="53.2" cy="28.8" r="0.9" fill="#ffffff"/>
+          <polygon points="39,19 42,10 48,15.5 54,10 57,19" fill="#facc15" stroke="#92400e" stroke-width="1.6" stroke-linejoin="round"/>
         </svg>
         <h1 data-i18n="gameTitle"class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Snake Arena</h1>
       </div>
