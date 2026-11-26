@@ -242,17 +242,6 @@
         </div>
       </div>
 
-      <!-- Level-Based Food Type Picker (Changes ONLY your food, keeps round dot shape) -->
-      <div class="px-5 py-2.5 border-b border-slate-100 bg-slate-50/80 flex flex-col gap-1.5">
-        <div class="flex items-center justify-between text-xs">
-          <span class="font-extrabold text-slate-700">Your Food Type <span id="foodLevelBadge" class="ml-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">Lv. 1</span></span>
-          <span id="foodLevelNextHint" class="text-[11px] text-slate-500 font-medium">Eat dots to unlock more food types</span>
-        </div>
-        <div id="foodTypePickerBar" class="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-          <!-- Dynamically filled by renderFoodTypePicker() -->
-        </div>
-      </div>
-
       <!-- Filter Controls: Search + Categories -->
       <div class="px-5 py-3 border-b border-slate-100 bg-white flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
         <!-- Search Box -->
@@ -6070,11 +6059,6 @@
     }
 
     function renderFoodTypePicker() {
-      const bar = document.getElementById('foodTypePickerBar');
-      const lvBadge = document.getElementById('foodLevelBadge');
-      const nextHint = document.getElementById('foodLevelNextHint');
-      if (!bar) return;
-
       const lv = getPlayerFoodLevel();
       const active = getActiveFoodType();
       const wDot = document.getElementById('welcomeFoodDot');
@@ -6086,6 +6070,11 @@
       if (wLbl) wLbl.textContent = `Lv. ${lv} • ${active.name}`;
       const skinLvEl = document.getElementById('skinsModalLevelNum');
       if (skinLvEl) skinLvEl.textContent = String(lv);
+
+      const bar = document.getElementById('foodTypePickerBar');
+      const lvBadge = document.getElementById('foodLevelBadge');
+      const nextHint = document.getElementById('foodLevelNextHint');
+      if (!bar) return;
 
       if (lvBadge) lvBadge.textContent = `Lv. ${lv} • ${active.name}`;
 
