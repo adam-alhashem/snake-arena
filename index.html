@@ -5746,8 +5746,10 @@
       inspectedFoodTypeId = typeId;
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
+      const closeX = document.getElementById('btnCloseFoodModal');
       if (listV) listV.classList.add('hidden');
       if (detailV) detailV.classList.remove('hidden');
+      if (closeX) closeX.classList.add('hidden');
       renderFoodModal();
       if (typeof playSFX === 'function') playSFX('eat');
     }
@@ -5755,9 +5757,11 @@
     function showFoodListPage() {
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
+      const closeX = document.getElementById('btnCloseFoodModal');
       inspectedFoodTypeId = getActiveFoodType().id;
       if (detailV) detailV.classList.add('hidden');
       if (listV) listV.classList.remove('hidden');
+      if (closeX) closeX.classList.remove('hidden');
       renderFoodModal();
     }
 
@@ -5767,8 +5771,10 @@
       inspectedFoodTypeId = getActiveFoodType().id;
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
+      const closeX = document.getElementById('btnCloseFoodModal');
       if (detailV) detailV.classList.add('hidden');
       if (listV) listV.classList.remove('hidden');
+      if (closeX) closeX.classList.remove('hidden');
       renderFoodTypePicker();
       renderFoodModal();
       m.classList.remove('hidden');
