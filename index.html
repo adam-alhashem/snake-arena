@@ -593,7 +593,7 @@
       <!-- Vibrant Header -->
       <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white flex items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <button id="btnFoodBackArrow" type="button" title="Back / Exit Food" class="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 text-white text-lg font-black flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0" aria-label="Back out of food">←</button>
+          <button id="btnFoodBackArrow" type="button" title="Back to Foods" class="hidden w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 text-white text-lg font-black flex items-center justify-center active:scale-95 transition-all cursor-pointer shrink-0" aria-label="Back out of food">←</button>
           <div id="foodModalHeaderDot" class="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
             <span class="w-5 h-5 rounded-full inline-block" style="background-color:#ef4444; box-shadow:0 0 12px #ef4444;"></span>
           </div>
@@ -5747,9 +5747,11 @@
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
       const closeX = document.getElementById('btnCloseFoodModal');
+      const backArr = document.getElementById('btnFoodBackArrow');
       if (listV) listV.classList.add('hidden');
       if (detailV) detailV.classList.remove('hidden');
       if (closeX) closeX.classList.add('hidden');
+      if (backArr) backArr.classList.remove('hidden');
       renderFoodModal();
       if (typeof playSFX === 'function') playSFX('eat');
     }
@@ -5758,10 +5760,12 @@
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
       const closeX = document.getElementById('btnCloseFoodModal');
+      const backArr = document.getElementById('btnFoodBackArrow');
       inspectedFoodTypeId = getActiveFoodType().id;
       if (detailV) detailV.classList.add('hidden');
       if (listV) listV.classList.remove('hidden');
       if (closeX) closeX.classList.remove('hidden');
+      if (backArr) backArr.classList.add('hidden');
       renderFoodModal();
     }
 
@@ -5772,9 +5776,11 @@
       const listV = document.getElementById('foodListView');
       const detailV = document.getElementById('foodDetailView');
       const closeX = document.getElementById('btnCloseFoodModal');
+      const backArr = document.getElementById('btnFoodBackArrow');
       if (detailV) detailV.classList.add('hidden');
       if (listV) listV.classList.remove('hidden');
       if (closeX) closeX.classList.remove('hidden');
+      if (backArr) backArr.classList.add('hidden');
       renderFoodTypePicker();
       renderFoodModal();
       m.classList.remove('hidden');
