@@ -317,6 +317,26 @@
           <span data-i18n="scoreLabel">Score:</span> <strong id="deathFinalScore" class="text-slate-800 text-sm">0</strong>
         </div>
       </div>
+
+      <!-- Match Summary Stats Grid -->
+      <div class="w-full grid grid-cols-4 gap-1.5 text-center">
+        <div class="bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-1">
+          <div class="text-[9px] font-bold text-slate-400 uppercase">Dots</div>
+          <div id="deathStatDots" class="text-xs font-black text-emerald-600">0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-1">
+          <div class="text-[9px] font-bold text-slate-400 uppercase">Kills</div>
+          <div id="deathStatKills" class="text-xs font-black text-rose-600">0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-1">
+          <div class="text-[9px] font-bold text-slate-400 uppercase">Sticks/F</div>
+          <div id="deathStatMats" class="text-xs font-black text-amber-600">0/0</div>
+        </div>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl py-1.5 px-1">
+          <div class="text-[9px] font-bold text-slate-400 uppercase">Time</div>
+          <div id="deathStatTime" class="text-xs font-black text-indigo-600">0s</div>
+        </div>
+      </div>
       <p data-i18n="deathMatchLiveHint" class="text-[11px] text-emerald-600 font-semibold -mt-2">
         ⚡ The 35-player match is still live in the background! Choose where to play:
       </p>
@@ -517,6 +537,18 @@
         </span>
         <span class="text-xs font-black text-slate-900 leading-none">Lucky Spin</span>
         <span id="welcomeSpinLabel" class="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black leading-none">Ready</span>
+      </button>
+
+      <button id="btnDailyStreak" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 hover:from-indigo-100 hover:to-sky-100 border-2 border-indigo-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shrink-0"></span>
+        <span class="text-xs font-black text-slate-900 leading-none">Daily Streak</span>
+        <span id="dailyStreakBadge" class="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-black leading-none">Day 1</span>
+      </button>
+
+      <button id="btnOrbPetToggle" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-50 to-teal-50 hover:from-cyan-100 hover:to-teal-100 border-2 border-cyan-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+        <span class="w-3 h-3 rounded-full bg-cyan-400 shrink-0" style="box-shadow:0 0 8px #22d3ee;"></span>
+        <span class="text-xs font-black text-slate-900 leading-none">Orb Pet</span>
+        <span id="orbPetStatusBadge" class="px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none">2,000 Food</span>
       </button>
     </div>
 
@@ -790,6 +822,24 @@
     </div>
   </div>
 
+      <!-- 7-Day Daily Login Streak Modal -->
+  <div id="dailyStreakModal" class="fixed inset-0 z-[67] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden flex flex-col p-5 gap-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-black text-slate-900 leading-tight">7-Day Daily Streak</h2>
+          <p id="dailyStreakSub" class="text-xs font-semibold text-indigo-600">Come back each day for bigger rewards</p>
+        </div>
+        <button id="btnCloseStreakModal" type="button" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xl font-bold flex items-center justify-center cursor-pointer">&times;</button>
+      </div>
+      <div id="dailyStreakGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      <p id="dailyStreakMsg" class="text-xs font-bold text-center text-emerald-700 min-h-[16px]"></p>
+      <button id="btnClaimDailyStreak" type="button" class="w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md active:scale-95 transition-all cursor-pointer">
+        Claim Today's Bonus
+      </button>
+    </div>
+  </div>
+
   <!-- ========================================================================= -->
   <!-- BLANK START / SERVER JOIN CHOICE PAGE                                     -->
   <!-- ========================================================================= -->
@@ -842,12 +892,21 @@
         </button>
       </div>
 
-      <!-- Arena Floor Theme Swatches on the Third Page -->
-      <div class="flex items-center justify-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100/90 border border-slate-200">
-        <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Floor</span>
-        <div id="arenaThemeBar" class="flex items-center gap-1.5">
-          <!-- Populated by renderArenaThemeBar() -->
+      <!-- Arena Floor Theme & Optional Match Prep Boosts on the Third Page -->
+      <div class="flex flex-wrap items-center justify-center gap-2.5">
+        <div class="flex items-center justify-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-100/90 border border-slate-200">
+          <span class="text-[11px] font-extrabold uppercase tracking-wide text-slate-500">Floor</span>
+          <div id="arenaThemeBar" class="flex items-center gap-1.5">
+            <!-- Populated by renderArenaThemeBar() -->
+          </div>
         </div>
+
+        <button id="btnPrepShield" type="button" class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
+          Start Shield (200 Food)
+        </button>
+        <button id="btnPrepTurbo" type="button" class="px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-orange-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer">
+          Turbo Start (150 Food)
+        </button>
       </div>
 
       <!-- Bottom actions: Back + Choose Skin -->
@@ -4970,6 +5029,106 @@
       }
     }
 
+    // Match Summary Stats, Meteor Shower, Freeze Traps, Orb Pet & Prep Boosts
+    let matchDotsEaten = 0;
+    let matchKills = 0;
+    let matchSticks = 0;
+    let matchFeathers = 0;
+    let matchStartedAt = Date.now();
+    let nextMeteorShowerAt = Date.now() + 90000;
+    let meteorRings = [];
+    let freezeTraps = [];
+    let freezeTrapCooldownUntil = 0;
+    let orbPetOwned = localStorage.getItem('snakeOrbPetOwned_v1') === '1';
+    let orbPetEnabled = localStorage.getItem('snakeOrbPetEnabled_v1') !== '0';
+    let prepShieldArmed = false;
+    let prepTurboArmed = false;
+
+    function triggerMeteorShower() {
+      nextMeteorShowerAt = Date.now() + 90000;
+      const now = Date.now();
+      for (let i = 0; i < 15 && foods.length < 450; i++) {
+        const mx = Math.floor(Math.random() * (COLS - 12)) + 6;
+        const my = Math.floor(Math.random() * (ROWS - 12)) + 6;
+        foods.push({ x: mx, y: my, color: '#facc15', isLoot: true });
+        meteorRings.push({ x: mx * GRID_SIZE + GRID_SIZE / 2, y: my * GRID_SIZE + GRID_SIZE / 2, start: now, until: now + 900 });
+      }
+      for (let m = 0; m < 3; m++) { spawnFloorStick(); spawnFloorFeather(); }
+      triggerCenterBanner('GOLDEN METEOR SHOWER!', '#eab308', 2400);
+      if (typeof playSFX === 'function') playSFX('powerup');
+    }
+
+    function drawMeteorRings() {
+      const now = Date.now();
+      for (let i = meteorRings.length - 1; i >= 0; i--) {
+        const r = meteorRings[i];
+        if (now >= r.until) { meteorRings.splice(i, 1); continue; }
+        const p = (now - r.start) / (r.until - r.start);
+        ctx.save();
+        ctx.globalAlpha = 1 - p;
+        ctx.strokeStyle = '#facc15';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(r.x, r.y, 6 + p * 26, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function dropFreezeTrap() {
+      if (!isPlayerAlive || !isRunning || isPaused || isGameOver || snake.length === 0) return;
+      const now = Date.now();
+      if (now < freezeTrapCooldownUntil) return;
+      freezeTrapCooldownUntil = now + 10000;
+      const tail = snake[snake.length - 1];
+      freezeTraps.push({ x: tail.x, y: tail.y, until: now + 12000 });
+      if (freezeTraps.length > 4) freezeTraps.shift();
+      playSFX('powerup');
+      floatingTexts.push({ x: tail.x * GRID_SIZE + GRID_SIZE / 2, y: tail.y * GRID_SIZE, text: 'Freeze Trap!', color: '#06b6d4', life: 28, maxLife: 28 });
+    }
+
+    function drawFreezeTraps(vMinX, vMaxX, vMinY, vMaxY) {
+      const now = Date.now();
+      for (let i = freezeTraps.length - 1; i >= 0; i--) {
+        const tr = freezeTraps[i];
+        if (now >= tr.until) { freezeTraps.splice(i, 1); continue; }
+        const px = tr.x * GRID_SIZE + GRID_SIZE / 2;
+        const py = tr.y * GRID_SIZE + GRID_SIZE / 2;
+        if (px < vMinX || px > vMaxX || py < vMinY || py > vMaxY) continue;
+        const pulse = (Math.sin(now / 180 + i) + 1) / 2;
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.beginPath();
+        ctx.arc(0, 0, 12 + pulse * 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(6, 182, 212, 0.24)';
+        ctx.fill();
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawOrbPet() {
+      if (!orbPetOwned || !orbPetEnabled || !isPlayerAlive || snake.length === 0) return;
+      const head = snake[0];
+      const ang = Date.now() / 320;
+      const ox = head.x * GRID_SIZE + GRID_SIZE / 2 + Math.cos(ang) * 24;
+      const oy = head.y * GRID_SIZE + GRID_SIZE / 2 + Math.sin(ang) * 24;
+      ctx.save();
+      ctx.shadowColor = '#22d3ee';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#06b6d4';
+      ctx.beginPath();
+      ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(ox - 1.5, oy - 1.5, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     function pushElimFeed(text, color = '#0f172a') {
       const now = Date.now();
       elimFeed.unshift({ text, color, start: now, until: now + 2200 });
@@ -5171,6 +5330,15 @@
       portalCooldown = 0;
       dashCooldownUntil = 0;
       elimFeed = [];
+      matchDotsEaten = 0;
+      matchKills = 0;
+      matchSticks = 0;
+      matchFeathers = 0;
+      matchStartedAt = Date.now();
+      nextMeteorShowerAt = Date.now() + 90000;
+      meteorRings = [];
+      freezeTraps = [];
+      freezeTrapCooldownUntil = 0;
       spawnArenaPortals();
       floorSticks = [];
       floorFeathers = [];
@@ -6056,10 +6224,42 @@
               triggerCenterBanner('CHEST OPENED! +2 STICKS & FEATHERS', '#d97706', 2200);
             }
 
+            // Orb Pet Companion: auto-collect dots, Sticks & Feathers within 2 tiles!
+            if (orbPetOwned && orbPetEnabled) {
+              for (let oi = foods.length - 1; oi >= 0; oi--) {
+                if (Math.abs(head.x - foods[oi].x) <= 2 && Math.abs(head.y - foods[oi].y) <= 2) {
+                  foods.splice(oi, 1);
+                  score += 1;
+                  matchDotsEaten++;
+                  checkPersonalBest(score);
+                  addFoodBank(1);
+                  if (scoreEl) scoreEl.textContent = score;
+                  spawnFood();
+                }
+              }
+              for (let si = floorSticks.length - 1; si >= 0; si--) {
+                if (Math.abs(head.x - floorSticks[si].x) <= 2 && Math.abs(head.y - floorSticks[si].y) <= 2) {
+                  floorSticks.splice(si, 1);
+                  matchSticks++;
+                  if (typeof addFactoryMaterials === 'function') addFactoryMaterials(1, 0);
+                  spawnFloorStick();
+                }
+              }
+              for (let fi = floorFeathers.length - 1; fi >= 0; fi--) {
+                if (Math.abs(head.x - floorFeathers[fi].x) <= 2 && Math.abs(head.y - floorFeathers[fi].y) <= 2) {
+                  floorFeathers.splice(fi, 1);
+                  matchFeathers++;
+                  if (typeof addFactoryMaterials === 'function') addFactoryMaterials(0, 1);
+                  spawnFloorFeather();
+                }
+              }
+            }
+
             // Collect Sticks & Feathers on the floor for Arrow Crafting
             for (let si = floorSticks.length - 1; si >= 0; si--) {
               if (head.x === floorSticks[si].x && head.y === floorSticks[si].y) {
                 floorSticks.splice(si, 1);
+                matchSticks++;
                 if (typeof addFactoryMaterials === 'function') addFactoryMaterials(1, 0);
                 playSFX('eat');
                 floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE, text: '+1 Stick', color: '#b45309', life: 28, maxLife: 28 });
@@ -6070,6 +6270,7 @@
             for (let fi = floorFeathers.length - 1; fi >= 0; fi--) {
               if (head.x === floorFeathers[fi].x && head.y === floorFeathers[fi].y) {
                 floorFeathers.splice(fi, 1);
+                matchFeathers++;
                 if (typeof addFactoryMaterials === 'function') addFactoryMaterials(0, 1);
                 playSFX('eat');
                 floatingTexts.push({ x: head.x * GRID_SIZE + GRID_SIZE / 2, y: head.y * GRID_SIZE, text: '+1 Feather', color: '#0284c7', life: 28, maxLife: 28 });
@@ -6084,6 +6285,7 @@
               if (head.x === foods[i].x && head.y === foods[i].y) {
                 foods.splice(i, 1);
                 score += 1;
+                matchDotsEaten++;
                 playSFX('eat');
                 checkPersonalBest(score);
                 recordRewardProgress('bestScore', score);
@@ -6210,13 +6412,25 @@
       }
 
       // 2. UPDATE AI BOTS (ALWAYS RUNNING LIVE IN SERVER!)
+      const nowBotMs = Date.now();
       bots.forEach((bot, bIndex) => {
+        if (bot.frozenUntil && nowBotMs < bot.frozenUntil) return;
         updateBotAI(bot);
 
         const bHead = {
           x: bot.snake[0].x + bot.dx,
           y: bot.snake[0].y + bot.dy
         };
+
+        // Check Freeze Traps placed by player
+        for (let ti = freezeTraps.length - 1; ti >= 0; ti--) {
+          if (Math.abs(bHead.x - freezeTraps[ti].x) <= 1 && Math.abs(bHead.y - freezeTraps[ti].y) <= 1) {
+            bot.frozenUntil = nowBotMs + 2500;
+            freezeTraps.splice(ti, 1);
+            floatingTexts.push({ x: bHead.x * GRID_SIZE + GRID_SIZE / 2, y: bHead.y * GRID_SIZE, text: 'FROZEN!', color: '#06b6d4', life: 28, maxLife: 28 });
+            return;
+          }
+        }
 
         // DEADLY LASER PERIMETER COLLISION FOR BOTS:
         if (bHead.x <= 0 || bHead.x >= COLS - 1 || bHead.y <= 0 || bHead.y >= ROWS - 1) {
@@ -6298,6 +6512,10 @@
       // 5. ARENA TREASURE CHEST EVENT (Every 45 seconds)
       if (isRunning && !isPaused && !arenaChest && Date.now() >= nextChestSpawnAt) {
         spawnArenaChest();
+      }
+      // 6. GOLDEN METEOR SHOWER EVENT (Every 90 seconds)
+      if (isRunning && !isPaused && Date.now() >= nextMeteorShowerAt) {
+        triggerMeteorShower();
       }
 
       const king = getCurrentKing();
@@ -6505,6 +6723,14 @@
           : `Server #${serverNumber} (${MAX_SERVER_PLAYERS} Players Room)`;
       }
       if (deathFinalScore) deathFinalScore.textContent = finalScore != null ? finalScore : score;
+      const dDots = document.getElementById('deathStatDots');
+      const dKills = document.getElementById('deathStatKills');
+      const dMats = document.getElementById('deathStatMats');
+      const dTime = document.getElementById('deathStatTime');
+      if (dDots) dDots.textContent = String(matchDotsEaten);
+      if (dKills) dKills.textContent = String(matchKills);
+      if (dMats) dMats.textContent = `${matchSticks}/${matchFeathers}`;
+      if (dTime) dTime.textContent = `${Math.max(1, Math.floor((Date.now() - matchStartedAt) / 1000))}s`;
       if (btnRespawnSameServerText) {
         btnRespawnSameServerText.textContent = currentLang === 'ar'
           ? `العودة إلى سيرفر #${serverNumber}`
@@ -6650,6 +6876,17 @@
       if (pendingSpinExtraShield > 0) {
         spawnShieldTimer += pendingSpinExtraShield;
         pendingSpinExtraShield = 0;
+      }
+      if (prepShieldArmed) {
+        spawnShieldTimer += 60;
+        prepShieldArmed = false;
+        if (typeof updatePrepBoostButtonsUI === 'function') updatePrepBoostButtonsUI();
+      }
+      if (prepTurboArmed) {
+        freeBoostTimer = Math.max(freeBoostTimer, 60);
+        fuel = currentMaxFuel;
+        prepTurboArmed = false;
+        if (typeof updatePrepBoostButtonsUI === 'function') updatePrepBoostButtonsUI();
       }
       // Load crafted arrows from Arrow Factory into starting quiver (up to MAX_PLAYER_ARROWS)
       if (typeof consumeFactoryArrowsForMatch === 'function') {
@@ -7294,6 +7531,8 @@
         drawArenaPortals(vMinX, vMaxX, vMinY, vMaxY);
         drawArenaChest(vMinX, vMaxX, vMinY, vMaxY);
         drawFloorMaterials(vMinX, vMaxX, vMinY, vMaxY);
+        drawFreezeTraps(vMinX, vMaxX, vMinY, vMaxY);
+        drawMeteorRings();
 
         // Draw Bots (Frustum culled for smooth 60 FPS with 100 snakes)
         bots.forEach(bot => {
@@ -7352,6 +7591,7 @@
           drawConnectedBody(snake, pSkin);
           const pHead = snake[0];
           drawHead(pHead.x * GRID_SIZE + GRID_SIZE / 2, pHead.y * GRID_SIZE + GRID_SIZE / 2, dx, dy, pSkin);
+          drawOrbPet();
 
           // Draw Spawn Protection Shield Bubble
           if (spawnShieldTimer > 0) {
@@ -8032,6 +8272,13 @@
       if (k === 'e') {
         e.preventDefault();
         performQuickDash();
+        return;
+      }
+
+      // Freeze Trap hotkey [Q]
+      if (k === 'q') {
+        e.preventDefault();
+        dropFreezeTrap();
         return;
       }
 
@@ -9229,6 +9476,7 @@
         killStreak = 1;
       }
       lastKillTime = now;
+      matchKills++;
       screenShake = Math.min(12, 6 + killStreak * 1.5);
       playSFX('kill');
       pushElimFeed(`You eliminated ${enemyName || 'Rival'}`, '#f59e0b');
@@ -9596,6 +9844,191 @@
     if (btnSpinNow) btnSpinNow.addEventListener('click', spinWheelNow);
     updateSpinButtonLabel();
     setInterval(updateSpinButtonLabel, 1000);
+
+    // =========================================================================
+    // 7-DAY DAILY LOGIN STREAK, ORB PET COMPANION & PREP BOOSTS
+    // =========================================================================
+    const DAILY_STREAK_REWARDS = [
+      { day: 1, label: '+2 Sticks & +2 Feathers', grant: () => { addFactoryMaterials(2, 2); return 'Claimed Day 1: +2 Sticks & +2 Feathers!'; } },
+      { day: 2, label: '+500 Food',               grant: () => { addFoodBank(500); return 'Claimed Day 2: +500 Food!'; } },
+      { day: 3, label: '+4 Sticks & +4 Feathers', grant: () => { addFactoryMaterials(4, 4); return 'Claimed Day 3: +4 Sticks & +4 Feathers!'; } },
+      { day: 4, label: '+1,500 Food',             grant: () => { addFoodBank(1500); return 'Claimed Day 4: +1,500 Food!'; } },
+      { day: 5, label: '+6 Sticks & +6 Feathers', grant: () => { addFactoryMaterials(6, 6); return 'Claimed Day 5: +6 Sticks & +6 Feathers!'; } },
+      { day: 6, label: '+3,500 Food',             grant: () => { addFoodBank(3500); return 'Claimed Day 6: +3,500 Food!'; } },
+      { day: 7, label: 'Mystery Skin + 5K Food',  grant: () => { addFoodBank(5000); return 'Day 7 Jackpot! +5,000 Food + ' + unlockRandomRewardSkin([2, 3, 4], 'Daily Streak'); } }
+    ];
+
+    let streakState = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeDailyStreak_v1') || 'null');
+        if (s && typeof s === 'object') return s;
+      } catch (e) {}
+      return { dayCount: 0, lastClaimDate: '' };
+    })();
+
+    function canClaimStreakToday() {
+      return streakState.lastClaimDate !== getTodayDateKey();
+    }
+
+    function renderDailyStreakUI() {
+      const badge = document.getElementById('dailyStreakBadge');
+      const grid = document.getElementById('dailyStreakGrid');
+      const btnClaim = document.getElementById('btnClaimDailyStreak');
+      const nextDay = (streakState.dayCount % 7) + 1;
+      const ready = canClaimStreakToday();
+
+      if (badge) badge.textContent = ready ? `Day ${nextDay} Ready` : `Day ${streakState.dayCount || 1} Done`;
+      if (btnClaim) {
+        btnClaim.disabled = !ready;
+        btnClaim.textContent = ready ? `Claim Day ${nextDay} Bonus` : 'Come Back Tomorrow';
+        btnClaim.className = ready
+          ? 'w-full py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-black shadow-md active:scale-95 transition-all cursor-pointer'
+          : 'w-full py-3 rounded-2xl bg-slate-200 text-slate-500 text-sm font-black cursor-not-allowed';
+      }
+      if (grid) {
+        grid.innerHTML = '';
+        const completedInCycle = streakState.dayCount % 7;
+        DAILY_STREAK_REWARDS.forEach(item => {
+          const isDone = (item.day <= completedInCycle) || (!ready && item.day === (completedInCycle === 0 ? 7 : completedInCycle));
+          const isToday = ready && item.day === nextDay;
+          const card = document.createElement('div');
+          card.className = `p-2.5 rounded-xl border-2 text-center flex flex-col gap-1 ${
+            isToday ? 'border-indigo-500 bg-indigo-50 shadow-sm'
+            : isDone ? 'border-emerald-300 bg-emerald-50/70'
+            : 'border-slate-200 bg-slate-50/70'
+          }`;
+          card.innerHTML = `
+            <span class="text-[10px] font-black uppercase ${isToday ? 'text-indigo-700' : (isDone ? 'text-emerald-700' : 'text-slate-400')}">Day ${item.day}</span>
+            <span class="text-[11px] font-extrabold text-slate-800 leading-tight">${item.label}</span>
+          `;
+          grid.appendChild(card);
+        });
+      }
+    }
+
+    const btnDailyStreak = document.getElementById('btnDailyStreak');
+    const dailyStreakModal = document.getElementById('dailyStreakModal');
+    const btnCloseStreakModal = document.getElementById('btnCloseStreakModal');
+    const btnClaimDailyStreak = document.getElementById('btnClaimDailyStreak');
+    if (btnDailyStreak) {
+      btnDailyStreak.addEventListener('click', () => {
+        if (dailyStreakModal) dailyStreakModal.classList.remove('hidden');
+        renderDailyStreakUI();
+      });
+    }
+    if (btnCloseStreakModal) {
+      btnCloseStreakModal.addEventListener('click', () => {
+        if (dailyStreakModal) dailyStreakModal.classList.add('hidden');
+      });
+    }
+    if (dailyStreakModal) {
+      dailyStreakModal.addEventListener('click', (e) => {
+        if (e.target === dailyStreakModal) dailyStreakModal.classList.add('hidden');
+      });
+    }
+    if (btnClaimDailyStreak) {
+      btnClaimDailyStreak.addEventListener('click', () => {
+        if (!canClaimStreakToday()) return;
+        const nextIdx = streakState.dayCount % 7;
+        const prize = DAILY_STREAK_REWARDS[nextIdx];
+        streakState.dayCount++;
+        streakState.lastClaimDate = getTodayDateKey();
+        try { localStorage.setItem('snakeDailyStreak_v1', JSON.stringify(streakState)); } catch (e) {}
+        const msg = prize.grant();
+        const msgEl = document.getElementById('dailyStreakMsg');
+        if (msgEl) msgEl.textContent = msg;
+        if (typeof playSFX === 'function') playSFX('powerup');
+        renderDailyStreakUI();
+      });
+    }
+    renderDailyStreakUI();
+
+    // Orb Pet Companion Lobby Toggle / Unlock
+    function updateOrbPetUI() {
+      const badge = document.getElementById('orbPetStatusBadge');
+      if (!badge) return;
+      if (!orbPetOwned) {
+        badge.textContent = '2,000 Food';
+        badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-800 text-white text-[9px] font-black leading-none';
+      } else if (orbPetEnabled) {
+        badge.textContent = 'ON';
+        badge.className = 'px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[9px] font-black leading-none';
+      } else {
+        badge.textContent = 'OFF';
+        badge.className = 'px-1.5 py-0.5 rounded-full bg-slate-400 text-white text-[9px] font-black leading-none';
+      }
+    }
+    const btnOrbPetToggle = document.getElementById('btnOrbPetToggle');
+    if (btnOrbPetToggle) {
+      btnOrbPetToggle.addEventListener('click', () => {
+        if (!orbPetOwned) {
+          if (foodBank >= 2000) {
+            foodBank -= 2000;
+            orbPetOwned = true;
+            orbPetEnabled = true;
+            try {
+              localStorage.setItem('snakeOrbPetOwned_v1', '1');
+              localStorage.setItem('snakeOrbPetEnabled_v1', '1');
+            } catch (e) {}
+            saveFoodBank();
+            if (typeof playSFX === 'function') playSFX('powerup');
+          } else {
+            if (typeof playSFX === 'function') playSFX('eat');
+          }
+        } else {
+          orbPetEnabled = !orbPetEnabled;
+          try { localStorage.setItem('snakeOrbPetEnabled_v1', orbPetEnabled ? '1' : '0'); } catch (e) {}
+          if (typeof playSFX === 'function') playSFX('eat');
+        }
+        updateOrbPetUI();
+      });
+    }
+    updateOrbPetUI();
+
+    // Prep Boost Buttons on 3rd Page (Start Shield & Turbo Start)
+    function updatePrepBoostButtonsUI() {
+      const bShield = document.getElementById('btnPrepShield');
+      const bTurbo = document.getElementById('btnPrepTurbo');
+      if (bShield) {
+        bShield.textContent = prepShieldArmed ? 'Start Shield: ARMED' : 'Start Shield (200 Food)';
+        bShield.className = prepShieldArmed
+          ? 'px-3 py-2 rounded-2xl border-2 border-sky-500 bg-sky-600 text-white text-xs font-black shadow-sm cursor-pointer'
+          : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-sky-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
+      }
+      if (bTurbo) {
+        bTurbo.textContent = prepTurboArmed ? 'Turbo Start: ARMED' : 'Turbo Start (150 Food)';
+        bTurbo.className = prepTurboArmed
+          ? 'px-3 py-2 rounded-2xl border-2 border-orange-500 bg-orange-500 text-white text-xs font-black shadow-sm cursor-pointer'
+          : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-orange-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
+      }
+    }
+    const btnPrepShield = document.getElementById('btnPrepShield');
+    const btnPrepTurbo = document.getElementById('btnPrepTurbo');
+    if (btnPrepShield) {
+      btnPrepShield.addEventListener('click', () => {
+        if (prepShieldArmed) return;
+        if (foodBank >= 200) {
+          foodBank -= 200;
+          prepShieldArmed = true;
+          saveFoodBank();
+          updatePrepBoostButtonsUI();
+          if (typeof playSFX === 'function') playSFX('powerup');
+        }
+      });
+    }
+    if (btnPrepTurbo) {
+      btnPrepTurbo.addEventListener('click', () => {
+        if (prepTurboArmed) return;
+        if (foodBank >= 150) {
+          foodBank -= 150;
+          prepTurboArmed = true;
+          saveFoodBank();
+          updatePrepBoostButtonsUI();
+          if (typeof playSFX === 'function') playSFX('powerup');
+        }
+      });
+    }
+    updatePrepBoostButtonsUI();
 
     // =========================================================================
     // ARROW FACTORY SYSTEM (Manual Crafting Required, Upgrades & Arrow Styles)
