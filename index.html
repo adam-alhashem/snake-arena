@@ -10864,36 +10864,6 @@
           saveFoodBank();
           updatePrepBoostButtonsUI();
 
-    const btnPrepBattleRoyale = document.getElementById('btnPrepBattleRoyale');
-    function updateBattleRoyaleBtnUI() {
-      if (!btnPrepBattleRoyale) return;
-      btnPrepBattleRoyale.textContent = battleRoyaleMode ? 'Battle Royale: ON' : 'Battle Royale: OFF';
-      btnPrepBattleRoyale.className = battleRoyaleMode
-        ? 'px-3 py-2 rounded-2xl border-2 border-rose-500 bg-rose-600 text-white text-xs font-black shadow-sm cursor-pointer'
-        : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-rose-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
-    }
-    if (btnPrepBattleRoyale) {
-      btnPrepBattleRoyale.addEventListener('click', () => {
-        battleRoyaleMode = !battleRoyaleMode;
-        updateBattleRoyaleBtnUI();
-        if (typeof playSFX === 'function') playSFX('eat');
-      });
-    }
-    updateBattleRoyaleBtnUI();
-
-    // Wire Sign Out from Profile Dropdown
-    const btnSignOut = document.getElementById('btnSignOut');
-    if (btnSignOut) {
-      btnSignOut.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (profileMenuDropdown) profileMenuDropdown.classList.add('hidden');
-        playerProfile = { name: '', date: '', gender: '' };
-        selectedGender = '';
-        try { localStorage.removeItem('snakePlayerProfile_v1'); } catch (err) {}
-        updateLobbyProfileBadge();
-        showLanguageMapPage();
-      });
-    }
           if (typeof playSFX === 'function') playSFX('powerup');
         }
       });
@@ -11701,6 +11671,35 @@
         showProfileSetupPage();
       });
     }
+    const btnSignOut = document.getElementById('btnSignOut');
+    if (btnSignOut) {
+      btnSignOut.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (profileMenuDropdown) profileMenuDropdown.classList.add('hidden');
+        playerProfile = { name: '', date: '', gender: '' };
+        selectedGender = '';
+        try { localStorage.removeItem('snakePlayerProfile_v1'); } catch (err) {}
+        updateLobbyProfileBadge();
+        showLanguageMapPage();
+      });
+    }
+
+    const btnPrepBattleRoyale = document.getElementById('btnPrepBattleRoyale');
+    function updateBattleRoyaleBtnUI() {
+      if (!btnPrepBattleRoyale) return;
+      btnPrepBattleRoyale.textContent = battleRoyaleMode ? 'Battle Royale: ON' : 'Battle Royale: OFF';
+      btnPrepBattleRoyale.className = battleRoyaleMode
+        ? 'px-3 py-2 rounded-2xl border-2 border-rose-500 bg-rose-600 text-white text-xs font-black shadow-sm cursor-pointer'
+        : 'px-3 py-2 rounded-2xl border-2 border-slate-200 bg-white hover:border-rose-400 text-slate-700 text-xs font-extrabold transition-all active:scale-95 cursor-pointer';
+    }
+    if (btnPrepBattleRoyale) {
+      btnPrepBattleRoyale.addEventListener('click', () => {
+        battleRoyaleMode = !battleRoyaleMode;
+        updateBattleRoyaleBtnUI();
+        if (typeof playSFX === 'function') playSFX('eat');
+      });
+    }
+    updateBattleRoyaleBtnUI();
     document.addEventListener('click', (e) => {
       if (profileMenuDropdown && !profileMenuDropdown.classList.contains('hidden')) {
         if (!profileMenuWrapper || !profileMenuWrapper.contains(e.target)) {
