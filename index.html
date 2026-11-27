@@ -520,10 +520,15 @@
         Please enter your name, date, and pick Boy or Girl!
       </p>
 
-      <!-- Continue Button -->
-      <button id="btnProfileContinue"type="button"data-i18n="profileContinue"class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer">
-        Continue to Lobby →
-      </button>
+      <!-- Continue & Skip Buttons -->
+      <div class="flex flex-col gap-2">
+        <button id="btnProfileContinue"type="button"data-i18n="profileContinue"class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-base font-extrabold shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer">
+          Continue to Lobby →
+        </button>
+        <button id="btnProfileSkip" type="button" class="w-full py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 text-sm font-extrabold border border-slate-200 active:scale-95 transition-all cursor-pointer">
+          Skip Profile
+        </button>
+      </div>
     </div>
   </div>
 
@@ -11869,6 +11874,18 @@
     const btnProfileBackToLang = document.getElementById('btnProfileBackToLang');
     if (btnProfileBackToLang) {
       btnProfileBackToLang.addEventListener('click', showLanguageMapPage);
+    }
+    const btnProfileSkip = document.getElementById('btnProfileSkip');
+    if (btnProfileSkip) {
+      btnProfileSkip.addEventListener('click', () => {
+        if (!playerProfile || !playerProfile.name) {
+          playerProfile = { name: 'Player', date: '', gender: selectedGender || 'boy' };
+        }
+        updateLobbyProfileBadge();
+        if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
+        if (profileSetupPage) profileSetupPage.classList.add('hidden');
+        showWelcomeBlankPage();
+      });
     }
 
     // Never let an unowned Golden Emperor remain equipped from an old session
