@@ -5629,6 +5629,14 @@
 
     function initGame() {
       resizeCanvas();
+      if (playerProfile && playerProfile.isGuest && playerProfile.guestNum) {
+        try {
+          const curGuestCount = parseInt(localStorage.getItem('snakeGuestPlayerCounter_v1') || '0', 10) || 0;
+          if (playerProfile.guestNum > curGuestCount) {
+            localStorage.setItem('snakeGuestPlayerCounter_v1', String(playerProfile.guestNum));
+          }
+        } catch (e) {}
+      }
 
       bestAtRunStart = personalBestScore;
       newBestCelebratedThisRun = false;
@@ -11882,9 +11890,8 @@
           let nextPlayerNum = 1;
           try {
             nextPlayerNum = (parseInt(localStorage.getItem('snakeGuestPlayerCounter_v1') || '0', 10) || 0) + 1;
-            localStorage.setItem('snakeGuestPlayerCounter_v1', String(nextPlayerNum));
           } catch (e) {}
-          playerProfile = { name: `Player ${nextPlayerNum}`, date: '', gender: selectedGender || 'boy' };
+          playerProfile = { name: `Player ${nextPlayerNum}`, date: '', gender: selectedGender || 'boy', isGuest: true, guestNum: nextPlayerNum };
           try { localStorage.setItem('snakePlayerProfile_v1', JSON.stringify(playerProfile)); } catch (e) {}
         }
         updateLobbyProfileBadge();
