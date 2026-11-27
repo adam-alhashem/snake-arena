@@ -450,6 +450,9 @@
   <!-- ========================================================================= -->
   <div id="profileSetupPage"class="fixed inset-0 z-[58] bg-white flex items-center justify-center p-4 sm:p-6 overflow-y-auto hidden">
     <div class="w-full max-w-md bg-white rounded-3xl border-2 border-slate-200 shadow-xl p-6 sm:p-8 flex flex-col gap-5">
+      <button id="btnProfileBackToLang" type="button" data-i18n="backBtn" class="self-start px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold border border-slate-200 active:scale-95 transition-all cursor-pointer">
+        ← Back
+      </button>
       <div class="flex flex-col items-center text-center gap-2">
         <svg viewBox="0 0 96 96" class="w-16 h-16 drop-shadow-md">
           <defs>
@@ -11806,6 +11809,10 @@
         if (languageMapPage) languageMapPage.classList.add('hidden');
         showProfileSetupPage();
       });
+    }
+    const btnProfileBackToLang = document.getElementById('btnProfileBackToLang');
+    if (btnProfileBackToLang) {
+      btnProfileBackToLang.addEventListener('click', showLanguageMapPage);
     }
 
     // Never let an unowned Golden Emperor remain equipped from an old session
