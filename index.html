@@ -564,7 +564,7 @@
           </div>
           <div class="bg-indigo-50 rounded-lg px-2 py-1 border border-indigo-200/70">
             <div class="text-[9px] font-bold text-indigo-700 uppercase">Level</div>
-            <div id="hoverStatLevel" class="text-xs font-black text-indigo-900">Lv. 1</div>
+            <div id="hoverStatLevel" class="text-xs font-black text-indigo-900">Lv. 0</div>
           </div>
           <div class="bg-sky-50 rounded-lg px-2 py-1 border border-sky-200/70">
             <div class="text-[9px] font-bold text-sky-700 uppercase">Dots Eaten</div>
@@ -674,7 +674,7 @@
           <span id="welcomeFoodDot"class="w-4 h-4 rounded-full inline-block shrink-0"style="background-color:#ef4444; box-shadow:0 0 8px #ef4444;"></span>
           <div class="flex flex-col text-start leading-tight">
             <span class="text-sm font-black text-slate-900">Food</span>
-            <span id="welcomeFoodLabel"class="text-[10px] font-bold text-emerald-700">Lv. 1 • Classic Berry</span>
+            <span id="welcomeFoodLabel"class="text-[10px] font-bold text-emerald-700">Lv. 0 • Classic Berry</span>
           </div>
         </button>
 
@@ -719,7 +719,7 @@
           </div>
           <div>
             <h2 class="text-lg sm:text-xl font-black tracking-tight leading-tight">Food Lab</h2>
-            <p id="foodModalSubtitle"class="text-xs font-semibold text-emerald-300">Lv. 1 • Classic Berry (0 eaten)</p>
+            <p id="foodModalSubtitle"class="text-xs font-semibold text-emerald-300">Lv. 0 • Classic Berry (0 eaten)</p>
           </div>
         </div>
         <button id="btnCloseFoodModal"class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xl font-bold flex items-center justify-center transition-all cursor-pointer"aria-label="Close food page">&times;</button>
@@ -743,7 +743,7 @@
           <div class="grid grid-cols-3 gap-2 text-center">
             <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
               <div class="text-[10px] font-bold text-slate-400 uppercase">Food Level</div>
-              <div id="foodStatLevel"class="text-sm sm:text-base font-black text-slate-900">Lv. 1</div>
+              <div id="foodStatLevel"class="text-sm sm:text-base font-black text-slate-900">Lv. 0</div>
             </div>
             <div class="bg-white rounded-xl border border-slate-200/80 py-1.5 px-2">
               <div class="text-[10px] font-bold text-slate-400 uppercase">Total Eaten</div>
@@ -780,7 +780,7 @@
             <button id="btnBackToFoodList"type="button"class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold transition-all cursor-pointer">
               ← Back to Foods
             </button>
-            <span id="foodDetailLevel"class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-black">Lv. 1 • Starter</span>
+            <span id="foodDetailLevel"class="px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-black">Lv. 0 • Starter</span>
           </div>
 
           <!-- Big Food Title & Glowing Dot Trio -->
@@ -5811,49 +5811,49 @@
     // Level-Based Food Type System (changes ONLY your food color/name/perks; keeps round dot shape!)
     const FOOD_TYPES_BY_LEVEL = [
       {
-        id: 'classic_berry', level: 1, minFood: 0, name: 'Classic Berry', color: '#ef4444',
+        id: 'classic_berry', level: 0, minFood: 0, name: 'Classic Berry', color: '#ef4444',
         palette: ['#ef4444', '#f87171', '#dc2626'],
         fuelGain: 25, arrowEvery: 0, shieldEvery: 0, miniPull: false,
         effects: ['+1 Score & +1 Food per dot', '+25 Boost Fuel per dot', 'Classic ruby glow in-game']
       },
       {
-        id: 'citrus_drop', level: 2, minFood: 25, name: 'Citrus Drop', color: '#f97316',
+        id: 'citrus_drop', level: 1, minFood: 25, name: 'Citrus Drop', color: '#f97316',
         palette: ['#f97316', '#fb923c', '#ea580c'],
         fuelGain: 32, arrowEvery: 0, shieldEvery: 0, miniPull: false,
         effects: ['+1 Score & +1 Food per dot', '+32 Boost Fuel per dot (charges boost faster)', 'Bright tangerine glow']
       },
       {
-        id: 'mint_melon', level: 3, minFood: 75, name: 'Mint Melon', color: '#10b981',
+        id: 'mint_melon', level: 2, minFood: 75, name: 'Mint Melon', color: '#10b981',
         palette: ['#10b981', '#34d399', '#059669'],
         fuelGain: 30, arrowEvery: 0, shieldEvery: 0, miniPull: true,
         effects: ['+1 Score & +1 Food per dot', '+30 Boost Fuel per dot', 'Mini Magnet: pulls nearby dots 1 tile closer when eating']
       },
       {
-        id: 'blue_berry', level: 4, minFood: 150, name: 'Blue Berry', color: '#3b82f6',
+        id: 'blue_berry', level: 3, minFood: 150, name: 'Blue Berry', color: '#3b82f6',
         palette: ['#3b82f6', '#60a5fa', '#2563eb'],
         fuelGain: 32, arrowEvery: 10, shieldEvery: 0, miniPull: false,
         effects: ['+1 Score & +1 Food per dot', '+32 Boost Fuel per dot', 'Arrow Charge: +1 free arrow every 10 dots eaten']
       },
       {
-        id: 'royal_grape', level: 5, minFood: 300, name: 'Royal Grape', color: '#8b5cf6',
+        id: 'royal_grape', level: 4, minFood: 300, name: 'Royal Grape', color: '#8b5cf6',
         palette: ['#8b5cf6', '#a78bfa', '#7c3aed'],
         fuelGain: 35, arrowEvery: 0, shieldEvery: 15, miniPull: false,
         effects: ['+1 Score & +1 Food per dot', '+35 Boost Fuel per dot', 'Shield Spark: 2-second mini shield every 15 dots eaten']
       },
       {
-        id: 'pink_candy', level: 6, minFood: 600, name: 'Pink Candy', color: '#ec4899',
+        id: 'pink_candy', level: 5, minFood: 600, name: 'Pink Candy', color: '#ec4899',
         palette: ['#ec4899', '#f472b6', '#db2777'],
         fuelGain: 42, arrowEvery: 0, shieldEvery: 0, miniPull: true,
         effects: ['+1 Score & +1 Food per dot', 'Turbo Fuel: +42 Boost Fuel per dot', 'Mini Magnet: pulls nearby dots closer when eating']
       },
       {
-        id: 'frost_crystal', level: 7, minFood: 1200, name: 'Frost Crystal', color: '#06b6d4',
+        id: 'frost_crystal', level: 6, minFood: 1200, name: 'Frost Crystal', color: '#06b6d4',
         palette: ['#06b6d4', '#22d3ee', '#0891b2'],
         fuelGain: 40, arrowEvery: 8, shieldEvery: 0, miniPull: true,
         effects: ['+1 Score & +1 Food per dot', '+40 Boost Fuel per dot', 'Mini Magnet pull + 1 free arrow every 8 dots']
       },
       {
-        id: 'solar_gold', level: 8, minFood: 2500, name: 'Solar Gold', color: '#eab308',
+        id: 'solar_gold', level: 7, minFood: 2500, name: 'Solar Gold', color: '#eab308',
         palette: ['#eab308', '#facc15', '#ca8a04'],
         fuelGain: 50, arrowEvery: 6, shieldEvery: 12, miniPull: true,
         effects: ['+1 Score & +1 Food per dot', 'Max Fuel: +50 Boost Fuel per dot', '+1 free arrow every 6 dots + Mini Shield every 12 dots + Magnet pull']
@@ -5866,7 +5866,7 @@
     let runFoodPerkCounter = 0;
 
     function getPlayerFoodLevel() {
-      let lv = 1;
+      let lv = 0;
       for (let i = 0; i < FOOD_TYPES_BY_LEVEL.length; i++) {
         if (totalFoodEaten >= FOOD_TYPES_BY_LEVEL[i].minFood) lv = FOOD_TYPES_BY_LEVEL[i].level;
       }
@@ -5878,7 +5878,7 @@
       const chosen = FOOD_TYPES_BY_LEVEL.find(ft =>ft.id === selectedFoodTypeId && ft.level <= lv);
       if (chosen) return chosen;
       // Default to highest unlocked food type for current level
-      return FOOD_TYPES_BY_LEVEL[Math.min(lv - 1, FOOD_TYPES_BY_LEVEL.length - 1)];
+      return FOOD_TYPES_BY_LEVEL[Math.min(lv, FOOD_TYPES_BY_LEVEL.length - 1)];
     }
 
     function setPlayerFoodType(typeId) {
@@ -6078,7 +6078,7 @@
       if (prevTag) prevTag.textContent = `${inspected.name} • Lv. ${inspected.level}`;
       if (statLv) statLv.textContent = `Lv. ${lv}`;
       if (statEat) statEat.textContent = totalFoodEaten.toLocaleString();
-      if (statUnl) statUnl.textContent = `${lv} / ${FOOD_TYPES_BY_LEVEL.length}`;
+      if (statUnl) statUnl.textContent = `${lv + 1} / ${FOOD_TYPES_BY_LEVEL.length}`;
       if (hdrDot) {
         const inner = hdrDot.querySelector('span');
         if (inner) {
@@ -6158,7 +6158,7 @@
         }
       }
 
-      const curType = FOOD_TYPES_BY_LEVEL[Math.min(lv - 1, FOOD_TYPES_BY_LEVEL.length - 1)];
+      const curType = FOOD_TYPES_BY_LEVEL[Math.min(lv, FOOD_TYPES_BY_LEVEL.length - 1)];
       const nextType = FOOD_TYPES_BY_LEVEL.find(ft =>ft.level === lv + 1);
       if (nextType) {
         const span = Math.max(1, nextType.minFood - curType.minFood);
@@ -6632,7 +6632,7 @@
                 try { localStorage.setItem('snakeTotalFoodEaten_v1', String(totalFoodEaten)); } catch (e) {}
                 const newFoodLv = getPlayerFoodLevel();
                 if (newFoodLv >prevFoodLv) {
-                  const unlockedFt = FOOD_TYPES_BY_LEVEL[newFoodLv - 1];
+                  const unlockedFt = FOOD_TYPES_BY_LEVEL[newFoodLv];
                   if (unlockedFt) {
                     selectedFoodTypeId = unlockedFt.id;
                     try { localStorage.setItem('snakeSelectedFoodType_v1', unlockedFt.id); } catch (e) {}
