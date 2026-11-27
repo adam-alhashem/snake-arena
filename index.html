@@ -7267,10 +7267,28 @@
           const sn = lobbySimSnakes[s];
           const head = sn.pts[0];
 
-          // Steer gently toward nearest dot (and away from screen edges)
+          // Steer away from edges & dodge nearby rival snakes, otherwise chase nearest dot
           let targetAng = sn.ang;
-          if (head.x < 60 || head.x > w - 60 || head.y < 60 || head.y > h - 60) {
+          let dangerX = 0, dangerY = 0, hasDanger = false;
+          for (let o = 0; o < lobbySimSnakes.length; o++) {
+            if (o === s) continue;
+            const other = lobbySimSnakes[o];
+            for (let op = 0; op < other.pts.length; op += 2) {
+              const dxo = head.x - other.pts[op].x;
+              const dyo = head.y - other.pts[op].y;
+              const distO = Math.hypot(dxo, dyo);
+              if (distO < 62 && distO > 0.1) {
+                dangerX += dxo / distO;
+                dangerY += dyo / distO;
+                hasDanger = true;
+              }
+            }
+          }
+
+          if (head.x < 65 || head.x > w - 65 || head.y < 65 || head.y > h - 65) {
             targetAng = Math.atan2(h / 2 - head.y, w / 2 - head.x);
+          } else if (hasDanger) {
+            targetAng = Math.atan2(dangerY, dangerX);
           } else {
             let bestDot = null;
             let bestDist = 1e9;
@@ -7283,10 +7301,39 @@
           let diff = targetAng - sn.ang;
           while (diff > Math.PI) diff -= Math.PI * 2;
           while (diff < -Math.PI) diff += Math.PI * 2;
-          sn.ang += Math.max(-0.075, Math.min(0.075, diff));
+          sn.ang += Math.max(-0.11, Math.min(0.11, diff));
 
           const nx = head.x + Math.cos(sn.ang) * sn.speed;
           const ny = head.y + Math.sin(sn.ang) * sn.speed;
+
+          // Real collision check: if head hits another snake, burst into dots & respawn safely!
+          let crashed = false;
+          for (let o = 0; o < lobbySimSnakes.length; o++) {
+            if (o === s) continue;
+            const other = lobbySimSnakes[o];
+            for (let op = 0; op < other.pts.length; op++) {
+              if (Math.hypot(nx - other.pts[op].x, ny - other.pts[op].y) < 11.5) {
+                crashed = true;
+                break;
+              }
+            }
+            if (crashed) break;
+          }
+          if (crashed) {
+            for (let k = 0; k < sn.pts.length; k += 3) {
+              if (lobbySimDots.length < 48) {
+                lobbySimDots.push({ x: sn.pts[k].x, y: sn.pts[k].y, color: sn.skin.innerColor || '#facc15', phase: Math.random() * 6 });
+              }
+            }
+            const rx = 80 + Math.random() * Math.max(200, w - 160);
+            const ry = 80 + Math.random() * Math.max(200, h - 160);
+            sn.ang = Math.random() * Math.PI * 2;
+            sn.pts = [];
+            for (let k = 0; k < 12; k++) {
+              sn.pts.push({ x: rx - Math.cos(sn.ang) * k * 8, y: ry - Math.sin(sn.ang) * k * 8 });
+            }
+            continue;
+          }
           sn.pts.unshift({ x: nx, y: ny });
 
           // Check dot eating
