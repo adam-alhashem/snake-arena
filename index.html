@@ -994,8 +994,8 @@
         <!-- Pet Inventory Grid (Unlimited) -->
         <div class="flex flex-col gap-2 pt-2 border-t border-slate-100">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-black uppercase tracking-wider text-slate-500">Your Pet Inventory (Unlimited)</span>
-            <span id="petsCollectedCount"class="text-xs font-bold text-slate-500">0 Owned • Unlimited</span>
+            <span class="text-xs font-black uppercase tracking-wider text-slate-500">Your Pet Inventory</span>
+            <span id="petsCollectedCount"class="text-xs font-bold text-slate-500">0 Owned</span>
           </div>
           <div id="petsCollectionGrid"class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <!-- Populated by renderPetsModal() -->
@@ -10804,7 +10804,7 @@
 
       if (moneyEl) moneyEl.textContent = foodBank.toLocaleString();
       if (headerEl) headerEl.textContent = `Active Pets Playing With You (${activeList.length} / ${MAX_ACTIVE_PETS} Max)`;
-      if (countEl) countEl.textContent = `${petsState.inventory.length} Owned • Unlimited`;
+      if (countEl) countEl.textContent = `${petsState.inventory.length} Owned`;
 
       if (activeList.length > 0) {
         const maxReach = Math.max(...activeList.map(p => p.radius || 2));
@@ -10823,7 +10823,7 @@
         if (petsState.inventory.length === 0) {
           const empty = document.createElement('div');
           empty.className = 'col-span-full py-6 px-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-center text-xs font-bold text-slate-400';
-          empty.textContent = 'Your pet inventory is empty — hatch an egg above! You can collect unlimited pets and bring up to 3 into the arena.';
+          empty.textContent = 'Your pet inventory is empty — hatch an egg above! You can bring up to 3 pets into the arena.';
           grid.appendChild(empty);
           return;
         }
@@ -10905,7 +10905,7 @@
       if (msgEl) {
         msgEl.textContent = autoEquipped
           ? `Hatched ${hatched.rarity} ${hatched.name}! Now playing with you (${petsState.equipped.length}/${MAX_ACTIVE_PETS}).`
-          : `Hatched ${hatched.rarity} ${hatched.name}! Saved to your unlimited inventory (${MAX_ACTIVE_PETS}/${MAX_ACTIVE_PETS} active full).`;
+          : `Hatched ${hatched.rarity} ${hatched.name}! Saved to your inventory (${MAX_ACTIVE_PETS}/${MAX_ACTIVE_PETS} active full).`;
       }
     }
 
