@@ -527,7 +527,9 @@
   <!-- ========================================================================= -->
   <!-- PURE WHITE BLANK WELCOME PAGE (SECOND PAGE / LOBBY)                       -->
   <!-- ========================================================================= -->
-  <div id="welcomeBlankPage"class="fixed inset-0 z-[55] bg-white flex items-center justify-center p-6 hidden">
+  <div id="welcomeBlankPage"class="fixed inset-0 z-[55] bg-slate-200 flex items-center justify-center p-6 hidden overflow-hidden">
+    <!-- Live Background Arena showing snakes playing in real time -->
+    <canvas id="lobbyLiveArenaCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
     <!-- Top-Left Player Profile Badge & Dropdown Menu -->
     <div id="profileMenuWrapper"class="fixed top-4 left-4 sm:top-6 sm:left-6 flex flex-col items-start gap-1.5 z-20">
       <button id="btnEditProfile"type="button"title="Profile options"class="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-2xs flex items-center gap-2 text-xs font-extrabold text-slate-800 active:scale-95 transition-all cursor-pointer">
@@ -605,7 +607,7 @@
       <span data-i18n="openRewardsBtn"class="w-full py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[11px] sm:text-xs font-black shadow-xs">Open →</span>
     </button>
 
-    <div class="flex flex-col items-center text-center gap-5 max-w-sm w-full px-28 sm:px-0">
+    <div class="relative z-10 flex flex-col items-center text-center gap-4 max-w-md w-full px-5 py-5 rounded-3xl bg-white/75 backdrop-blur-xs border border-white/80 shadow-lg">
       <div class="flex flex-col items-center gap-2">
         <svg viewBox="0 0 96 96" class="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-lg">
           <defs>
@@ -7173,6 +7175,167 @@
     }
 
     // BLANK START / SERVER CHOICE PAGE HELPERS
+    // LIVE BACKGROUND ARENA ON LOBBY PAGE (See snakes actively playing behind lobby UI!)
+    let lobbyLiveRafId = null;
+    let lobbySimSnakes = [];
+    let lobbySimDots = [];
+
+    function initLobbyLiveSim(w, h) {
+      lobbySimDots = [];
+      const dotCols = ['#ef4444', '#f97316', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#eab308'];
+      for (let i = 0; i < 34; i++) {
+        lobbySimDots.push({
+          x: 40 + Math.random() * Math.max(200, w - 80),
+          y: 40 + Math.random() * Math.max(200, h - 80),
+          color: dotCols[i % dotCols.length],
+          phase: Math.random() * Math.PI * 2
+        });
+      }
+      lobbySimSnakes = [];
+      const pool = (typeof SKINS_LIST !== 'undefined' && SKINS_LIST.length > 0) ? SKINS_LIST : [];
+      for (let i = 0; i < 10; i++) {
+        const skin = pool.length ? pool[(i * 9 + 1) % Math.min(pool.length, 95)] : { bodyColor: '#16a34a', innerColor: '#22c55e', stripeColor: '#ffffff' };
+        const sx = 80 + Math.random() * Math.max(200, w - 160);
+        const sy = 80 + Math.random() * Math.max(200, h - 160);
+        const ang = Math.random() * Math.PI * 2;
+        const pts = [];
+        for (let s = 0; s < 14; s++) {
+          pts.push({ x: sx - Math.cos(ang) * s * 8, y: sy - Math.sin(ang) * s * 8 });
+        }
+        lobbySimSnakes.push({
+          skin,
+          pts,
+          ang,
+          speed: 1.7 + Math.random() * 0.9,
+          turnTimer: 0
+        });
+      }
+    }
+
+    function startLobbyLivePreview() {
+      if (lobbyLiveRafId) return;
+      const lc = document.getElementById('lobbyLiveArenaCanvas');
+      if (!lc) return;
+      const lctx = lc.getContext('2d');
+      if (!lctx) return;
+
+      function resizeLobbyCanvas() {
+        if (lc.width !== window.innerWidth || lc.height !== window.innerHeight) {
+          lc.width = window.innerWidth;
+          lc.height = window.innerHeight;
+          if (lobbySimSnakes.length === 0) initLobbyLiveSim(lc.width, lc.height);
+        }
+      }
+      resizeLobbyCanvas();
+      if (lobbySimSnakes.length === 0) initLobbyLiveSim(lc.width, lc.height);
+
+      function frame() {
+        if (!welcomeBlankPage || welcomeBlankPage.classList.contains('hidden')) {
+          lobbyLiveRafId = null;
+          return;
+        }
+        resizeLobbyCanvas();
+        const w = lc.width;
+        const h = lc.height;
+        const now = Date.now();
+
+        // Clean floor matching player's selected Arena Theme
+        lctx.fillStyle = (typeof getActiveArenaTheme === 'function') ? getActiveArenaTheme().bg : '#e2e8f0';
+        lctx.fillRect(0, 0, w, h);
+
+        // Draw pulsing dots
+        for (let i = 0; i < lobbySimDots.length; i++) {
+          const d = lobbySimDots[i];
+          const p = Math.sin(now / 240 + d.phase) * 0.9;
+          lctx.save();
+          lctx.shadowColor = d.color;
+          lctx.shadowBlur = 8;
+          lctx.fillStyle = d.color;
+          lctx.beginPath();
+          lctx.arc(d.x, d.y, 6 + p * 0.5, 0, Math.PI * 2);
+          lctx.fill();
+          lctx.shadowBlur = 0;
+          lctx.fillStyle = 'rgba(255,255,255,0.85)';
+          lctx.beginPath();
+          lctx.arc(d.x - 1.6, d.y - 1.6, 1.6, 0, Math.PI * 2);
+          lctx.fill();
+          lctx.restore();
+        }
+
+        // Move & draw 10 live competing snakes
+        for (let s = 0; s < lobbySimSnakes.length; s++) {
+          const sn = lobbySimSnakes[s];
+          const head = sn.pts[0];
+
+          // Steer gently toward nearest dot (and away from screen edges)
+          let targetAng = sn.ang;
+          if (head.x < 60 || head.x > w - 60 || head.y < 60 || head.y > h - 60) {
+            targetAng = Math.atan2(h / 2 - head.y, w / 2 - head.x);
+          } else {
+            let bestDot = null;
+            let bestDist = 1e9;
+            for (let di = 0; di < lobbySimDots.length; di++) {
+              const dist = Math.hypot(lobbySimDots[di].x - head.x, lobbySimDots[di].y - head.y);
+              if (dist < bestDist) { bestDist = dist; bestDot = lobbySimDots[di]; }
+            }
+            if (bestDot) targetAng = Math.atan2(bestDot.y - head.y, bestDot.x - head.x);
+          }
+          let diff = targetAng - sn.ang;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          sn.ang += Math.max(-0.075, Math.min(0.075, diff));
+
+          const nx = head.x + Math.cos(sn.ang) * sn.speed;
+          const ny = head.y + Math.sin(sn.ang) * sn.speed;
+          sn.pts.unshift({ x: nx, y: ny });
+
+          // Check dot eating
+          let ate = false;
+          for (let di = 0; di < lobbySimDots.length; di++) {
+            if (Math.hypot(nx - lobbySimDots[di].x, ny - lobbySimDots[di].y) < 14) {
+              lobbySimDots[di].x = 40 + Math.random() * Math.max(200, w - 80);
+              lobbySimDots[di].y = 40 + Math.random() * Math.max(200, h - 80);
+              ate = true;
+              break;
+            }
+          }
+          if (!ate || sn.pts.length > 26) sn.pts.pop();
+
+          // Draw smooth layered body
+          function strokeSim(lw, col, yOff = 0) {
+            lctx.save();
+            lctx.lineWidth = lw;
+            lctx.strokeStyle = col;
+            lctx.lineCap = 'round';
+            lctx.lineJoin = 'round';
+            lctx.beginPath();
+            lctx.moveTo(sn.pts[sn.pts.length - 1].x, sn.pts[sn.pts.length - 1].y + yOff);
+            for (let k = sn.pts.length - 2; k >= 0; k--) {
+              lctx.lineTo(sn.pts[k].x, sn.pts[k].y + yOff);
+            }
+            lctx.stroke();
+            lctx.restore();
+          }
+          strokeSim(14.5, 'rgba(15, 23, 42, 0.08)', 1.5);
+          strokeSim(13, sn.skin.bodyColor || '#16a34a', 0);
+          strokeSim(8, sn.skin.innerColor || '#22c55e', 0);
+          strokeSim(2.2, sn.skin.stripeColor || '#ffffff', 0);
+
+          // Draw matched smooth round head
+          lctx.save();
+          lctx.translate(nx, ny);
+          lctx.rotate(sn.ang);
+          if (typeof drawRoundSnakeHead === 'function') {
+            drawRoundSnakeHead(lctx, sn.skin);
+          }
+          lctx.restore();
+        }
+
+        lobbyLiveRafId = requestAnimationFrame(frame);
+      }
+      lobbyLiveRafId = requestAnimationFrame(frame);
+    }
+
     function showWelcomeBlankPage() {
       isRunning = false;
       isPaused = false;
@@ -7184,6 +7347,7 @@
       if (startChoicePage) startChoicePage.classList.add('hidden');
       if (btnInGameSound) btnInGameSound.classList.add('hidden');
       if (welcomeBlankPage) welcomeBlankPage.classList.remove('hidden');
+      startLobbyLivePreview();
     }
 
     function showStartChoicePage() {
