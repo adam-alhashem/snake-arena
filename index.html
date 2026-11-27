@@ -1151,6 +1151,19 @@
   </div>
 
   <script>
+    // One-time fresh start reset so the game starts like a brand-new player
+    try {
+      if (!localStorage.getItem('snakeFreshStartResetV1')) {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('snake')) keysToRemove.push(k);
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        localStorage.setItem('snakeFreshStartResetV1', '1');
+      }
+    } catch (e) {}
+
     const container = document.getElementById('arenaContainer');
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
