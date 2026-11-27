@@ -278,6 +278,11 @@
     </div>
   </div>
 
+  <!-- Minimal In-Game Sound ON/OFF Button (Top-Right, only shown while playing) -->
+  <button id="btnInGameSound" type="button" title="Toggle Sound ON/OFF" class="hidden fixed top-3 right-3 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer">
+    ON
+  </button>
+
   <!-- ========================================================================= -->
   <!-- DEATH & SERVER SELECTION MODAL (Game NEVER stops, you choose where to play) -->
   <!-- ========================================================================= -->
@@ -7181,6 +7186,7 @@
       hideDeathModal();
       updateSkinLockUI();
       if (startChoicePage) startChoicePage.classList.add('hidden');
+      if (btnInGameSound) btnInGameSound.classList.add('hidden');
       if (welcomeBlankPage) welcomeBlankPage.classList.remove('hidden');
     }
 
@@ -7223,6 +7229,7 @@
         joinText = `JOINED SOLO SERVER #${serverNumber}!`;
       }
       if (startChoicePage) startChoicePage.classList.add('hidden');
+      if (btnInGameSound) btnInGameSound.classList.remove('hidden');
       initGame();
       if (pendingSpinStartArrows >0) {
         playerArrowAmmo = Math.min(MAX_PLAYER_ARROWS, playerArrowAmmo + pendingSpinStartArrows);
@@ -9801,12 +9808,22 @@
       } catch (e) {}
     }
 
+    const btnInGameSound = document.getElementById('btnInGameSound');
     function updateSoundButtonUI() {
-      if (btnWelcomeSound) {
-        btnWelcomeSound.innerHTML = soundEnabled
-          ? `<span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#0f172a"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/></svg><span>ON</span></span>`
-          : `<span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#64748b"/><line x1="16" y1="9" x2="21" y2="15" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/><line x1="21" y1="9" x2="16" y2="15" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/></svg><span>OFF</span></span>`;
-      }
+      const markup = soundEnabled
+        ? `<span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#0f172a"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/></svg><span>ON</span></span>`
+        : `<span class="inline-flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="w-4 h-4"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#64748b"/><line x1="16" y1="9" x2="21" y2="15" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/><line x1="21" y1="9" x2="16" y2="15" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round"/></svg><span>OFF</span></span>`;
+      if (btnWelcomeSound) btnWelcomeSound.innerHTML = markup;
+      if (btnInGameSound) btnInGameSound.innerHTML = markup;
+    }
+    if (btnInGameSound) {
+      btnInGameSound.addEventListener('click', (e) => {
+        e.stopPropagation();
+        soundEnabled = !soundEnabled;
+        try { localStorage.setItem('snakeSoundEnabled', String(soundEnabled)); } catch (err) {}
+        updateSoundButtonUI();
+        if (soundEnabled) playSFX('eat');
+      });
     }
 
     const POWERUP_TYPES = [
