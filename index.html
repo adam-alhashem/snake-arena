@@ -957,9 +957,14 @@
             <span id="activePetPerk"class="text-xs font-semibold text-cyan-700 mt-0.5">Hatch eggs below! Up to 3 pets can play with you at once.</span>
           </div>
         </div>
-        <button id="btnUnequipPet"type="button"class="hidden px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-extrabold cursor-pointer shrink-0">
-          Rest All
-        </button>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btnEquipBestPets" type="button" class="hidden px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs active:scale-95 transition-all cursor-pointer">
+            Equip Best
+          </button>
+          <button id="btnUnequipPet"type="button"class="hidden px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-extrabold cursor-pointer">
+            Rest All
+          </button>
+        </div>
       </div>
 
       <!-- Egg Hatchery + Pet Collection -->
@@ -10797,6 +10802,7 @@
       const nameEl = document.getElementById('activePetName');
       const perkEl = document.getElementById('activePetPerk');
       const btnUnequip = document.getElementById('btnUnequipPet');
+      const btnEquipBest = document.getElementById('btnEquipBestPets');
       const countEl = document.getElementById('petsCollectedCount');
       const grid = document.getElementById('petsCollectionGrid');
       const msgEl = document.getElementById('eggHatchResultMsg');
@@ -10805,6 +10811,10 @@
       if (moneyEl) moneyEl.textContent = foodBank.toLocaleString();
       if (headerEl) headerEl.textContent = `Active Pets Playing With You (${activeList.length} / ${MAX_ACTIVE_PETS} Max)`;
       if (countEl) countEl.textContent = `${petsState.inventory.length} Owned`;
+      if (btnEquipBest) {
+        if (petsState.inventory.length > 0) btnEquipBest.classList.remove('hidden');
+        else btnEquipBest.classList.add('hidden');
+      }
 
       if (activeList.length > 0) {
         const maxReach = Math.max(...activeList.map(p => p.radius || 2));
@@ -10934,6 +10944,28 @@
         if (e.target === petsModal) petsModal.classList.add('hidden');
       });
     }
+    const PET_RARITY_RANK = { Common: 1, Rare: 2, Epic: 3, Legendary: 4, Mythic: 5 };
+    function getPetPowerScore(petId) {
+      const p = PETS_CATALOG.find(item => item.id === petId);
+      if (!p) return 0;
+      return (p.bonusMoney || 0) * 1000 + (p.radius || 0) * 100 + (PET_RARITY_RANK[p.rarity] || 0) * 10;
+    }
+
+    const btnEquipBestPets = document.getElementById('btnEquipBestPets');
+    if (btnEquipBestPets) {
+      btnEquipBestPets.addEventListener('click', () => {
+        if (!petsState.inventory || petsState.inventory.length === 0) return;
+        const ranked = [...petsState.inventory].sort((a, b) => getPetPowerScore(b.id) - getPetPowerScore(a.id));
+        const best = ranked.slice(0, MAX_ACTIVE_PETS);
+        petsState.equipped = best.map(x => x.uid);
+        savePetsState();
+        renderPetsModal();
+        if (typeof playSFX === 'function') playSFX('powerup');
+        const msgEl = document.getElementById('eggHatchResultMsg');
+        if (msgEl) msgEl.textContent = `Equipped your best ${best.length} pet${best.length === 1 ? '' : 's'}!`;
+      });
+    }
+
     if (btnUnequipPet) {
       btnUnequipPet.addEventListener('click', () => {
         petsState.equipped = [];
