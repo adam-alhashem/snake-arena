@@ -11879,7 +11879,13 @@
     if (btnProfileSkip) {
       btnProfileSkip.addEventListener('click', () => {
         if (!playerProfile || !playerProfile.name) {
-          playerProfile = { name: 'Player', date: '', gender: selectedGender || 'boy' };
+          let nextPlayerNum = 1;
+          try {
+            nextPlayerNum = (parseInt(localStorage.getItem('snakeGuestPlayerCounter_v1') || '0', 10) || 0) + 1;
+            localStorage.setItem('snakeGuestPlayerCounter_v1', String(nextPlayerNum));
+          } catch (e) {}
+          playerProfile = { name: `Player ${nextPlayerNum}`, date: '', gender: selectedGender || 'boy' };
+          try { localStorage.setItem('snakePlayerProfile_v1', JSON.stringify(playerProfile)); } catch (e) {}
         }
         updateLobbyProfileBadge();
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
