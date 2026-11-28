@@ -5,6 +5,7 @@
   <meta name="viewport"content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Game Box</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
   <style>
     html, body {
       margin: 0;
@@ -642,7 +643,7 @@
         <!-- Game Card 2: Mega Obby -->
         <div class="bg-white rounded-3xl border-2 border-slate-200 hover:border-sky-400 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col">
           <div class="h-40 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-900 flex items-center justify-center relative p-4">
-            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wide">Parkour</span>
+            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-emerald-400/30 border border-emerald-200/50 text-white text-[10px] font-black uppercase tracking-wide">Real 3D Parkour</span>
             <svg viewBox="0 0 120 84" class="w-28 h-20 drop-shadow-lg">
               <rect x="6" y="62" width="32" height="10" rx="4" fill="#22c55e" stroke="#ffffff" stroke-width="1.5"/>
               <rect x="44" y="44" width="32" height="10" rx="4" fill="#facc15" stroke="#ffffff" stroke-width="1.5"/>
@@ -1325,16 +1326,21 @@
       </div>
     </div>
 
-    <!-- Full-Viewport Game Canvas -->
+    <!-- Full-Viewport Game Canvas (2D + Real WebGL 3D Three.js Stage) -->
     <div class="relative flex-1 w-full min-h-0 bg-slate-950 overflow-hidden">
       <canvas id="miniGameCanvas" width="580" height="340" class="w-full h-full block cursor-pointer touch-none"></canvas>
+      <div id="obby3DContainer" class="hidden absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing"></div>
 
       <!-- Floating Bottom Bar: Touch Controls + Tycoon Upgrade Pads + Controls Hint -->
       <div class="pointer-events-none absolute bottom-5 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
-        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-center justify-between gap-3 px-1">
-          <div class="flex items-center gap-3">
-            <button id="btnHubMoveLeft" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">←</button>
-            <button id="btnHubMoveRight" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">→</button>
+        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-end justify-between gap-3 px-1">
+          <div class="flex flex-col items-center gap-1.5">
+            <button id="btnHubMoveUp" type="button" class="hidden w-12 h-12 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-lg font-black shadow-xl select-none touch-none cursor-pointer">↑</button>
+            <div class="flex items-center gap-2">
+              <button id="btnHubMoveLeft" type="button" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">←</button>
+              <button id="btnHubMoveDown" type="button" class="hidden w-12 h-12 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-lg font-black shadow-xl select-none touch-none cursor-pointer">↓</button>
+              <button id="btnHubMoveRight" type="button" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">→</button>
+            </div>
           </div>
           <button id="btnHubJump" type="button" class="px-7 h-14 rounded-2xl bg-emerald-600/95 hover:bg-emerald-500 active:scale-95 text-white border-2 border-emerald-300/50 text-base font-black shadow-xl select-none touch-none cursor-pointer">JUMP</button>
         </div>
@@ -12463,7 +12469,7 @@
     let miniGameMode = 'obby'; // 'obby' | 'tycoon' | 'survival'
     let miniGameRafId = null;
     let miniGameSessionEarned = 0;
-    let miniKeys = { left: false, right: false, jump: false };
+    let miniKeys = { left: false, right: false, up: false, down: false, jump: false };
     let miniParticles = [];
     let miniPopups = [];
 
@@ -13832,6 +13838,12 @@
       const H = 340;
       miniCtx.save();
       miniCtx.setTransform(targetW / W, 0, 0, targetH / H, 0, 0);
+      if (miniGameMode === 'obby' && typeof isReal3DObbyActive === 'function' && isReal3DObbyActive()) {
+        miniCtx.restore();
+        stepAndRenderReal3DObby();
+        miniGameRafId = requestAnimationFrame(miniGameLoop);
+        return;
+      }
       if (miniGameMode === 'obby') stepAndDrawObby(W, H);
       else if (miniGameMode === 'tycoon') stepAndDrawTycoon(W, H);
       else stepAndDrawSurvival(W, H);
@@ -13881,6 +13893,8 @@
         survival.lives = survivalSavedRun.lives;
       }
       miniGameModal.classList.remove('hidden');
+      if (typeof syncObby3DVisibility === 'function') syncObby3DVisibility();
+      if (typeof buildReal3DObbyStage === 'function' && r3.inited && miniGameMode === 'obby') buildReal3DObbyStage(obbySavedStage || 1);
       updateMiniGameHUD();
       if (typeof sendMyPresenceHeartbeat === 'function') sendMyPresenceHeartbeat(true);
       if (!miniGameRafId) miniGameRafId = requestAnimationFrame(miniGameLoop);
@@ -14458,6 +14472,7 @@
           obbySavedStage = 1;
           try { localStorage.setItem('snakeHubObbySavedStage_v1', '1'); } catch (e) {}
           buildObbyStage(1);
+          if (typeof buildReal3DObbyStage === 'function' && r3.inited) buildReal3DObbyStage(1);
         } else if (miniGameMode === 'survival') {
           survivalSavedRun = null;
           try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
@@ -14542,7 +14557,9 @@
       if (e.key === 'Escape') { closeMiniGameModal(); return; }
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') miniKeys.left = true;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') miniKeys.right = true;
-      if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') miniKeys.up = true;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') miniKeys.down = true;
+      if (e.code === 'Space' || ((miniGameMode !== 'obby' || !isReal3DObbyActive()) && (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W'))) {
         e.preventDefault();
         miniKeys.jump = true;
         if (miniGameMode === 'survival' && survival.state !== 'playing') {
@@ -14558,6 +14575,8 @@
     document.addEventListener('keyup', (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') miniKeys.left = false;
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') miniKeys.right = false;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') miniKeys.up = false;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') miniKeys.down = false;
       if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') miniKeys.jump = false;
     });
 
@@ -15259,6 +15278,7 @@
       is3DMode = !is3DMode;
       try { localStorage.setItem('snake3DMode_v1', is3DMode ? 'true' : 'false'); } catch (err) {}
       update3DButtonsUI();
+      if (typeof syncObby3DVisibility === 'function') syncObby3DVisibility();
       if (typeof playSFX === 'function') playSFX('eat');
     }
 
@@ -15266,6 +15286,420 @@
     if (btnToggle3DMini) btnToggle3DMini.addEventListener('click', toggle3DMode);
     if (btnToggle3DSnake) btnToggle3DSnake.addEventListener('click', toggle3DMode);
     update3DButtonsUI();
+
+    // =========================================================================
+    // REAL WEBGL 3D ROBLOX-STYLE OBBY ENGINE (THREE.JS 3RD-PERSON WORLD!)
+    // =========================================================================
+    const obby3DContainer = document.getElementById('obby3DContainer');
+    let r3 = {
+      inited: false, scene: null, camera: null, renderer: null,
+      playerGroup: null, leftLeg: null, rightLeg: null, leftArm: null, rightArm: null,
+      px: 0, py: 2.2, pz: 0, vy: 0, onGround: false, yaw: 0, camYaw: 0, camPitch: 0.42,
+      spawnX: 0, spawnY: 2.2, spawnZ: 0,
+      plats: [], lavas: [], coins: [], trophy: null, stageGroup: null,
+      dragging: false, lastX: 0, lastY: 0, walkPhase: 0,
+      remoteMeshes: {}
+    };
+
+    function isReal3DObbyActive() {
+      return !!(is3DMode && miniGameMode === 'obby' && typeof THREE !== 'undefined' && obby3DContainer && miniGameModal && !miniGameModal.classList.contains('hidden'));
+    }
+
+    function syncObby3DVisibility() {
+      const use3D = isReal3DObbyActive();
+      const upBtn = document.getElementById('btnHubMoveUp');
+      const downBtn = document.getElementById('btnHubMoveDown');
+      if (obby3DContainer) {
+        if (use3D) obby3DContainer.classList.remove('hidden');
+        else obby3DContainer.classList.add('hidden');
+      }
+      if (miniGameCanvas) {
+        if (use3D) miniGameCanvas.classList.add('hidden');
+        else miniGameCanvas.classList.remove('hidden');
+      }
+      if (upBtn) { if (use3D) upBtn.classList.remove('hidden'); else upBtn.classList.add('hidden'); }
+      if (downBtn) { if (use3D) downBtn.classList.remove('hidden'); else downBtn.classList.add('hidden'); }
+      if (use3D) {
+        initReal3DObby();
+        rebuild3DAvatarMesh();
+        const hEl = document.getElementById('miniGameHint');
+        if (hEl) hEl.textContent = '3D Roblox Controls: WASD / Arrows to walk, Space to Jump, drag screen to rotate 3D camera!';
+      }
+    }
+
+    function build3DCharacterGroup(cfg) {
+      const g = new THREE.Group();
+      const shirtObj = AVATAR_SHIRTS.find(x => x.id === (cfg && cfg.shirt)) || AVATAR_SHIRTS[0];
+      const pantsObj = AVATAR_PANTS.find(x => x.id === (cfg && cfg.pants)) || AVATAR_PANTS[0];
+      const skinCol = (cfg && cfg.skin) ? cfg.skin : '#facc15';
+
+      const matSkin = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.55 });
+      const matShirt = new THREE.MeshStandardMaterial({ color: shirtObj.col, roughness: 0.6 });
+      const matPants = new THREE.MeshStandardMaterial({ color: pantsObj.col, roughness: 0.7 });
+      const matDark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.5 });
+
+      // Legs
+      const legGeo = new THREE.BoxGeometry(0.42, 0.9, 0.42);
+      const lLeg = new THREE.Mesh(legGeo, matPants); lLeg.position.set(-0.24, 0.45, 0); lLeg.castShadow = true;
+      const rLeg = new THREE.Mesh(legGeo, matPants); rLeg.position.set(0.24, 0.45, 0); rLeg.castShadow = true;
+      // Torso
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.0, 0.52), matShirt);
+      torso.position.set(0, 1.4, 0); torso.castShadow = true;
+      // Arms
+      const armGeo = new THREE.BoxGeometry(0.34, 0.92, 0.36);
+      const lArm = new THREE.Mesh(armGeo, matSkin); lArm.position.set(-0.68, 1.4, 0); lArm.castShadow = true;
+      const rArm = new THREE.Mesh(armGeo, matSkin); rArm.position.set(0.68, 1.4, 0); rArm.castShadow = true;
+      // Head
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.76, 0.76), matSkin);
+      head.position.set(0, 2.32, 0); head.castShadow = true;
+      // Eyes on front (-Z is forward!)
+      const eyeGeo = new THREE.BoxGeometry(0.12, 0.14, 0.06);
+      const lEye = new THREE.Mesh(eyeGeo, matDark); lEye.position.set(-0.16, 2.38, -0.38);
+      const rEye = new THREE.Mesh(eyeGeo, matDark); rEye.position.set(0.16, 2.38, -0.38);
+      const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.06), matDark); mouth.position.set(0, 2.16, -0.38);
+
+      g.add(lLeg, rLeg, torso, lArm, rArm, head, lEye, rEye, mouth);
+
+      // 3D Hats!
+      const hat = cfg && cfg.hat;
+      if (hat === 'crown') {
+        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.38, 0.32, 6), new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.5, roughness: 0.25 }));
+        crown.position.set(0, 2.86, 0); g.add(crown);
+      } else if (hat === 'tophat') {
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16), matDark); brim.position.set(0, 2.74, 0);
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.58, 16), matDark); top.position.set(0, 3.05, 0);
+        g.add(brim, top);
+      } else if (hat === 'wizard') {
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 16), new THREE.MeshStandardMaterial({ color: '#6d28d9' })); brim.position.set(0, 2.74, 0);
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.95, 16), new THREE.MeshStandardMaterial({ color: '#6d28d9' })); cone.position.set(0, 3.22, 0);
+        g.add(brim, cone);
+      } else if (hat === 'cap' || hat === 'red_cap') {
+        const capCol = hat === 'red_cap' ? '#dc2626' : '#0284c7';
+        const capMat = new THREE.MeshStandardMaterial({ color: capCol });
+        const dome = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.8), capMat); dome.position.set(0, 2.8, 0);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.45), capMat); visor.position.set(0, 2.7, -0.5);
+        g.add(dome, visor);
+      } else if (hat === 'halo') {
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 10, 24), new THREE.MeshBasicMaterial({ color: '#fde047' }));
+        halo.rotation.x = Math.PI / 2; halo.position.set(0, 3.0, 0); g.add(halo);
+      } else if (hat && hat !== 'none') {
+        const hatObj = AVATAR_HATS.find(x => x.id === hat);
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.24, 0.82), new THREE.MeshStandardMaterial({ color: (hatObj && hatObj.col) || '#10b981' }));
+        cap.position.set(0, 2.82, 0); g.add(cap);
+      }
+
+      return { group: g, lLeg, rLeg, lArm, rArm };
+    }
+
+    function rebuild3DAvatarMesh() {
+      if (!r3.scene) return;
+      if (r3.playerGroup) r3.scene.remove(r3.playerGroup);
+      const built = build3DCharacterGroup(avatarConfig);
+      r3.playerGroup = built.group;
+      r3.leftLeg = built.lLeg; r3.rightLeg = built.rLeg;
+      r3.leftArm = built.lArm; r3.rightArm = built.rArm;
+      r3.playerGroup.position.set(r3.px, r3.py, r3.pz);
+      r3.scene.add(r3.playerGroup);
+    }
+
+    function buildReal3DObbyStage(stageNum) {
+      if (!r3.scene) return;
+      if (r3.stageGroup) r3.scene.remove(r3.stageGroup);
+      r3.stageGroup = new THREE.Group();
+      r3.plats = []; r3.lavas = []; r3.coins = []; r3.trophy = null;
+
+      const addBlock = (x, y, z, w, h, d, col, opts) => {
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, d),
+          new THREE.MeshStandardMaterial({ color: col, roughness: 0.45, metalness: 0.1 })
+        );
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true;
+        mesh.castShadow = true;
+        r3.stageGroup.add(mesh);
+        r3.plats.push(Object.assign({ mesh, x, y, z, w, h, d, baseX: x, baseY: y, baseZ: z }, opts || {}));
+      };
+
+      const addLava = (x, y, z, w, h, d) => {
+        const mesh = new THREE.Mesh(
+          new THREE.BoxGeometry(w, h, d),
+          new THREE.MeshStandardMaterial({ color: '#ef4444', emissive: '#b91c1c', emissiveIntensity: 0.65 })
+        );
+        mesh.position.set(x, y, z);
+        r3.stageGroup.add(mesh);
+        r3.lavas.push({ x, y, z, w, h, d });
+      };
+
+      const addCoin = (x, y, z) => {
+        const mesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.45, 0.45, 0.14, 16),
+          new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.6, roughness: 0.2 })
+        );
+        mesh.rotation.z = Math.PI / 2;
+        mesh.position.set(x, y, z);
+        r3.stageGroup.add(mesh);
+        r3.coins.push({ mesh, x, y, z, taken: false });
+      };
+
+      const colors = ['#22c55e', '#38bdf8', '#facc15', '#a855f7', '#ec4899', '#f97316', '#06b6d4', '#10b981'];
+      // Start platform
+      addBlock(0, 0, 0, 7, 1.2, 7, '#22c55e');
+      r3.spawnX = 0; r3.spawnY = 0.8; r3.spawnZ = 0;
+      r3.px = 0; r3.py = 0.8; r3.pz = 0; r3.vy = 0; r3.yaw = 0; r3.camYaw = 0;
+
+      // Build a fun 10-platform Roblox 3D sky parkour course!
+      let cz = -6.5;
+      let cy = 0.6;
+      const seed = (stageNum - 1) * 1.7;
+      for (let i = 0; i < 9; i++) {
+        const cx = Math.sin(i * 0.9 + seed) * 3.8;
+        const isBounce = (i === 2 || i === 6);
+        const isMoving = (i === 4 || i === 7);
+        const w = isBounce ? 3.8 : 4.2;
+        const d = isBounce ? 3.8 : 4.2;
+        addBlock(cx, cy, cz, w, 1.0, d, isBounce ? '#facc15' : colors[(i + stageNum) % colors.length], {
+          bounce: isBounce,
+          moveX: isMoving ? 2.4 : 0
+        });
+        if (i === 3 || i === 5) {
+          addLava(cx, cy + 0.6, cz, w * 0.85, 0.25, 0.7);
+        }
+        if (i % 2 === 1) addCoin(cx, cy + 1.8, cz);
+        cz -= (isBounce ? 7.2 : 5.8);
+        cy += (isBounce ? 2.4 : 0.7);
+      }
+
+      // Finish platform + Spinning 3D Golden Trophy!
+      addBlock(0, cy, cz - 1.5, 7, 1.2, 7, '#10b981');
+      const trophyGrp = new THREE.Group();
+      const goldMat = new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.7, roughness: 0.2 });
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.42, 1.1, 16), goldMat); cup.position.y = 1.4;
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.5, 12), goldMat); stem.position.y = 0.7;
+      const base = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.3, 1.1), goldMat); base.position.y = 0.35;
+      trophyGrp.add(cup, stem, base);
+      trophyGrp.position.set(0, cy + 0.6, cz - 1.5);
+      r3.stageGroup.add(trophyGrp);
+      r3.trophy = { mesh: trophyGrp, x: 0, y: cy + 1.4, z: cz - 1.5 };
+
+      r3.scene.add(r3.stageGroup);
+    }
+
+    function initReal3DObby() {
+      if (r3.inited || typeof THREE === 'undefined' || !obby3DContainer) return;
+      r3.inited = true;
+
+      r3.scene = new THREE.Scene();
+      r3.scene.background = new THREE.Color('#38bdf8');
+      r3.scene.fog = new THREE.Fog('#7dd3fc', 35, 120);
+
+      r3.camera = new THREE.PerspectiveCamera(62, 16 / 9, 0.1, 220);
+      r3.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      r3.renderer.shadowMap.enabled = true;
+      r3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      obby3DContainer.innerHTML = '';
+      obby3DContainer.appendChild(r3.renderer.domElement);
+      r3.renderer.domElement.style.width = '100%';
+      r3.renderer.domElement.style.height = '100%';
+      r3.renderer.domElement.style.display = 'block';
+
+      // Bright Roblox sunlight + sky hemisphere light
+      const hemi = new THREE.HemisphereLight('#ffffff', '#38bdf8', 0.85);
+      r3.scene.add(hemi);
+      const sun = new THREE.DirectionalLight('#fffbeb', 1.1);
+      sun.position.set(24, 48, 22);
+      sun.castShadow = true;
+      r3.scene.add(sun);
+
+      // Floating 3D white clouds
+      const cloudMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.82 });
+      for (let i = 0; i < 14; i++) {
+        const c = new THREE.Mesh(new THREE.BoxGeometry(6 + Math.random() * 6, 1.4, 3.5 + Math.random() * 3), cloudMat);
+        c.position.set((Math.random() - 0.5) * 90, 14 + Math.random() * 14, -Math.random() * 85 + 10);
+        r3.scene.add(c);
+      }
+
+      // Drag to rotate 3D camera around your Roblox avatar!
+      obby3DContainer.addEventListener('pointerdown', (e) => {
+        r3.dragging = true;
+        r3.lastX = e.clientX;
+        r3.lastY = e.clientY;
+      });
+      window.addEventListener('pointermove', (e) => {
+        if (!r3.dragging) return;
+        const dx = e.clientX - r3.lastX;
+        const dy = e.clientY - r3.lastY;
+        r3.lastX = e.clientX;
+        r3.lastY = e.clientY;
+        r3.camYaw -= dx * 0.007;
+        r3.camPitch = Math.max(0.12, Math.min(1.15, r3.camPitch + dy * 0.005));
+      });
+      window.addEventListener('pointerup', () => { r3.dragging = false; });
+
+      rebuild3DAvatarMesh();
+      buildReal3DObbyStage(obby.stage || 1);
+    }
+
+    function stepAndRenderReal3DObby() {
+      if (!r3.inited || !r3.renderer || !r3.scene || !r3.camera) return;
+      const rect = obby3DContainer.getBoundingClientRect();
+      if (rect.width > 10 && rect.height > 10) {
+        const w = Math.round(rect.width), h = Math.round(rect.height);
+        if (r3.renderer.domElement.width !== w || r3.renderer.domElement.height !== h) {
+          r3.renderer.setSize(w, h, false);
+          r3.camera.aspect = w / h;
+          r3.camera.updateProjectionMatrix();
+        }
+      }
+
+      const t = Date.now() / 1000;
+      // Animate moving platforms
+      r3.plats.forEach(pl => {
+        if (pl.moveX) {
+          pl.x = pl.baseX + Math.sin(t * 1.6 + pl.baseZ) * pl.moveX;
+          pl.mesh.position.x = pl.x;
+        }
+      });
+
+      // 3D character movement relative to camera angle
+      let fwd = (miniKeys.up ? 1 : 0) - (miniKeys.down ? 1 : 0);
+      let strafe = (miniKeys.right ? 1 : 0) - (miniKeys.left ? 1 : 0);
+      const speed = 0.19;
+      let moving = false;
+      if (fwd !== 0 || strafe !== 0) {
+        moving = true;
+        const len = Math.hypot(fwd, strafe);
+        fwd /= len; strafe /= len;
+        const sinY = Math.sin(r3.camYaw);
+        const cosY = Math.cos(r3.camYaw);
+        const vx = (-sinY * fwd + cosY * strafe) * speed;
+        const vz = (-cosY * fwd - sinY * strafe) * speed;
+        r3.px += vx;
+        r3.pz += vz;
+        r3.yaw = Math.atan2(-vx, -vz);
+      }
+
+      if (miniKeys.jump && r3.onGround) {
+        r3.vy = 0.34;
+        r3.onGround = false;
+        if (typeof playSFX === 'function') playSFX('eat');
+      }
+
+      const prevY = r3.py;
+      r3.vy = Math.max(-0.65, r3.vy - 0.017);
+      r3.py += r3.vy;
+      r3.onGround = false;
+
+      // Platform landing check
+      for (const pl of r3.plats) {
+        const topY = pl.y + pl.h / 2;
+        if (Math.abs(r3.px - pl.x) <= pl.w / 2 + 0.35 && Math.abs(r3.pz - pl.z) <= pl.d / 2 + 0.35) {
+          if (r3.vy <= 0 && prevY >= topY - 0.35 && r3.py <= topY) {
+            r3.py = topY;
+            if (pl.bounce) {
+              r3.vy = 0.52;
+              r3.onGround = false;
+              if (typeof playSFX === 'function') playSFX('powerup');
+            } else {
+              r3.vy = 0;
+              r3.onGround = true;
+            }
+          }
+        }
+      }
+
+      // Lava kill-brick or fell off sky check
+      let died = r3.py < -14;
+      for (const lv of r3.lavas) {
+        if (Math.abs(r3.px - lv.x) <= lv.w / 2 + 0.3 && Math.abs(r3.pz - lv.z) <= lv.d / 2 + 0.3 && Math.abs(r3.py - (lv.y + lv.h / 2)) < 0.7) {
+          died = true;
+        }
+      }
+      if (died) {
+        r3.px = r3.spawnX; r3.py = r3.spawnY; r3.pz = r3.spawnZ; r3.vy = 0;
+        if (typeof playSFX === 'function') playSFX('gameover');
+      }
+
+      // Spin & collect 3D gold coins
+      r3.coins.forEach(c => {
+        if (c.taken) return;
+        c.mesh.rotation.y += 0.06;
+        if (Math.hypot(r3.px - c.x, r3.py + 1.1 - c.y, r3.pz - c.z) < 1.35) {
+          c.taken = true;
+          c.mesh.visible = false;
+          obbyCoins += 15;
+          updateMiniGameHUD();
+          if (typeof playSFX === 'function') playSFX('eat');
+        }
+      });
+
+      // Trophy finish check
+      if (r3.trophy) {
+        r3.trophy.mesh.rotation.y += 0.03;
+        if (Math.hypot(r3.px - r3.trophy.x, r3.py + 1 - r3.trophy.y, r3.pz - r3.trophy.z) < 1.8) {
+          obbyCoins += 100;
+          obby.stage = (obby.stage || 1) + 1;
+          if (obby.stage > obbyBestStage) obbyBestStage = obby.stage;
+          if (typeof playSFX === 'function') playSFX('powerup');
+          buildReal3DObbyStage(obby.stage);
+          updateMiniGameHUD();
+        }
+      }
+
+      // Animate Roblox character legs & arms while running!
+      if (r3.playerGroup) {
+        r3.playerGroup.position.set(r3.px, r3.py, r3.pz);
+        r3.playerGroup.rotation.y = r3.yaw;
+        if (moving && r3.onGround) {
+          r3.walkPhase += 0.24;
+          const sw = Math.sin(r3.walkPhase) * 0.65;
+          if (r3.leftLeg) r3.leftLeg.rotation.x = sw;
+          if (r3.rightLeg) r3.rightLeg.rotation.x = -sw;
+          if (r3.leftArm) r3.leftArm.rotation.x = -sw * 0.7;
+          if (r3.rightArm) r3.rightArm.rotation.x = sw * 0.7;
+        } else {
+          if (r3.leftLeg) r3.leftLeg.rotation.x *= 0.8;
+          if (r3.rightLeg) r3.rightLeg.rotation.x *= 0.8;
+          if (r3.leftArm) r3.leftArm.rotation.x *= 0.8;
+          if (r3.rightArm) r3.rightArm.rotation.x *= 0.8;
+        }
+      }
+
+      // Sync & draw real remote online players in 3D space!
+      if (mpConnected) {
+        const activeIds = new Set();
+        Object.values(mpRemotePlayers).forEach(p => {
+          if (p.game !== 'obby') return;
+          activeIds.add(p.id);
+          if (!r3.remoteMeshes[p.id]) {
+            const built = build3DCharacterGroup(p.avatar || avatarConfig);
+            r3.scene.add(built.group);
+            r3.remoteMeshes[p.id] = built.group;
+          }
+          const grp = r3.remoteMeshes[p.id];
+          grp.position.x += ((p.x || 0) - grp.position.x) * 0.35;
+          grp.position.y += ((p.y || 0.8) - grp.position.y) * 0.35;
+          grp.position.z += ((p.z || 0) - grp.position.z) * 0.35;
+        });
+        Object.keys(r3.remoteMeshes).forEach(id => {
+          if (!activeIds.has(id)) {
+            r3.scene.remove(r3.remoteMeshes[id]);
+            delete r3.remoteMeshes[id];
+          }
+        });
+      }
+
+      // 3rd-person Roblox camera smoothly orbits behind your avatar!
+      const camDist = 9.5;
+      const cx = r3.px + Math.sin(r3.camYaw) * Math.cos(r3.camPitch) * camDist;
+      const cy = r3.py + 2.4 + Math.sin(r3.camPitch) * camDist;
+      const cz = r3.pz + Math.cos(r3.camYaw) * Math.cos(r3.camPitch) * camDist;
+      r3.camera.position.set(cx, cy, cz);
+      r3.camera.lookAt(r3.px, r3.py + 1.8, r3.pz);
+      r3.renderer.render(r3.scene, r3.camera);
+    }
+
+    bindHoldBtn('btnHubMoveUp', 'up');
+    bindHoldBtn('btnHubMoveDown', 'down');
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
