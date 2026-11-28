@@ -722,7 +722,7 @@
         <!-- Game Card 5: Turbo Racing (Car Game) -->
         <div class="bg-white rounded-3xl border-2 border-slate-200 hover:border-orange-400 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col">
           <div class="h-40 bg-gradient-to-br from-slate-900 via-orange-950 to-slate-950 flex items-center justify-center relative p-4">
-            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-orange-500/30 border border-orange-300/40 text-orange-200 text-[10px] font-black uppercase tracking-wide">Racing</span>
+            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-orange-500/40 border border-orange-300/60 text-orange-100 text-[10px] font-black uppercase tracking-wide">Real 3D Racing</span>
             <svg viewBox="0 0 120 84" class="w-28 h-20 drop-shadow-lg">
               <!-- Highway Perspective -->
               <polygon points="36,10 84,10 112,80 8,80" fill="#334155"/>
@@ -1340,6 +1340,18 @@
     <div class="relative w-full h-full bg-slate-950 overflow-hidden">
       <canvas id="miniGameCanvas" width="580" height="340" class="w-full h-full block cursor-pointer touch-none"></canvas>
       <div id="obby3DContainer" class="hidden absolute inset-0 w-full h-full touch-none cursor-grab active:cursor-grabbing"></div>
+      <div id="car3DContainer" class="hidden absolute inset-0 w-full h-full touch-none"></div>
+      <!-- Forza-Style 3D Speedometer & Nitro HUD (only shown in 3D Turbo Racing) -->
+      <div id="car3DHudOverlay" class="hidden pointer-events-none absolute bottom-4 right-4 z-20 bg-slate-950/75 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-2.5 text-white shadow-2xl flex flex-col items-end gap-1">
+        <div class="flex items-baseline gap-1.5">
+          <span id="car3DSpeedVal" class="text-2xl sm:text-3xl font-black tracking-tight tabular-nums text-white">120</span>
+          <span class="text-[10px] font-black uppercase tracking-wider text-orange-300">KM/H</span>
+        </div>
+        <div class="w-28 h-2 rounded-full bg-white/15 overflow-hidden">
+          <div id="car3DNitroBar" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 transition-all" style="width:100%"></div>
+        </div>
+        <div id="car3DLivesRow" class="flex items-center gap-1 mt-0.5"></div>
+      </div>
 
       <!-- Floating Translucent Single-Row Top Bar (never wraps or shrinks the game on mobile!) -->
       <div class="pointer-events-none absolute top-2 inset-x-2 sm:top-3 sm:inset-x-4 z-20 flex items-center justify-between gap-2">
@@ -14206,6 +14218,12 @@
       }
       if (miniGameMode === 'obby') stepAndDrawObby(W, H);
       else if (miniGameMode === 'tycoon') stepAndDrawTycoon(W, H);
+      else if (miniGameMode === 'car' && typeof isReal3DCarActive === 'function' && isReal3DCarActive()) {
+        miniCtx.restore();
+        stepAndRenderReal3DCar();
+        miniGameRafId = requestAnimationFrame(miniGameLoop);
+        return;
+      }
       else if (miniGameMode === 'car') stepAndDrawCar(W, H);
       else stepAndDrawSurvival(W, H);
       miniCtx.restore();
@@ -14872,6 +14890,7 @@
           carSavedRun = null;
           try { localStorage.removeItem('snakeHubCarSaved_v1'); } catch (e) {}
           resetCarGame();
+          if (typeof resetReal3DCar === 'function') resetReal3DCar();
         } else {
           tycoonCubes = [];
           updateMiniGameHUD();
@@ -15731,26 +15750,48 @@
       return !!(is3DMode && miniGameMode === 'obby' && typeof THREE !== 'undefined' && obby3DContainer && miniGameModal && !miniGameModal.classList.contains('hidden'));
     }
 
+    function isReal3DCarActive() {
+      return !!(is3DMode && miniGameMode === 'car' && typeof THREE !== 'undefined' && document.getElementById('car3DContainer') && miniGameModal && !miniGameModal.classList.contains('hidden'));
+    }
+
     function syncObby3DVisibility() {
-      const use3D = isReal3DObbyActive();
+      const useObby3D = isReal3DObbyActive();
+      const useCar3D = isReal3DCarActive();
+      const any3D = useObby3D || useCar3D;
       const joyEl = document.getElementById('robloxJoystickBase');
       const arrowsEl = document.getElementById('hub2DArrowsGroup');
+      const carDiv = document.getElementById('car3DContainer');
+      const carHud = document.getElementById('car3DHudOverlay');
+
       if (obby3DContainer) {
-        if (use3D) obby3DContainer.classList.remove('hidden');
+        if (useObby3D) obby3DContainer.classList.remove('hidden');
         else obby3DContainer.classList.add('hidden');
       }
+      if (carDiv) {
+        if (useCar3D) carDiv.classList.remove('hidden');
+        else carDiv.classList.add('hidden');
+      }
+      if (carHud) {
+        if (useCar3D) carHud.classList.remove('hidden');
+        else carHud.classList.add('hidden');
+      }
       if (miniGameCanvas) {
-        if (use3D) miniGameCanvas.classList.add('hidden');
+        if (any3D) miniGameCanvas.classList.add('hidden');
         else miniGameCanvas.classList.remove('hidden');
       }
-      // 2D shows ← → arrow buttons; 3D shows NO on-screen movement buttons (keyboard / drag only!)
+      // 2D shows ← → arrow buttons; 3D shows NO on-screen movement buttons
       if (joyEl) joyEl.classList.add('hidden');
-      if (arrowsEl) { if (use3D) arrowsEl.classList.add('hidden'); else arrowsEl.classList.remove('hidden'); }
-      if (use3D) {
+      if (arrowsEl) { if (any3D) arrowsEl.classList.add('hidden'); else arrowsEl.classList.remove('hidden'); }
+
+      if (useObby3D) {
         initReal3DObby();
         rebuild3DAvatarMesh();
         const hEl = document.getElementById('miniGameHint');
         if (hEl) hEl.textContent = '3D Roblox Controls: WASD / Arrows to walk, Space to Jump, drag screen to rotate 3D camera!';
+      } else if (useCar3D) {
+        initReal3DCar();
+        const hEl = document.getElementById('miniGameHint');
+        if (hEl) hEl.textContent = '3D Turbo Racing: Steer with A/D or Arrows, hold W / Up / Space for Nitro Boost!';
       }
     }
 
@@ -16369,6 +16410,372 @@
       joyBase.addEventListener('pointercancel', (e) => {
         if (e.pointerId === joyPointerId) resetJoy();
       });
+    }
+
+    // =========================================================================
+    // REAL WEBGL 3D FORZA HORIZON-STYLE SUPERCAR ENGINE (THREE.JS CHASE CAM!)
+    // =========================================================================
+    const car3DContainer = document.getElementById('car3DContainer');
+    let c3 = {
+      inited: false, scene: null, camera: null, renderer: null,
+      playerCar: null, flames: [], wheels: [],
+      roadDashes: [], scenery: [], traffic: [], pickups: [],
+      px: 0, vx: 0, speed: 0.72, dist: 0, nitro: 100, lives: 3, invuln: 0, frame: 0,
+      laneXs: [-4.5, -1.5, 1.5, 4.5]
+    };
+
+    function build3DSupercarMesh(bodyCol, isPlayer) {
+      const grp = new THREE.Group();
+      const paint = new THREE.MeshStandardMaterial({ color: bodyCol, metalness: 0.65, roughness: 0.22 });
+      const dark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.5 });
+      const glass = new THREE.MeshStandardMaterial({ color: '#38bdf8', metalness: 0.85, roughness: 0.1, transparent: true, opacity: 0.78 });
+      const wheelMat = new THREE.MeshStandardMaterial({ color: '#111827', roughness: 0.75 });
+      const rimMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.8, roughness: 0.2 });
+
+      // Sculpted lower supercar chassis
+      const lower = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.52, 4.3), paint);
+      lower.position.y = 0.48; lower.castShadow = true; grp.add(lower);
+
+      // Sloped aerodynamic hood & cockpit cabin
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.52, 2.0), glass);
+      cabin.position.set(0, 0.94, 0.2); cabin.castShadow = true; grp.add(cabin);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.08, 1.4), paint);
+      roof.position.set(0, 1.22, 0.25); grp.add(roof);
+
+      // Racing stripe
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 4.32), new THREE.MeshStandardMaterial({ color: '#fef08a' }));
+      stripe.position.set(0, 0.75, 0); grp.add(stripe);
+
+      // Wide GT Rear Wing Spoiler (for player supercar)
+      if (isPlayer) {
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(2.15, 0.09, 0.45), dark);
+        wing.position.set(0, 1.12, 1.92); grp.add(wing);
+        const sL = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.36, 0.2), dark); sL.position.set(-0.7, 0.9, 1.9); grp.add(sL);
+        const sR = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.36, 0.2), dark); sR.position.set(0.7, 0.9, 1.9); grp.add(sR);
+      }
+
+      // LED Headlights & Tail Light Bar
+      const headMat = new THREE.MeshBasicMaterial({ color: '#fef9c3' });
+      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.08), headMat); hlL.position.set(-0.68, 0.54, -2.16); grp.add(hlL);
+      const hlR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.08), headMat); hlR.position.set(0.68, 0.54, -2.16); grp.add(hlR);
+      const tailBar = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.14, 0.08), new THREE.MeshBasicMaterial({ color: '#ef4444' }));
+      tailBar.position.set(0, 0.58, 2.16); grp.add(tailBar);
+
+      // 4 3D Wheels with silver rims
+      const wheels = [];
+      const wPos = [[-1.04, 0.36, -1.35], [1.04, 0.36, -1.35], [-1.04, 0.36, 1.35], [1.04, 0.36, 1.35]];
+      wPos.forEach(([wx, wy, wz]) => {
+        const wGrp = new THREE.Group();
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.3, 14), wheelMat);
+        tire.rotation.z = Math.PI / 2;
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.32, 10), rimMat);
+        rim.rotation.z = Math.PI / 2;
+        wGrp.add(tire, rim);
+        wGrp.position.set(wx, wy, wz);
+        grp.add(wGrp);
+        wheels.push(wGrp);
+      });
+
+      // Twin 3D Blue Nitro Exhaust Flames
+      const flames = [];
+      if (isPlayer) {
+        const fMat = new THREE.MeshBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0.9 });
+        [-0.48, 0.48].forEach(fx => {
+          const fl = new THREE.Mesh(new THREE.ConeGeometry(0.18, 1.1, 10), fMat);
+          fl.rotation.x = Math.PI / 2;
+          fl.position.set(fx, 0.38, 2.75);
+          fl.visible = false;
+          grp.add(fl);
+          flames.push(fl);
+        });
+      }
+      return { grp, wheels, flames };
+    }
+
+    function resetReal3DCar() {
+      c3.px = 0; c3.vx = 0; c3.speed = 0.72; c3.dist = 0; c3.nitro = 100; c3.lives = 3; c3.invuln = 0; c3.frame = 0;
+      if (c3.scene) {
+        c3.traffic.forEach(t => c3.scene.remove(t.mesh));
+        c3.pickups.forEach(p => c3.scene.remove(p.mesh));
+      }
+      c3.traffic = [];
+      c3.pickups = [];
+    }
+
+    function initReal3DCar() {
+      if (c3.inited || typeof THREE === 'undefined' || !car3DContainer) return;
+      c3.inited = true;
+
+      c3.scene = new THREE.Scene();
+      // Golden-hour Forza Horizon sky & horizon fog
+      c3.scene.background = new THREE.Color('#0c4a6e');
+      c3.scene.fog = new THREE.Fog('#ea580c', 55, 190);
+
+      c3.camera = new THREE.PerspectiveCamera(64, 16 / 9, 0.1, 260);
+      c3.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      c3.renderer.shadowMap.enabled = true;
+      c3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      car3DContainer.innerHTML = '';
+      car3DContainer.appendChild(c3.renderer.domElement);
+      c3.renderer.domElement.style.width = '100%';
+      c3.renderer.domElement.style.height = '100%';
+      c3.renderer.domElement.style.display = 'block';
+
+      // Sunset directional sunlight + sky light
+      c3.scene.add(new THREE.HemisphereLight('#fed7aa', '#0f172a', 0.9));
+      const sunLight = new THREE.DirectionalLight('#fde68a', 1.35);
+      sunLight.position.set(16, 32, -40);
+      sunLight.castShadow = true;
+      c3.scene.add(sunLight);
+
+      // Glowing Horizon Sun Disk
+      const sunDisk = new THREE.Mesh(new THREE.CircleGeometry(18, 24), new THREE.MeshBasicMaterial({ color: '#fde047', fog: false }));
+      sunDisk.position.set(0, 26, -185);
+      c3.scene.add(sunDisk);
+
+      // Wide scenic desert/coastal ground + 4-lane Asphalt Highway
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(360, 420), new THREE.MeshStandardMaterial({ color: '#14532d', roughness: 0.95 }));
+      ground.rotation.x = -Math.PI / 2; ground.position.set(0, -0.05, -140);
+      c3.scene.add(ground);
+
+      const road = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 420), new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.8 }));
+      road.rotation.x = -Math.PI / 2; road.position.set(0, 0, -140); road.receiveShadow = true;
+      c3.scene.add(road);
+
+      // Metallic highway guardrails
+      const railMat = new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.6, roughness: 0.3 });
+      [-6.8, 6.8].forEach(rx => {
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.75, 420), railMat);
+        rail.position.set(rx, 0.4, -140);
+        c3.scene.add(rail);
+      });
+
+      // Scrolling dashed lane lines
+      const dashMat = new THREE.MeshBasicMaterial({ color: '#facc15' });
+      const dashGeo = new THREE.BoxGeometry(0.18, 0.03, 3.6);
+      for (let z = 10; z > -180; z -= 10) {
+        [-3, 0, 3].forEach(lx => {
+          const d = new THREE.Mesh(dashGeo, dashMat);
+          d.position.set(lx, 0.02, z);
+          c3.scene.add(d);
+          c3.roadDashes.push(d);
+        });
+      }
+
+      // Roadside palm/pine trees + glowing highway street lamps + distant mountains
+      const trunkMat = new THREE.MeshStandardMaterial({ color: '#78350f' });
+      const leafMat = new THREE.MeshStandardMaterial({ color: '#16a34a' });
+      const lampMat = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.7 });
+      const bulbMat = new THREE.MeshBasicMaterial({ color: '#fef08a' });
+      for (let z = 12; z > -190; z -= 14) {
+        [-9.5, 9.5].forEach(sx => {
+          const tree = new THREE.Group();
+          const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 3.4, 8), trunkMat); tr.position.y = 1.7;
+          const top = new THREE.Mesh(new THREE.ConeGeometry(1.7, 3.8, 8), leafMat); top.position.y = 4.5;
+          tree.add(tr, top);
+          tree.position.set(sx + (sx < 0 ? -Math.random() * 4 : Math.random() * 4), 0, z);
+          c3.scene.add(tree);
+          c3.scenery.push(tree);
+
+          if (Math.abs(z) % 28 === 0) {
+            const lamp = new THREE.Group();
+            const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 5.5, 8), lampMat); pole.position.y = 2.75;
+            const arm = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.12), lampMat); arm.position.set(sx < 0 ? 0.6 : -0.6, 5.4, 0);
+            const bulb = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.12, 0.25), bulbMat); bulb.position.set(sx < 0 ? 1.1 : -1.1, 5.3, 0);
+            lamp.add(pole, arm, bulb);
+            lamp.position.set(sx < 0 ? -7.4 : 7.4, 0, z);
+            c3.scene.add(lamp);
+            c3.scenery.push(lamp);
+          }
+        });
+      }
+      // Distant scenic mountains along horizon
+      const mtnMat = new THREE.MeshStandardMaterial({ color: '#334155', roughness: 0.95 });
+      for (let i = 0; i < 10; i++) {
+        const m = new THREE.Mesh(new THREE.ConeGeometry(16 + Math.random() * 14, 22 + Math.random() * 18, 5), mtnMat);
+        m.position.set((i < 5 ? -1 : 1) * (28 + Math.random() * 45), 8, -90 - Math.random() * 90);
+        c3.scene.add(m);
+      }
+
+      // Build your glossy Red Forza Supercar!
+      const built = build3DSupercarMesh('#ef4444', true);
+      c3.playerCar = built.grp;
+      c3.wheels = built.wheels;
+      c3.flames = built.flames;
+      c3.scene.add(c3.playerCar);
+
+      // Drag left/right on mobile touch to steer the 3D supercar smoothly!
+      let steerPtr = null, lastSX = 0;
+      car3DContainer.addEventListener('pointerdown', (e) => {
+        steerPtr = e.pointerId; lastSX = e.clientX;
+      });
+      window.addEventListener('pointermove', (e) => {
+        if (steerPtr !== e.pointerId || !isReal3DCarActive()) return;
+        const dx = e.clientX - lastSX; lastSX = e.clientX;
+        c3.px = Math.max(-5.2, Math.min(5.2, c3.px + dx * 0.032));
+      });
+      const endSteer = (e) => { if (e.pointerId === steerPtr) steerPtr = null; };
+      window.addEventListener('pointerup', endSteer);
+      window.addEventListener('pointercancel', endSteer);
+    }
+
+    function stepAndRenderReal3DCar() {
+      if (!c3.inited || !c3.renderer || !c3.scene || !c3.camera) return;
+      const rect = car3DContainer.getBoundingClientRect();
+      if (rect.width > 10 && rect.height > 10) {
+        const w = Math.round(rect.width), h = Math.round(rect.height);
+        if (c3.renderer.domElement.width !== w || c3.renderer.domElement.height !== h) {
+          c3.renderer.setSize(w, h, false);
+          c3.camera.aspect = w / h;
+          c3.camera.updateProjectionMatrix();
+        }
+      }
+
+      c3.frame++;
+      if (c3.invuln > 0) c3.invuln--;
+
+      // Nitro Boost when holding Space / Up / W / Jump!
+      const boosting = (miniKeys.jump || miniKeys.up) && c3.nitro > 2;
+      const baseSpeed = 0.78 + Math.min(0.95, c3.dist * 0.00055);
+      const targetSpeed = boosting ? baseSpeed * 1.65 : baseSpeed;
+      c3.speed += (targetSpeed - c3.speed) * 0.12;
+      if (boosting) c3.nitro = Math.max(0, c3.nitro - 0.65);
+      else c3.nitro = Math.min(100, c3.nitro + 0.16);
+
+      c3.dist += c3.speed * 0.55;
+      carGame.dist = c3.dist;
+      if (Math.floor(c3.dist) > carBestDist) carBestDist = Math.floor(c3.dist);
+
+      // Smooth steering with realistic Forza chassis body roll!
+      const steerInput = (miniKeys.right ? 1 : 0) - (miniKeys.left ? 1 : 0) + (Math.abs(miniKeys.joyX || 0) > 0.1 ? miniKeys.joyX : 0);
+      c3.vx += (steerInput * 0.24 - c3.vx) * 0.22;
+      c3.px = Math.max(-5.2, Math.min(5.2, c3.px + c3.vx));
+
+      if (c3.playerCar) {
+        c3.playerCar.position.set(c3.px, 0, 0);
+        c3.playerCar.rotation.y = -c3.vx * 0.55;
+        c3.playerCar.rotation.z = -c3.vx * 0.22;
+        c3.playerCar.visible = (c3.invuln % 8 < 5);
+      }
+      c3.wheels.forEach(w => { w.rotation.x -= c3.speed * 0.7; });
+      c3.flames.forEach(fl => {
+        fl.visible = boosting;
+        if (boosting) fl.scale.y = 0.8 + Math.random() * 0.7;
+      });
+
+      // Scroll lane lines & roadside scenery toward camera
+      c3.roadDashes.forEach(d => {
+        d.position.z += c3.speed * 1.5;
+        if (d.position.z > 14) d.position.z -= 190;
+      });
+      c3.scenery.forEach(s => {
+        s.position.z += c3.speed * 1.5;
+        if (s.position.z > 16) s.position.z -= 202;
+      });
+
+      // Spawn 3D Traffic Cars
+      const spawnEvery = Math.max(20, 48 - Math.floor(c3.dist / 80));
+      if (c3.frame % spawnEvery === 1) {
+        const lx = c3.laneXs[Math.floor(Math.random() * c3.laneXs.length)];
+        const tooClose = c3.traffic.some(t => Math.abs(t.x - lx) < 1.8 && t.z < -110);
+        if (!tooClose) {
+          const cols = ['#3b82f6', '#eab308', '#a855f7', '#f8fafc', '#10b981', '#f97316'];
+          const col = cols[Math.floor(Math.random() * cols.length)];
+          const built = build3DSupercarMesh(col, false);
+          built.grp.position.set(lx, 0, -155);
+          c3.scene.add(built.grp);
+          c3.traffic.push({ mesh: built.grp, x: lx, z: -155, vy: 0.28 + Math.random() * 0.22 });
+        }
+      }
+
+      // Spawn spinning 3D Gold Coins & Cyan Nitro Orbs
+      if (c3.frame % 62 === 20) {
+        const lx = c3.laneXs[Math.floor(Math.random() * c3.laneXs.length)];
+        const isNitro = Math.random() < 0.3;
+        const mesh = isNitro
+          ? new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0284c7', emissiveIntensity: 0.7 }))
+          : new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.16, 16), new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.7, roughness: 0.2 }));
+        if (!isNitro) mesh.rotation.z = Math.PI / 2;
+        mesh.position.set(lx, 0.9, -150);
+        c3.scene.add(mesh);
+        c3.pickups.push({ mesh, x: lx, z: -150, type: isNitro ? 'nitro' : 'coin' });
+      }
+
+      // Move traffic & check collision
+      for (let i = c3.traffic.length - 1; i >= 0; i--) {
+        const t = c3.traffic[i];
+        t.z += (c3.speed * 1.5) - t.vy;
+        t.mesh.position.z = t.z;
+        if (c3.invuln <= 0 && Math.abs(t.x - c3.px) < 1.85 && Math.abs(t.z) < 3.6) {
+          c3.scene.remove(t.mesh);
+          c3.traffic.splice(i, 1);
+          c3.lives--;
+          c3.invuln = 75;
+          c3.speed *= 0.55;
+          if (typeof playSFX === 'function') playSFX('gameover');
+          if (c3.lives <= 0) {
+            resetReal3DCar();
+            break;
+          }
+          continue;
+        }
+        if (t.z > 18) {
+          c3.scene.remove(t.mesh);
+          c3.traffic.splice(i, 1);
+        }
+      }
+
+      // Move & collect pickups
+      for (let i = c3.pickups.length - 1; i >= 0; i--) {
+        const pk = c3.pickups[i];
+        pk.z += c3.speed * 1.5;
+        pk.mesh.position.z = pk.z;
+        pk.mesh.rotation.y += 0.08;
+        if (Math.abs(pk.x - c3.px) < 1.7 && Math.abs(pk.z) < 2.6) {
+          c3.scene.remove(pk.mesh);
+          c3.pickups.splice(i, 1);
+          if (pk.type === 'nitro') {
+            c3.nitro = Math.min(100, c3.nitro + 40);
+            if (typeof playSFX === 'function') playSFX('powerup');
+          } else {
+            carCoins += 15;
+            if (typeof playSFX === 'function') playSFX('eat');
+          }
+          updateMiniGameHUD();
+          continue;
+        }
+        if (pk.z > 14) {
+          c3.scene.remove(pk.mesh);
+          c3.pickups.splice(i, 1);
+        }
+      }
+
+      // Dynamic Forza Horizon Chase Camera (FOV widens & camera pulls back during Nitro!)
+      const targetFov = boosting ? 76 : 64;
+      c3.camera.fov += (targetFov - c3.camera.fov) * 0.1;
+      c3.camera.updateProjectionMatrix();
+      c3.camera.position.set(c3.px * 0.62, 3.15, boosting ? 7.9 : 7.0);
+      c3.camera.lookAt(c3.px * 0.72, 1.0, -14);
+
+      // Update live Forza Speedometer & Nitro HUD
+      if (c3.frame % 4 === 0) {
+        const spEl = document.getElementById('car3DSpeedVal');
+        const nbEl = document.getElementById('car3DNitroBar');
+        const lvEl = document.getElementById('car3DLivesRow');
+        if (spEl) spEl.textContent = String(Math.round(c3.speed * 185));
+        if (nbEl) nbEl.style.width = `${Math.round(c3.nitro)}%`;
+        if (lvEl) {
+          lvEl.innerHTML = '';
+          for (let k = 0; k < 3; k++) {
+            const dot = document.createElement('span');
+            dot.className = `w-2.5 h-2.5 rounded-full ${k < c3.lives ? 'bg-rose-500' : 'bg-white/20'}`;
+            lvEl.appendChild(dot);
+          }
+        }
+        if (c3.frame % 12 === 0) updateMiniGameHUD();
+      }
+
+      c3.renderer.render(c3.scene, c3.camera);
     }
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
