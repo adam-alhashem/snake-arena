@@ -14,9 +14,22 @@
       height: 100dvh;
       overflow: hidden;
       overscroll-behavior: none;
-      touch-action: none;
+      touch-action: manipulation;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+    }
+    input, textarea, select {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      touch-action: manipulation;
+    }
+    .overflow-y-auto {
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
     }
     canvas {
       image-rendering: auto;
@@ -1284,7 +1297,7 @@
   <!-- ========================================================================= -->
   <!-- FULL-PAGE GAME SCREEN (MEGA OBBY, MONEY TYCOON, DISASTER SURVIVAL)        -->
   <!-- ========================================================================= -->
-  <div id="miniGameModal" class="fixed inset-0 z-[72] bg-slate-950 flex flex-col w-screen h-screen overflow-hidden hidden">
+  <div id="miniGameModal" class="fixed inset-0 z-[72] bg-slate-950 flex flex-col w-full h-[100dvh] overflow-hidden hidden">
     <!-- Compact Full-Width Top HUD Bar -->
     <div class="w-full px-3 sm:px-5 py-2.5 bg-slate-900 border-b border-slate-800 text-white flex flex-wrap items-center justify-between gap-2 shrink-0 z-10">
       <div class="flex items-center gap-2">
@@ -1310,13 +1323,13 @@
       <canvas id="miniGameCanvas" width="580" height="340" class="w-full h-full block cursor-pointer touch-none"></canvas>
 
       <!-- Floating Bottom Bar: Touch Controls + Tycoon Upgrade Pads + Controls Hint -->
-      <div class="pointer-events-none absolute bottom-3 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
-        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <button id="btnHubMoveLeft" type="button" class="w-12 h-12 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-95 text-white border border-white/20 text-lg font-black shadow-lg select-none cursor-pointer">←</button>
-            <button id="btnHubMoveRight" type="button" class="w-12 h-12 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-95 text-white border border-white/20 text-lg font-black shadow-lg select-none cursor-pointer">→</button>
+      <div class="pointer-events-none absolute bottom-5 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
+        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-center justify-between gap-3 px-1">
+          <div class="flex items-center gap-3">
+            <button id="btnHubMoveLeft" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">←</button>
+            <button id="btnHubMoveRight" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">→</button>
           </div>
-          <button id="btnHubJump" type="button" class="px-6 h-12 rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 text-sm font-black shadow-lg select-none cursor-pointer">JUMP</button>
+          <button id="btnHubJump" type="button" class="px-7 h-14 rounded-2xl bg-emerald-600/95 hover:bg-emerald-500 active:scale-95 text-white border-2 border-emerald-300/50 text-base font-black shadow-xl select-none touch-none cursor-pointer">JUMP</button>
         </div>
         <div id="tycoonControlsBar" class="pointer-events-auto hidden w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/85 backdrop-blur-sm p-2 rounded-2xl border border-slate-700 shadow-xl">
           <button id="btnTycoonCollect" type="button" class="px-2.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Collect ($0)</button>
@@ -15055,8 +15068,11 @@
     const bindHoldBtn = (id, keyName, onTap) => {
       const b = document.getElementById(id);
       if (!b) return;
-      const down = (e) => { e.preventDefault(); miniKeys[keyName] = true; if (onTap) onTap(); };
-      const up = (e) => { e.preventDefault(); miniKeys[keyName] = false; };
+      const down = (e) => { e.preventDefault(); e.stopPropagation(); miniKeys[keyName] = true; if (onTap) onTap(); };
+      const up = (e) => { e.preventDefault(); e.stopPropagation(); miniKeys[keyName] = false; };
+      b.addEventListener('touchstart', down, { passive: false });
+      b.addEventListener('touchend', up, { passive: false });
+      b.addEventListener('touchcancel', up, { passive: false });
       b.addEventListener('pointerdown', down);
       b.addEventListener('pointerup', up);
       b.addEventListener('pointercancel', up);
