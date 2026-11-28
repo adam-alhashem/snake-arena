@@ -14553,43 +14553,44 @@
         pc = new RTCPeerConnection({
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
           ]
         });
         mpPeerConns[peerId] = pc;
-        try {
-          if (typeof pc.addTransceiver === 'function' && !(micActive && micStream)) {
-            pc.addTransceiver('audio', { direction: 'recvonly' });
-          }
-        } catch (e) {}
 
         pc.onicecandidate = (ev) => {
           if (ev.candidate) mpSendSignal(peerId, 'ice', ev.candidate);
         };
+        pc.onconnectionstatechange = () => {
+          if (pc.connectionState === 'connected') {
+            showVoiceToast('Live Voice Connected! Turn Mic ON to talk.', 2600);
+          }
+        };
         pc.ontrack = (ev) => {
-          const stream = ev.streams && ev.streams[0];
-          if (!stream) return;
+          const stream = (ev.streams && ev.streams[0]) ? ev.streams[0] : new MediaStream([ev.track]);
           let audioEl = mpRemoteAudios[peerId];
           if (!audioEl) {
             audioEl = document.createElement('audio');
             audioEl.autoplay = true;
             audioEl.playsInline = true;
+            audioEl.volume = 1.0;
             if (remoteVoiceAudioContainer) remoteVoiceAudioContainer.appendChild(audioEl);
             mpRemoteAudios[peerId] = audioEl;
           }
           audioEl.srcObject = stream;
           audioEl.play().catch(() => {});
         };
+        // Pre-add a bidirectional audio transceiver so both sides can talk & hear immediately
+        try {
+          if (micActive && micStream && micStream.getAudioTracks().length > 0) {
+            pc.addTrack(micStream.getAudioTracks()[0], micStream);
+          } else if (typeof pc.addTransceiver === 'function') {
+            pc.addTransceiver('audio', { direction: 'sendrecv' });
+          }
+        } catch (e) {}
       }
-      // Attach local mic track if Mic is currently ON
-      if (micActive && micStream) {
-        const senders = pc.getSenders();
-        micStream.getAudioTracks().forEach(track => {
-          const existing = senders.find(s => s.track && s.track.kind === 'audio');
-          if (existing) existing.replaceTrack(track).catch(() => {});
-          else pc.addTrack(track, micStream);
-        });
-      }
+
       if (shouldOffer) {
         pc.createOffer({ offerToReceiveAudio: true })
           .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
@@ -14600,24 +14601,31 @@
 
     function mpSyncMicToAllPeers() {
       if (!mpConnected) return;
+      const newTrack = (micActive && micStream && micStream.getAudioTracks().length > 0) ? micStream.getAudioTracks()[0] : null;
       Object.keys(mpRemotePlayers).forEach(peerId => {
         const pc = mpEnsurePeerConnection(peerId, false);
         if (!pc) return;
-        if (micActive && micStream) {
-          const senders = pc.getSenders();
-          micStream.getAudioTracks().forEach(track => {
-            const existing = senders.find(s => s.track && s.track.kind === 'audio');
-            if (existing) existing.replaceTrack(track).catch(() => {});
-            else pc.addTrack(track, micStream);
-          });
+        const audioTransceiver = pc.getTransceivers ? pc.getTransceivers().find(t => (t.sender && t.sender.track && t.sender.track.kind === 'audio') || (t.receiver && t.receiver.track && t.receiver.track.kind === 'audio')) : null;
+        if (audioTransceiver && audioTransceiver.sender) {
+          audioTransceiver.direction = 'sendrecv';
+          audioTransceiver.sender.replaceTrack(newTrack).catch(() => {});
+          if (mpMyId > peerId && pc.signalingState === 'stable') {
+            pc.createOffer({ offerToReceiveAudio: true })
+              .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
+              .catch(() => {});
+          }
+        } else if (newTrack) {
+          pc.addTrack(newTrack, micStream);
+          if (pc.signalingState === 'stable') {
+            pc.createOffer({ offerToReceiveAudio: true })
+              .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
+              .catch(() => {});
+          }
         }
-        pc.createOffer({ offerToReceiveAudio: true })
-          .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
-          .catch(() => {});
       });
     }
 
-    // Hook into Mic ON so turning on your mic immediately streams voice to everyone in the room!
+    // Hook into Mic ON/OFF so turning mic on/off immediately updates live voice to all peers
     const _origToggleMic = toggleMicrophone;
     toggleMicrophone = async function() {
       await _origToggleMic();
@@ -14742,6 +14750,9 @@
           const pc = mpEnsurePeerConnection(msg.from, false);
           if (!pc) return;
           if (msg.type === 'offer') {
+            if (pc.signalingState !== 'stable') {
+              try { await pc.setLocalDescription({ type: 'rollback' }); } catch (e) {}
+            }
             await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
