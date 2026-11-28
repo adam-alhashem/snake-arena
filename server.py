@@ -10,6 +10,7 @@ Then open http://localhost:8080 in two browser tabs (or on two devices on the
 same Wi-Fi using your Mac's local IP) and join the same Room Code!
 """
 
+import gzip
 import json
 import os
 import queue
@@ -22,6 +23,23 @@ from urllib.parse import parse_qs, urlparse
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_FILE = os.path.join(BASE_DIR, "index.html")
 PORT = int(os.environ.get("PORT", "8080"))
+
+_index_cache = {"mtime": 0, "raw": b"", "gz": b""}
+_index_lock = threading.Lock()
+
+
+def get_index_payload(accept_gzip):
+    st = os.stat(INDEX_FILE)
+    with _index_lock:
+        if st.st_mtime != _index_cache["mtime"] or not _index_cache["raw"]:
+            with open(INDEX_FILE, "rb") as f:
+                raw = f.read()
+            _index_cache["raw"] = raw
+            _index_cache["gz"] = gzip.compress(raw, compresslevel=6)
+            _index_cache["mtime"] = st.st_mtime
+        if accept_gzip:
+            return _index_cache["gz"], True
+        return _index_cache["raw"], False
 
 # rooms[room_code][player_id] = { "id", "name", "avatar", "game", "x", "y", "speaking", "last_seen", "queue" }
 rooms = {}
@@ -143,10 +161,13 @@ class GameServerHandler(BaseHTTPRequestHandler):
 
         if path in ("/", "/index.html", "/snake.html"):
             try:
-                with open(INDEX_FILE, "rb") as f:
-                    data = f.read()
+                accept_enc = self.headers.get("Accept-Encoding", "")
+                data, is_gz = get_index_payload("gzip" in accept_enc.lower())
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
+                if is_gz:
+                    self.send_header("Content-Encoding", "gzip")
+                    self.send_header("Vary", "Accept-Encoding")
                 self.send_header("Content-Length", str(len(data)))
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()

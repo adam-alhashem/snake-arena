@@ -10263,9 +10263,32 @@
       });
 
       const dir = RTL_LANGS.includes(currentLang) ? 'rtl' : 'ltr';
-      [profileSetupPage, welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
+      [profileSetupPage, platformHomePage, welcomeBlankPage, startChoicePage, deathModal, rewardsModal].forEach(el => {
         if (el) el.setAttribute('dir', dir);
       });
+      const LANG_MAP_UI = {
+        en: ['Choose Your Language', 'Tap a region on the world map to pick your language', 'Continue →'],
+        ar: ['اختر لغتك', 'اضغط على منطقتك على خريطة العالم لاختيار اللغة', 'متابعة ←'],
+        es: ['Elige tu idioma', 'Toca una región en el mapa para elegir tu idioma', 'Continuar →'],
+        fr: ['Choisissez votre langue', 'Touchez une région sur la carte pour choisir votre langue', 'Continuer →'],
+        de: ['Sprache wählen', 'Tippe auf eine Region auf der Weltkarte', 'Weiter →'],
+        it: ['Scegli la tua lingua', 'Tocca una regione sulla mappa per scegliere la lingua', 'Continua →'],
+        pt: ['Escolha seu idioma', 'Toque em uma região no mapa para escolher seu idioma', 'Continuar →'],
+        tr: ['Dilini Seç', 'Dilini seçmek için dünya haritasında bir bölgeye dokun', 'Devam Et →'],
+        ru: ['Выберите язык', 'Нажмите на регион на карте мира', 'Продолжить →'],
+        zh: ['选择语言', '点击世界地图上的区域选择语言', '继续 →'],
+        ja: ['言語を選択', '世界地図の地域をタップして言語を選んでください', '次へ →'],
+        ko: ['언어 선택', '세계 지도에서 지역을 탭하여 언어를 선택하세요', '계속 →'],
+        hi: ['अपनी भाषा चुनें', 'भाषा चुनने के लिए मानचित्र पर किसी क्षेत्र को टैप करें', 'जारी रखें →'],
+        ur: ['اپنی زبان منتخب کریں', 'زبان منتخب کرنے کے لیے دنیا کے نقشے پر ٹیپ کریں', 'جاری رکھیں ←']
+      };
+      const ui = LANG_MAP_UI[currentLang] || LANG_MAP_UI.en;
+      const lmT = document.getElementById('langMapTitle');
+      const lmS = document.getElementById('langMapSub');
+      const lmC = document.getElementById('btnLangMapContinue');
+      if (lmT) lmT.textContent = ui[0];
+      if (lmS) lmS.textContent = ui[1];
+      if (lmC) lmC.textContent = ui[2];
 
       if (langSelect && langSelect.value !== currentLang) {
         langSelect.value = currentLang;
