@@ -222,8 +222,39 @@ class GameServerHandler(BaseHTTPRequestHandler):
             room_code = (qs.get("room", ["ROOM1"])[0] or "ROOM1").strip().upper()[:16]
             pid = (qs.get("id", [""])[0] or "").strip()[:32]
             name = (qs.get("name", ["Player"])[0] or "Player").strip()[:24]
+            friends_raw = (qs.get("friends", [""])[0] or "")
+            my_friends = set(
+                x.strip().lower() for x in friends_raw.split(",") if x.strip()
+            )
             if not pid:
                 self._send_json(400, {"error": "missing id"})
+                return
+
+            # Friends-only room check: you cannot join a room with a player you haven't added as a friend!
+            blocked_by = None
+            with rooms_lock:
+                existing_room = rooms.get(room_code, {})
+                for other_id, other_info in existing_room.items():
+                    if other_id == pid:
+                        continue
+                    other_name = (other_info.get("name") or "").strip()
+                    if other_name and other_name.lower() != name.lower() and other_name.lower() not in my_friends:
+                        blocked_by = other_name
+                        break
+
+            if blocked_by:
+                self.send_response(200)
+                self._cors_headers()
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache")
+                self.send_header("Connection", "close")
+                self.end_headers()
+                msg = f"event: blocked\ndata: {json.dumps({'room': room_code, 'player': blocked_by, 'reason': f'You must add {blocked_by} as a friend first to join this room!'})}\n\n".encode("utf-8")
+                try:
+                    self.wfile.write(msg)
+                    self.wfile.flush()
+                except Exception:
+                    pass
                 return
 
             q = queue.Queue(maxsize=120)

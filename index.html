@@ -14747,11 +14747,24 @@
       mpDisconnectRoom();
       mpRoom = (roomCode || 'ROOM1').trim().toUpperCase().slice(0, 16) || 'ROOM1';
       const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'Player';
-      const url = `/api/events?room=${encodeURIComponent(mpRoom)}&id=${encodeURIComponent(mpMyId)}&name=${encodeURIComponent(myName)}`;
+      const myFriendsParam = (Array.isArray(friendsList) ? friendsList : []).map(f => (f.name || '').trim().toLowerCase()).filter(Boolean).join(',');
+      const url = `/api/events?room=${encodeURIComponent(mpRoom)}&id=${encodeURIComponent(mpMyId)}&name=${encodeURIComponent(myName)}&friends=${encodeURIComponent(myFriendsParam)}`;
       const es = new EventSource(url);
       mpEventSource = es;
       mpConnected = true;
       updateOnlineRoomUI();
+
+      es.addEventListener('blocked', (ev) => {
+        let reason = 'You must add this player as a friend first to join their room!';
+        try {
+          const data = JSON.parse(ev.data);
+          if (data && data.reason) reason = data.reason;
+        } catch (e) {}
+        mpDisconnectRoom();
+        if (onlineRoomStatus) onlineRoomStatus.textContent = reason;
+        showVoiceToast(reason, 4200);
+        if (typeof playSFX === 'function') playSFX('gameover');
+      });
 
       es.addEventListener('snapshot', (ev) => {
         try {
