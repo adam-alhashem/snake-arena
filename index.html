@@ -1353,25 +1353,28 @@
         <!-- Bottom-Left Live Radar Minimap -->
         <canvas id="car3DMinimap" width="116" height="116" class="hidden sm:block absolute bottom-4 left-4 rounded-full border-2 border-white/30 bg-slate-950/75 shadow-2xl"></canvas>
 
-        <!-- Bottom-Right Forza Dashboard -->
-        <div class="absolute bottom-4 right-4 bg-slate-950/80 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3 text-white shadow-2xl flex flex-col items-end gap-2">
-          <div class="flex items-center gap-1.5">
-            <button id="btnCar3DModel" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Car: GT Red</button>
+        <!-- Bottom-Right Forza Horizon 6 Circular Tachometer Dashboard -->
+        <div class="absolute bottom-4 right-4 flex flex-col items-end gap-2 text-white">
+          <div class="flex flex-wrap justify-end items-center gap-1.5 bg-slate-950/75 backdrop-blur-sm border border-white/15 rounded-xl px-2 py-1.5 shadow-xl">
+            <button id="btnCar3DModel" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Ferrari 488</button>
             <button id="btnCar3DSky" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Paris Day</button>
             <button id="btnCar3DCam" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Cam: Chase</button>
+            <button id="btnCar3DRewind" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-fuchsia-600/90 hover:bg-fuchsia-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Rewind (R)</button>
             <button id="btnCar3DHorn" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-amber-500/90 hover:bg-amber-400 text-[10px] font-black uppercase tracking-wider text-slate-950 cursor-pointer active:scale-95 transition-all">Horn</button>
           </div>
-          <div class="flex items-center gap-3">
-            <span id="car3DGearVal" class="w-8 h-8 rounded-xl bg-orange-500 text-white text-base font-black flex items-center justify-center shadow-xs">N</span>
-            <div class="flex items-baseline gap-1">
-              <span id="car3DSpeedVal" class="text-3xl font-black tracking-tight tabular-nums text-white">0</span>
-              <span class="text-[10px] font-black uppercase tracking-wider text-orange-300">KM/H</span>
-            </div>
-          </div>
-          <div class="w-44 flex items-center gap-1.5">
-            <span class="text-[9px] font-black text-slate-400 uppercase">RPM</span>
-            <div class="flex-1 h-2 rounded-full bg-white/15 overflow-hidden">
-              <div id="car3DRpmBar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all" style="width:12%"></div>
+          <div class="relative w-40 h-40 rounded-full bg-slate-950/80 backdrop-blur-md border border-white/15 shadow-2xl flex items-center justify-center">
+            <svg viewBox="0 0 120 120" class="absolute inset-0 w-full h-full -rotate-225">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="8" stroke-dasharray="235 315" stroke-linecap="round"/>
+              <circle id="car3DTachArc" cx="60" cy="60" r="50" fill="none" stroke="#f8fafc" stroke-width="8" stroke-dasharray="24 315" stroke-linecap="round" style="transition: stroke-dasharray 60ms linear, stroke 120ms linear;"/>
+            </svg>
+            <div class="relative z-10 flex flex-col items-center">
+              <div class="flex items-center gap-1.5 mb-0.5">
+                <span id="car3DAbsBadge" class="text-[8px] font-black px-1 rounded bg-white/10 text-slate-400">ABS</span>
+                <span id="car3DTcrBadge" class="text-[8px] font-black px-1 rounded bg-white/10 text-slate-400">TCR</span>
+              </div>
+              <span id="car3DSpeedVal" class="text-4xl font-black tracking-tighter tabular-nums leading-none text-white">0</span>
+              <span class="text-[9px] font-black uppercase tracking-widest text-slate-300 mt-0.5">KM/H</span>
+              <span id="car3DGearVal" class="mt-1 w-6 h-6 rounded-full bg-fuchsia-600 text-white text-xs font-black flex items-center justify-center shadow-md">N</span>
             </div>
           </div>
         </div>
@@ -16423,23 +16426,24 @@
     // =========================================================================
     const car3DContainer = document.getElementById('car3DContainer');
     const FH6_CARS = [
-      { name: 'GT Red',       col: '#ef4444', stripe: '#f8fafc', maxKmh: 310, accel: 1.65 },
-      { name: 'Skyline Blue', col: '#0284c7', stripe: '#e0f2fe', maxKmh: 295, accel: 1.55 },
-      { name: 'Lambo Gold',   col: '#eab308', stripe: '#1e293b', maxKmh: 330, accel: 1.80 },
-      { name: 'Supra Black',  col: '#1e293b', stripe: '#f97316', maxKmh: 305, accel: 1.60 },
-      { name: 'Drift White',  col: '#f8fafc', stripe: '#ec4899', maxKmh: 285, accel: 1.50 }
+      { name: 'Ferrari 488',   col: '#dc2626', stripe: '#f8fafc', maxKmh: 330, accel: 1.75 },
+      { name: 'Nissan GT-R',   col: '#0284c7', stripe: '#e0f2fe', maxKmh: 315, accel: 1.68 },
+      { name: 'Huracan Gold',  col: '#eab308', stripe: '#1e293b', maxKmh: 340, accel: 1.84 },
+      { name: 'Porsche GT3',   col: '#f8fafc', stripe: '#dc2626', maxKmh: 320, accel: 1.72 },
+      { name: 'GR Supra',      col: '#1e293b', stripe: '#f97316', maxKmh: 305, accel: 1.62 }
     ];
     const FH6_SKIES = [
-      { label: 'Paris Day',     bg: '#60a5fa', fog: '#dbeafe', sunCol: '#fffbeb', hemiTop: '#ffffff', hemiBot: '#94a3b8', sunInt: 1.35 },
-      { label: 'Seine Sunset',  bg: '#1e3a5f', fog: '#fb923c', sunCol: '#fde68a', hemiTop: '#fed7aa', hemiBot: '#334155', sunInt: 1.25 },
-      { label: 'Paris Night',   bg: '#020617', fog: '#0f172a', sunCol: '#fcd34d', hemiTop: '#1e293b', hemiBot: '#020617', sunInt: 0.62 }
+      { label: 'Paris Day',     bg: '#60a5fa', fog: '#dbeafe', sunCol: '#fffbeb', hemiTop: '#ffffff', hemiBot: '#94a3b8', sunInt: 1.40, rain: false },
+      { label: 'Seine Sunset',  bg: '#1e3a5f', fog: '#fb923c', sunCol: '#fde68a', hemiTop: '#fed7aa', hemiBot: '#334155', sunInt: 1.25, rain: false },
+      { label: 'Paris Rain',    bg: '#334155', fog: '#64748b', sunCol: '#cbd5e1', hemiTop: '#94a3b8', hemiBot: '#1e293b', sunInt: 0.85, rain: true },
+      { label: 'Paris Night',   bg: '#020617', fog: '#0f172a', sunCol: '#fcd34d', hemiTop: '#1e293b', hemiBot: '#020617', sunInt: 0.62, rain: false }
     ];
 
     let c3 = {
       inited: false, scene: null, camera: null, renderer: null,
       hemiLight: null, sunLight: null,
       playerCar: null, wheels: [], brakeLightMat: null, steeringWheel: null,
-      traffic: [], coins: [], smoke: [], skidMarks: [], colliders: [], trafficLights: [], skyDome: null, blinkerL: null, blinkerR: null,
+      traffic: [], coins: [], smoke: [], skidMarks: [], colliders: [], trafficLights: [], skyDome: null, blinkerL: null, blinkerR: null, rewindBuf: [], speedTraps: [], rainGroup: null, roadMatRef: null, turnMatRef: null, trapBannerTimer: 0, trapTitle: '', trapSub: '',
       px: 0, pz: 110, heading: 0, kmh: 0, steerAng: 0, driftSlip: 0,
       camX: 0, camY: 3.2, camZ: 118, camYaw: 0, pitchAng: 0,
       rpm: 900, gear: 0, dist: 0, frame: 0,
@@ -16679,19 +16683,25 @@
         sc.width = 64; sc.height = 256;
         const sg = sc.getContext('2d');
         const grad = sg.createLinearGradient(0, 0, 0, 256);
-        if (c3.skyIdx % FH6_SKIES.length === 0) {
+        const sIdx = c3.skyIdx % FH6_SKIES.length;
+        if (sIdx === 0) {
           grad.addColorStop(0, '#1d4ed8'); grad.addColorStop(0.45, '#60a5fa'); grad.addColorStop(0.55, '#e0f2fe'); grad.addColorStop(1, '#cbd5e1');
-        } else if (c3.skyIdx % FH6_SKIES.length === 1) {
+        } else if (sIdx === 1) {
           grad.addColorStop(0, '#1e1b4b'); grad.addColorStop(0.38, '#c2410c'); grad.addColorStop(0.54, '#fdba74'); grad.addColorStop(1, '#334155');
+        } else if (sIdx === 2) {
+          grad.addColorStop(0, '#1e293b'); grad.addColorStop(0.45, '#475569'); grad.addColorStop(0.58, '#64748b'); grad.addColorStop(1, '#334155');
         } else {
           grad.addColorStop(0, '#020617'); grad.addColorStop(0.48, '#0f172a'); grad.addColorStop(0.58, '#1e293b'); grad.addColorStop(1, '#020617');
         }
         sg.fillStyle = grad;
         sg.fillRect(0, 0, 64, 256);
-        if (c3.skyIdx % FH6_SKIES.length === 2) {
+        if (sIdx === 3) {
           sg.fillStyle = '#ffffff';
           for (let st = 0; st < 40; st++) sg.fillRect((st * 19) % 64, (st * 13) % 110, 1.5, 1.5);
         }
+        if (c3.rainGroup) c3.rainGroup.visible = !!sk.rain;
+        if (c3.roadMatRef) { c3.roadMatRef.roughness = sk.rain ? 0.28 : 0.82; c3.roadMatRef.metalness = sk.rain ? 0.25 : 0.0; }
+        if (c3.turnMatRef) { c3.turnMatRef.roughness = sk.rain ? 0.28 : 0.82; c3.turnMatRef.metalness = sk.rain ? 0.25 : 0.0; }
         c3.skyDome.material.map = new THREE.CanvasTexture(sc);
         c3.skyDome.material.needsUpdate = true;
       }
@@ -16793,6 +16803,8 @@
       turnTex.repeat.set(1, 1);
       turnTex.anisotropy = maxAniso;
       const turnRoadMat = new THREE.MeshStandardMaterial({ map: turnTex, roughness: 0.82 });
+      c3.roadMatRef = roadMat;
+      c3.turnMatRef = turnRoadMat;
       const shoulderMat = new THREE.MeshStandardMaterial({ color: '#374151', roughness: 0.94 });
       const railMetalMat = new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.65, roughness: 0.32 });
       const railPostMat = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.5, roughness: 0.5 });
@@ -17159,7 +17171,35 @@
 
       // Other cars / AI players disabled for now (solo free-roam)
 
-      // No arcade floating coins on real-life Paris streets
+      // Forza Horizon 6 Speed Trap Camera Gates on Champs-Elysees & Rue de Rivoli!
+      const trapPillarMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.35, metalness: 0.4 });
+      const trapAccentMat = new THREE.MeshBasicMaterial({ color: '#ec4899' });
+      const addSpeedTrap = (x, z, rotY, name) => {
+        const tg = new THREE.Group();
+        const pL = new THREE.Mesh(new THREE.BoxGeometry(0.45, 5.2, 0.45), trapPillarMat); pL.position.set(-7.5, 2.6, 0);
+        const pR = new THREE.Mesh(new THREE.BoxGeometry(0.45, 5.2, 0.45), trapPillarMat); pR.position.set(7.5, 2.6, 0);
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(15.6, 0.55, 0.45), trapPillarMat); bar.position.set(0, 5.1, 0);
+        const glow = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.16, 0.5), trapAccentMat); glow.position.set(0, 4.78, 0);
+        tg.add(pL, pR, bar, glow);
+        tg.position.set(x, 0, z);
+        tg.rotation.y = rotY;
+        c3.scene.add(tg);
+        c3.speedTraps.push({ x, z, name, cooldown: 0, best: 0 });
+      };
+      addSpeedTrap(0, -28, 0, 'CHAMPS-ELYSEES SPEED TRAP');
+      addSpeedTrap(-28, 0, Math.PI / 2, 'RUE DE RIVOLI SPEED TRAP');
+
+      // Dynamic 3D Paris Rain Particle System (active in Paris Rain weather)
+      c3.rainGroup = new THREE.Group();
+      const rainMat = new THREE.MeshBasicMaterial({ color: '#cbd5e1', transparent: true, opacity: 0.42 });
+      const rainGeo = new THREE.BoxGeometry(0.03, 1.15, 0.03);
+      for (let r = 0; r < 110; r++) {
+        const drop = new THREE.Mesh(rainGeo, rainMat);
+        drop.position.set((Math.random() - 0.5) * 44, Math.random() * 18, (Math.random() - 0.5) * 44);
+        c3.rainGroup.add(drop);
+      }
+      c3.rainGroup.visible = false;
+      c3.scene.add(c3.rainGroup);
 
       applyFH6SkyTheme();
       rebuildPlayerFH6Car();
@@ -17174,12 +17214,26 @@
         if (btnCam) btnCam.textContent = c3.camMode === 0 ? 'Cam: Chase' : c3.camMode === 1 ? 'Cam: Hood' : 'Cam: Cockpit';
       };
       if (btnCam) btnCam.addEventListener('click', cycleCam);
+      const doForzaRewind = () => {
+        if (!c3.rewindBuf.length) return;
+        const snap = c3.rewindBuf[0];
+        c3.px = snap.px; c3.pz = snap.pz; c3.heading = snap.heading;
+        c3.kmh = snap.kmh * 0.65; c3.steerAng = 0; c3.driftSlip = 0;
+        c3.rewindBuf.length = 0;
+        c3.trapTitle = 'FORZA REWIND';
+        c3.trapSub = 'BACK IN TIME';
+        c3.trapBannerTimer = 75;
+        if (typeof playSFX === 'function') playSFX('powerup');
+      };
+      const btnRewind = document.getElementById('btnCar3DRewind');
+      if (btnRewind) btnRewind.addEventListener('click', doForzaRewind);
       const btnHorn = document.getElementById('btnCar3DHorn');
       if (btnHorn) btnHorn.addEventListener('click', () => playRealCarHorn());
       document.addEventListener('keydown', (e) => {
         if (!isReal3DCarActive()) return;
         if (e.key === 'c' || e.key === 'C') cycleCam();
         if (e.key === 'h' || e.key === 'H') playRealCarHorn();
+        if (e.key === 'r' || e.key === 'R') doForzaRewind();
       });
     }
 
@@ -17429,21 +17483,60 @@
         c3.camera.lookAt(c3.px - sinH * 12, 1.12, c3.pz - cosH * 12);
       }
 
+      // Record Forza Rewind ring buffer every 4 frames (~4 seconds of history)
+      if (c3.frame % 4 === 0) {
+        c3.rewindBuf.push({ px: c3.px, pz: c3.pz, heading: c3.heading, kmh: c3.kmh });
+        if (c3.rewindBuf.length > 55) c3.rewindBuf.shift();
+      }
+      // Animate 3D Paris Rain streaks around the player car
+      if (c3.rainGroup && c3.rainGroup.visible) {
+        c3.rainGroup.position.set(c3.px, 0, c3.pz);
+        c3.rainGroup.children.forEach(drop => {
+          drop.position.y -= 0.72;
+          if (drop.position.y < 0) drop.position.y = 18;
+        });
+      }
+      // Check Forza Horizon Speed Trap Camera Gates
+      c3.speedTraps.forEach(tr => {
+        if (tr.cooldown > 0) { tr.cooldown--; return; }
+        if (Math.hypot(c3.px - tr.x, c3.pz - tr.z) < 6.8 && absKmh > 40) {
+          tr.cooldown = 180;
+          const spd = Math.round(absKmh);
+          if (spd > tr.best) tr.best = spd;
+          const stars = spd >= 240 ? '3 STARS' : spd >= 170 ? '2 STARS' : '1 STAR';
+          c3.trapTitle = tr.name;
+          c3.trapSub = `${spd} KM/H • ${stars}`;
+          c3.trapBannerTimer = 140;
+          carCoins += spd >= 240 ? 100 : 40;
+          if (typeof playSFX === 'function') playSFX('powerup');
+          updateMiniGameHUD();
+        }
+      });
+      if (c3.trapBannerTimer > 0) c3.trapBannerTimer--;
+
       if (c3.frame % 3 === 0) {
         const spEl = document.getElementById('car3DSpeedVal');
         const grEl = document.getElementById('car3DGearVal');
-        const rpmEl = document.getElementById('car3DRpmBar');
+        const tachEl = document.getElementById('car3DTachArc');
+        const absEl = document.getElementById('car3DAbsBadge');
+        const tcrEl = document.getElementById('car3DTcrBadge');
         const skBan = document.getElementById('car3DSkillBanner');
         const skLbl = document.getElementById('car3DSkillLabel');
         const skPts = document.getElementById('car3DSkillPoints');
         if (spEl) spEl.textContent = String(Math.round(absKmh));
         if (grEl) grEl.textContent = c3.gear === -1 ? 'R' : c3.gear === 0 ? 'N' : String(c3.gear);
-        if (rpmEl) rpmEl.style.width = `${Math.min(100, Math.round((c3.rpm / 8000) * 100))}%`;
+        if (tachEl) {
+          const pct = Math.max(0.08, Math.min(1, c3.rpm / 8200));
+          tachEl.setAttribute('stroke-dasharray', `${Math.round(pct * 235)} 315`);
+          tachEl.setAttribute('stroke', pct > 0.86 ? '#ef4444' : pct > 0.68 ? '#f59e0b' : '#f8fafc');
+        }
+        if (absEl) absEl.className = (brake && c3.kmh > 15) ? 'text-[8px] font-black px-1 rounded bg-amber-400 text-slate-950' : 'text-[8px] font-black px-1 rounded bg-white/10 text-slate-500';
+        if (tcrEl) tcrEl.className = isDrifting ? 'text-[8px] font-black px-1 rounded bg-orange-500 text-white' : 'text-[8px] font-black px-1 rounded bg-white/10 text-slate-500';
         if (skBan) {
-          if (c3.skillTimer > 0 && c3.skillScore > 0) {
+          if (c3.trapBannerTimer > 0) {
             skBan.classList.remove('hidden');
-            if (skLbl) skLbl.textContent = `${c3.skillLabel}${c3.skillMult > 1 ? ` • x${c3.skillMult}` : ''}`;
-            if (skPts) skPts.textContent = `+${(c3.skillScore * c3.skillMult).toLocaleString()}`;
+            if (skLbl) skLbl.textContent = c3.trapTitle;
+            if (skPts) skPts.textContent = c3.trapSub;
           } else {
             skBan.classList.add('hidden');
           }
