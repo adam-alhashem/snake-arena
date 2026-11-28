@@ -12294,6 +12294,7 @@
         playerProfile = { name: '', date: '', gender: '' };
         selectedGender = '';
         try { localStorage.removeItem('snakePlayerProfile_v1'); } catch (err) {}
+        if (typeof rotateProfileOwnerId === 'function') rotateProfileOwnerId();
         updateLobbyProfileBadge();
         showLanguageMapPage();
       });
@@ -12325,17 +12326,70 @@
       }
     });
 
+    function getProfileOwnerId() {
+      let oid = '';
+      try { oid = localStorage.getItem('snakeProfileOwnerId_v1') || ''; } catch (e) {}
+      if (!oid) {
+        oid = 'own_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+        try { localStorage.setItem('snakeProfileOwnerId_v1', oid); } catch (e) {}
+      }
+      return oid;
+    }
+
+    function rotateProfileOwnerId() {
+      const oid = 'own_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+      try { localStorage.setItem('snakeProfileOwnerId_v1', oid); } catch (e) {}
+      return oid;
+    }
+
     if (btnProfileContinue) {
-      btnProfileContinue.addEventListener('click', () => {
+      btnProfileContinue.addEventListener('click', async () => {
         const nameVal = profileNameInput ? profileNameInput.value.trim() : '';
         const dateVal = profileDateInput ? profileDateInput.value.trim() : '';
         if (!nameVal || !dateVal || !selectedGender) {
-          if (profileErrorMsg) profileErrorMsg.classList.remove('hidden');
+          if (profileErrorMsg) {
+            profileErrorMsg.textContent = 'Please enter your name, date, and pick Boy or Girl!';
+            profileErrorMsg.classList.remove('hidden');
+          }
           return;
         }
-        playerProfile = { name: nameVal, date: dateVal, gender: selectedGender };
+
+        const myOwnerId = getProfileOwnerId();
+        const lowerName = nameVal.toLowerCase();
+
+        // Check local registered players list first
+        if (typeof registeredPlayers !== 'undefined' && Array.isArray(registeredPlayers)) {
+          const localTaken = registeredPlayers.find(p => p.name && p.name.toLowerCase() === lowerName && p.ownerId !== myOwnerId);
+          if (localTaken) {
+            if (profileErrorMsg) {
+              profileErrorMsg.textContent = 'Someone else used this name, choose another one!';
+              profileErrorMsg.classList.remove('hidden');
+            }
+            return;
+          }
+        }
+
+        // Check server-side across all devices when hosted on server.py
+        if (window.location.protocol !== 'file:') {
+          try {
+            const resp = await fetch('/api/claim_name', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: nameVal, owner_id: myOwnerId, avatar: typeof avatarConfig !== 'undefined' ? avatarConfig : null })
+            });
+            if (resp.status === 409) {
+              if (profileErrorMsg) {
+                profileErrorMsg.textContent = 'Someone else used this name, choose another one!';
+                profileErrorMsg.classList.remove('hidden');
+              }
+              return;
+            }
+          } catch (e) {}
+        }
+
+        playerProfile = { name: nameVal, date: dateVal, gender: selectedGender, ownerId: myOwnerId };
         try { localStorage.setItem('snakePlayerProfile_v1', JSON.stringify(playerProfile)); } catch (e) {}
-        if (typeof registerPlayedPlayer === 'function') registerPlayedPlayer(nameVal, avatarConfig);
+        if (typeof registerPlayedPlayer === 'function') registerPlayedPlayer(nameVal, typeof avatarConfig !== 'undefined' ? avatarConfig : null, myOwnerId);
         updateLobbyProfileBadge();
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
         if (profileSetupPage) profileSetupPage.classList.add('hidden');
@@ -13938,6 +13992,7 @@
         playerProfile = { name: '', date: '', gender: '' };
         selectedGender = '';
         try { localStorage.removeItem('snakePlayerProfile_v1'); } catch (err) {}
+        if (typeof rotateProfileOwnerId === 'function') rotateProfileOwnerId();
         updateLobbyProfileBadge();
         showLanguageMapPage();
       });
@@ -14085,16 +14140,18 @@
       return [];
     })();
 
-    function registerPlayedPlayer(name, cfg) {
+    function registerPlayedPlayer(name, cfg, ownerId) {
       const clean = (name || '').trim().slice(0, 24);
       if (!clean) return;
       const useCfg = cfg ? Object.assign({}, cfg) : generateAvatarForFriendName(clean);
+      const oid = ownerId || (typeof getProfileOwnerId === 'function' ? getProfileOwnerId() : '');
       const existing = registeredPlayers.find(p => p.name.toLowerCase() === clean.toLowerCase());
       if (existing) {
         existing.cfg = useCfg;
+        if (oid && !existing.ownerId) existing.ownerId = oid;
         existing.lastPlayed = Date.now();
       } else {
-        registeredPlayers.push({ name: clean, cfg: useCfg, lastPlayed: Date.now() });
+        registeredPlayers.push({ name: clean, cfg: useCfg, ownerId: oid, lastPlayed: Date.now() });
       }
       try { localStorage.setItem('snakeRegisteredPlayers_v1', JSON.stringify(registeredPlayers)); } catch (e) {}
       if (window.location.protocol !== 'file:') {

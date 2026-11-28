@@ -340,6 +340,37 @@ class GameServerHandler(BaseHTTPRequestHandler):
         path = parsed.path
         body = self._read_json()
 
+        if path == "/api/claim_name":
+            name = (body.get("name") or "").strip()[:24]
+            owner_id = (body.get("owner_id") or "").strip()[:48]
+            avatar = body.get("avatar")
+            if not name:
+                self._send_json(400, {"ok": False, "message": "Please enter a name."})
+                return
+            key = name.lower()
+            with players_lock:
+                prev = players_db.get(key)
+                if prev:
+                    prev_owner = prev.get("owner_id") or ""
+                    if not owner_id or prev_owner != owner_id:
+                        self._send_json(409, {
+                            "ok": False,
+                            "taken": True,
+                            "message": "Someone else used this name, choose another one!",
+                        })
+                        return
+                players_db[key] = {
+                    "name": name,
+                    "owner_id": owner_id,
+                    "avatar": avatar if avatar is not None else (prev.get("avatar") if prev else None),
+                    "game": "hub",
+                    "online": True,
+                    "last_seen": time.time(),
+                }
+                save_players_db()
+            self._send_json(200, {"ok": True})
+            return
+
         if path == "/api/register_player":
             name = (body.get("name") or "").strip()[:24]
             avatar = body.get("avatar")
