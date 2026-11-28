@@ -14454,7 +14454,14 @@
         return;
       }
       try {
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1
+          }
+        });
         micActive = true;
         updateMicButtonsUI();
         const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'You';
@@ -14486,7 +14493,7 @@
         } catch (e) {}
 
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SR) {
+        if (SR && !(typeof mpConnected !== 'undefined' && mpConnected)) {
           try {
             micSpeechRec = new SR();
             micSpeechRec.continuous = true;
@@ -14533,6 +14540,7 @@
     const mpRemotePlayers = {}; // id -> { id, name, avatar, game, x, y, drawX, drawY, speaking }
     const mpPeerConns = {};     // peerId -> RTCPeerConnection
     const mpRemoteAudios = {};  // peerId -> HTMLAudioElement
+    const mpPendingIce = {};    // peerId -> RTCIceCandidateInit[]
 
     const onlineRoomInput = document.getElementById('onlineRoomInput');
     const btnOnlineRoomToggle = document.getElementById('btnOnlineRoomToggle');
@@ -14591,6 +14599,7 @@
         try { mpRemoteAudios[peerId].remove(); } catch (e) {}
         delete mpRemoteAudios[peerId];
       }
+      delete mpPendingIce[peerId];
     }
 
     function mpEnsurePeerConnection(peerId, shouldOffer) {
@@ -14611,7 +14620,8 @@
         };
         pc.onconnectionstatechange = () => {
           if (pc.connectionState === 'connected') {
-            showVoiceToast('Live Voice Connected! Turn Mic ON to talk.', 2600);
+            showVoiceToast('Full-Duplex Voice Live! Both players can talk & hear at once.', 3000);
+            updateOnlineRoomUI();
           }
         };
         pc.ontrack = (ev) => {
@@ -14794,6 +14804,15 @@
         } catch (e) {}
       });
 
+      async function flushPendingIce(peerId, pc) {
+        const list = mpPendingIce[peerId];
+        if (!list || !list.length) return;
+        mpPendingIce[peerId] = [];
+        for (const c of list) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch (e) {}
+        }
+      }
+
       es.addEventListener('signal', async (ev) => {
         try {
           const msg = JSON.parse(ev.data);
@@ -14805,13 +14824,33 @@
               try { await pc.setLocalDescription({ type: 'rollback' }); } catch (e) {}
             }
             await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+            await flushPendingIce(msg.from, pc);
+            // Ensure local mic track is attached in full-duplex sendrecv mode before answering!
+            const localTrack = (micActive && micStream && micStream.getAudioTracks().length > 0) ? micStream.getAudioTracks()[0] : null;
+            const tr = pc.getTransceivers ? pc.getTransceivers().find(t => (t.receiver && t.receiver.track && t.receiver.track.kind === 'audio') || (t.sender && t.sender.track && t.sender.track.kind === 'audio')) : null;
+            if (tr) {
+              tr.direction = 'sendrecv';
+              if (localTrack && tr.sender) {
+                try { await tr.sender.replaceTrack(localTrack); } catch (e) {}
+              }
+            } else if (localTrack) {
+              pc.addTrack(localTrack, micStream);
+            }
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             mpSendSignal(msg.from, 'answer', answer);
           } else if (msg.type === 'answer') {
-            await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+            if (pc.signalingState === 'have-local-offer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+              await flushPendingIce(msg.from, pc);
+            }
           } else if (msg.type === 'ice' && msg.data) {
-            await pc.addIceCandidate(new RTCIceCandidate(msg.data));
+            if (pc.remoteDescription && pc.remoteDescription.type) {
+              await pc.addIceCandidate(new RTCIceCandidate(msg.data));
+            } else {
+              if (!mpPendingIce[msg.from]) mpPendingIce[msg.from] = [];
+              mpPendingIce[msg.from].push(msg.data);
+            }
           }
         } catch (e) {}
       });
