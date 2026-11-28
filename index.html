@@ -703,28 +703,10 @@
           </div>
         </div>
 
-        <!-- Customization Pickers -->
-        <div class="sm:col-span-3 flex flex-col gap-3.5">
-          <div class="flex flex-col gap-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Skin Color</span>
-            <div id="avatarSkinPicker" class="flex flex-wrap gap-2"></div>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Shirt Color</span>
-            <div id="avatarShirtPicker" class="flex flex-wrap gap-2"></div>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Pants Color</span>
-            <div id="avatarPantsPicker" class="flex flex-wrap gap-2"></div>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Hat / Accessory</span>
-            <div id="avatarHatPicker" class="flex flex-wrap gap-1.5"></div>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Face</span>
-            <div id="avatarFacePicker" class="flex flex-wrap gap-1.5"></div>
-          </div>
+        <!-- Wardrobe Category Tabs & Item Grid -->
+        <div class="sm:col-span-3 flex flex-col gap-3 min-h-[260px]">
+          <div id="avatarCategoryTabs" class="flex flex-wrap gap-1.5"></div>
+          <div id="avatarItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto max-h-[270px] pr-1"></div>
         </div>
       </div>
     </div>
@@ -12163,50 +12145,68 @@
       avatarPreviewRafId = requestAnimationFrame(frame);
     }
 
+    let avatarActiveTab = 'shirt'; // 'shirt' | 'pants' | 'hat' | 'face' | 'skin'
+    const AVATAR_TABS = [
+      { id: 'shirt', label: `T-Shirts (${AVATAR_SHIRTS.length})` },
+      { id: 'pants', label: `Pants (${AVATAR_PANTS.length})` },
+      { id: 'hat',   label: `Hats (${AVATAR_HATS.length})` },
+      { id: 'face',  label: `Faces (${AVATAR_FACES.length})` },
+      { id: 'skin',  label: `Skin (${AVATAR_SKINS.length})` }
+    ];
+
     function renderAvatarPickers() {
-      const renderSwatches = (elId, colors, key) => {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        el.innerHTML = '';
-        colors.forEach(col => {
-          const active = avatarConfig[key] === col;
+      const tabsEl = document.getElementById('avatarCategoryTabs');
+      const gridEl = document.getElementById('avatarItemsGrid');
+      if (tabsEl) {
+        tabsEl.innerHTML = '';
+        AVATAR_TABS.forEach(t => {
+          const active = avatarActiveTab === t.id;
           const b = document.createElement('button');
           b.type = 'button';
-          b.className = `w-7 h-7 rounded-full border-2 transition-all cursor-pointer ${active ? 'border-slate-900 scale-115 ring-2 ring-emerald-400' : 'border-slate-200 hover:scale-105'}`;
-          b.style.backgroundColor = col;
+          b.className = `px-2.5 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+            active ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+          }`;
+          b.textContent = t.label;
           b.addEventListener('click', () => {
-            avatarConfig[key] = col;
-            saveAvatarConfig();
+            avatarActiveTab = t.id;
             renderAvatarPickers();
-            if (typeof playSFX === 'function') playSFX('eat');
           });
-          el.appendChild(b);
+          tabsEl.appendChild(b);
         });
-      };
-      const renderPills = (elId, items, key) => {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        el.innerHTML = '';
-        items.forEach(it => {
-          const active = avatarConfig[key] === it.id;
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = `px-2.5 py-1 rounded-xl text-xs font-extrabold border transition-all cursor-pointer ${active ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}`;
-          b.textContent = it.label;
-          b.addEventListener('click', () => {
-            avatarConfig[key] = it.id;
-            saveAvatarConfig();
-            renderAvatarPickers();
-            if (typeof playSFX === 'function') playSFX('eat');
-          });
-          el.appendChild(b);
+      }
+      if (!gridEl) return;
+      gridEl.innerHTML = '';
+      const list = avatarActiveTab === 'shirt' ? AVATAR_SHIRTS
+        : avatarActiveTab === 'pants' ? AVATAR_PANTS
+        : avatarActiveTab === 'hat' ? AVATAR_HATS
+        : avatarActiveTab === 'face' ? AVATAR_FACES
+        : AVATAR_SKINS;
+
+      list.forEach(item => {
+        const isSel = avatarConfig[avatarActiveTab] === item.id;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `p-2.5 rounded-2xl border-2 text-left flex items-center gap-2 transition-all cursor-pointer active:scale-95 ${
+          isSel ? 'border-emerald-500 bg-emerald-50 text-slate-900 shadow-xs ring-2 ring-emerald-200' : 'border-slate-200 bg-white hover:border-slate-400 text-slate-800'
+        }`;
+        if (item.col) {
+          const dot = document.createElement('span');
+          dot.className = 'w-6 h-6 rounded-lg shrink-0 border border-slate-300 shadow-2xs';
+          dot.style.background = item.accent ? `linear-gradient(135deg, ${item.col} 55%, ${item.accent} 55%)` : item.col;
+          card.appendChild(dot);
+        }
+        const lbl = document.createElement('span');
+        lbl.className = 'text-xs font-extrabold leading-tight truncate';
+        lbl.textContent = item.label;
+        card.appendChild(lbl);
+        card.addEventListener('click', () => {
+          avatarConfig[avatarActiveTab] = item.id;
+          saveAvatarConfig();
+          renderAvatarPickers();
+          if (typeof playSFX === 'function') playSFX('eat');
         });
-      };
-      renderSwatches('avatarSkinPicker', AVATAR_SKINS, 'skin');
-      renderSwatches('avatarShirtPicker', AVATAR_SHIRTS, 'shirt');
-      renderSwatches('avatarPantsPicker', AVATAR_PANTS, 'pants');
-      renderPills('avatarHatPicker', AVATAR_HATS, 'hat');
-      renderPills('avatarFacePicker', AVATAR_FACES, 'face');
+        gridEl.appendChild(card);
+      });
     }
 
     function openAvatarModal() {
@@ -12230,9 +12230,9 @@
     }
     if (btnAvatarRandom) {
       btnAvatarRandom.addEventListener('click', () => {
-        avatarConfig.skin = AVATAR_SKINS[Math.floor(Math.random() * AVATAR_SKINS.length)];
-        avatarConfig.shirt = AVATAR_SHIRTS[Math.floor(Math.random() * AVATAR_SHIRTS.length)];
-        avatarConfig.pants = AVATAR_PANTS[Math.floor(Math.random() * AVATAR_PANTS.length)];
+        avatarConfig.skin = AVATAR_SKINS[Math.floor(Math.random() * AVATAR_SKINS.length)].id;
+        avatarConfig.shirt = AVATAR_SHIRTS[Math.floor(Math.random() * AVATAR_SHIRTS.length)].id;
+        avatarConfig.pants = AVATAR_PANTS[Math.floor(Math.random() * AVATAR_PANTS.length)].id;
         avatarConfig.hat = AVATAR_HATS[Math.floor(Math.random() * AVATAR_HATS.length)].id;
         avatarConfig.face = AVATAR_FACES[Math.floor(Math.random() * AVATAR_FACES.length)].id;
         saveAvatarConfig();
@@ -12585,59 +12585,240 @@
       updateMiniGameHUD();
     }
 
-    const AVATAR_SKINS = ['#facc15', '#fed7aa', '#d6a272', '#8d5524', '#bae6fd', '#a7f3d0'];
-    const AVATAR_SHIRTS = ['#22c55e', '#0ea5e9', '#ef4444', '#8b5cf6', '#ec4899', '#f97316', '#eab308', '#1e293b'];
-    const AVATAR_PANTS = ['#1d4ed8', '#1e293b', '#15803d', '#4338ca', '#991b1b', '#a16207'];
-    const AVATAR_HATS = [
-      { id: 'none', label: 'None' },
-      { id: 'crown', label: 'Gold Crown' },
-      { id: 'cap', label: 'Blue Cap' },
-      { id: 'tophat', label: 'Top Hat' },
-      { id: 'horns', label: 'Horns' },
-      { id: 'halo', label: 'Halo' }
+    const AVATAR_SKINS = [
+      { id: '#facc15', label: 'Classic Gold', col: '#facc15' },
+      { id: '#fed7aa', label: 'Peach', col: '#fed7aa' },
+      { id: '#d6a272', label: 'Tan', col: '#d6a272' },
+      { id: '#8d5524', label: 'Brown', col: '#8d5524' },
+      { id: '#bae6fd', label: 'Ice Blue', col: '#bae6fd' },
+      { id: '#a7f3d0', label: 'Mint', col: '#a7f3d0' }
     ];
+
+    const AVATAR_SHIRTS = [
+      { id: 'classic_green', label: 'Classic Tee', col: '#22c55e', accent: '#ffffff' },
+      { id: 'gamer_hoodie',  label: 'Gamer Hoodie', col: '#4338ca', accent: '#38bdf8' },
+      { id: 'soccer_jersey', label: 'Soccer Jersey', col: '#dc2626', accent: '#ffffff' },
+      { id: 'ninja_suit',    label: 'Ninja Tunic', col: '#111827', accent: '#ef4444' },
+      { id: 'gold_armor',    label: 'Gold Armor', col: '#eab308', accent: '#fef08a' },
+      { id: 'galaxy_tee',    label: 'Galaxy Tee', col: '#3b0764', accent: '#e879f9' },
+      { id: 'tiger_stripes', label: 'Tiger Stripes', col: '#f97316', accent: '#1f2937' },
+      { id: 'royal_tux',     label: 'Royal Tuxedo', col: '#0f172a', accent: '#ef4444' },
+      { id: 'astronaut',     label: 'Space Suit', col: '#f1f5f9', accent: '#0284c7' },
+      { id: 'flame_jacket',  label: 'Flame Jacket', col: '#1e293b', accent: '#f97316' },
+      { id: 'rainbow_tee',   label: 'Rainbow Tee', col: '#ec4899', accent: '#facc15' },
+      { id: 'pirate_coat',   label: 'Pirate Coat', col: '#991b1b', accent: '#facc15' }
+    ];
+
+    const AVATAR_PANTS = [
+      { id: 'blue_jeans',    label: 'Blue Jeans', col: '#1d4ed8', accent: '#92400e' },
+      { id: 'track_pants',   label: 'Track Pants', col: '#111827', accent: '#ffffff' },
+      { id: 'camo_cargo',    label: 'Camo Cargo', col: '#166534', accent: '#4d7c0f' },
+      { id: 'gold_greaves',  label: 'Gold Armor', col: '#ca8a04', accent: '#fef08a' },
+      { id: 'ninja_pants',   label: 'Ninja Wraps', col: '#0f172a', accent: '#dc2626' },
+      { id: 'neon_joggers',  label: 'Neon Joggers', col: '#312e81', accent: '#22d3ee' },
+      { id: 'royal_slacks',  label: 'Tuxedo Pants', col: '#0f172a', accent: '#475569' },
+      { id: 'space_boots',   label: 'Space Boots', col: '#e2e8f0', accent: '#f97316' },
+      { id: 'checker_pants', label: 'Skater Check', col: '#1e293b', accent: '#f8fafc' },
+      { id: 'flame_pants',   label: 'Flame Pants', col: '#1f2937', accent: '#f97316' }
+    ];
+
+    const AVATAR_HATS = [
+      { id: 'none',             label: 'None', col: '#cbd5e1' },
+      { id: 'crown',            label: 'Gold Crown', col: '#facc15' },
+      { id: 'cap',              label: 'Blue Cap', col: '#0284c7' },
+      { id: 'red_cap',          label: 'Red Cap', col: '#dc2626' },
+      { id: 'tophat',           label: 'Top Hat', col: '#0f172a' },
+      { id: 'wizard',           label: 'Wizard Hat', col: '#6d28d9' },
+      { id: 'viking',           label: 'Viking Helm', col: '#64748b' },
+      { id: 'ninja_band',       label: 'Ninja Band', col: '#dc2626' },
+      { id: 'pirate_hat',       label: 'Pirate Hat', col: '#1e293b' },
+      { id: 'astronaut_helmet', label: 'Space Helm', col: '#38bdf8' },
+      { id: 'headphones',       label: 'Headphones', col: '#06b6d4' },
+      { id: 'cat_ears',         label: 'Cat Ears', col: '#ec4899' },
+      { id: 'beanie',           label: 'Cozy Beanie', col: '#10b981' },
+      { id: 'halo',             label: 'Gold Halo', col: '#fde047' }
+    ];
+
     const AVATAR_FACES = [
-      { id: 'happy', label: 'Happy' },
-      { id: 'shades', label: 'Shades' },
-      { id: 'wink', label: 'Wink' },
-      { id: 'hero', label: 'Hero' }
+      { id: 'happy',  label: 'Happy' },
+      { id: 'shades', label: 'Cool Shades' },
+      { id: 'wink',   label: 'Wink' },
+      { id: 'hero',   label: 'Hero Mask' },
+      { id: 'robot',  label: 'Cyber Visor' },
+      { id: 'star',   label: 'Star Eyes' }
     ];
 
     let avatarConfig = (() => {
+      const def = { skin: '#facc15', shirt: 'gamer_hoodie', pants: 'blue_jeans', hat: 'crown', face: 'happy' };
       try {
         const s = JSON.parse(localStorage.getItem('snakeAvatarConfig_v1') || 'null');
-        if (s && typeof s === 'object') return Object.assign({ skin: '#facc15', shirt: '#22c55e', pants: '#1d4ed8', hat: 'none', face: 'happy' }, s);
+        if (s && typeof s === 'object') {
+          const merged = Object.assign({}, def, s);
+          // Migrate legacy hex shirt/pants to named wardrobe IDs
+          if (!AVATAR_SHIRTS.some(x => x.id === merged.shirt)) merged.shirt = 'classic_green';
+          if (!AVATAR_PANTS.some(x => x.id === merged.pants)) merged.pants = 'blue_jeans';
+          if (!AVATAR_HATS.some(x => x.id === merged.hat)) merged.hat = 'none';
+          return merged;
+        }
       } catch (e) {}
-      return { skin: '#facc15', shirt: '#22c55e', pants: '#1d4ed8', hat: 'none', face: 'happy' };
+      return def;
     })();
     function saveAvatarConfig() {
       try { localStorage.setItem('snakeAvatarConfig_v1', JSON.stringify(avatarConfig)); } catch (e) {}
     }
 
     function drawCustomAvatarOn(targetCtx, cx, bottomY, scale) {
-      const cfg = avatarConfig || { skin: '#facc15', shirt: '#22c55e', pants: '#1d4ed8', hat: 'none', face: 'happy' };
+      const cfg = avatarConfig;
       const sc = scale || 1;
+      const shirtObj = AVATAR_SHIRTS.find(x => x.id === cfg.shirt) || AVATAR_SHIRTS[0];
+      const pantsObj = AVATAR_PANTS.find(x => x.id === cfg.pants) || AVATAR_PANTS[0];
+
       targetCtx.save();
       targetCtx.translate(cx, bottomY);
       targetCtx.scale(sc, sc);
-      // Legs
-      targetCtx.fillStyle = cfg.pants;
-      targetCtx.fillRect(-7, -10, 6, 10);
-      targetCtx.fillRect(1, -10, 6, 10);
-      // Torso
-      targetCtx.fillStyle = cfg.shirt;
-      targetCtx.fillRect(-8, -22, 16, 12);
-      // Arms
+
+      // --- 1. PANTS & SHOES ---
+      targetCtx.fillStyle = pantsObj.col;
+      targetCtx.fillRect(-7, -11, 6, 11);
+      targetCtx.fillRect(1, -11, 6, 11);
+
+      if (cfg.pants === 'blue_jeans') {
+        targetCtx.fillStyle = '#78350f';
+        targetCtx.fillRect(-7, -11, 14, 2); // belt
+        targetCtx.fillStyle = '#facc15';
+        targetCtx.fillRect(-1.5, -11, 3, 2); // buckle
+        targetCtx.fillStyle = '#7c2d12';
+        targetCtx.fillRect(-7, -2.5, 6, 2.5); targetCtx.fillRect(1, -2.5, 6, 2.5);
+      } else if (cfg.pants === 'track_pants') {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.fillRect(-7, -10, 1.3, 8); targetCtx.fillRect(5.7, -10, 1.3, 8);
+        targetCtx.fillStyle = '#ef4444';
+        targetCtx.fillRect(-7, -2.4, 6, 2.4); targetCtx.fillRect(1, -2.4, 6, 2.4);
+      } else if (cfg.pants === 'camo_cargo') {
+        targetCtx.fillStyle = '#84cc16';
+        targetCtx.fillRect(-6, -9, 3, 2.5); targetCtx.fillRect(2, -7, 3, 2.5);
+        targetCtx.fillStyle = '#365314';
+        targetCtx.fillRect(-5, -5, 2.5, 2); targetCtx.fillRect(3, -10, 2.5, 2);
+      } else if (cfg.pants === 'gold_greaves') {
+        targetCtx.fillStyle = '#fef08a';
+        targetCtx.fillRect(-6, -8, 4, 2.5); targetCtx.fillRect(2, -8, 4, 2.5);
+        targetCtx.fillStyle = '#92400e';
+        targetCtx.fillRect(-7, -2.4, 6, 2.4); targetCtx.fillRect(1, -2.4, 6, 2.4);
+      } else if (cfg.pants === 'ninja_pants') {
+        targetCtx.fillStyle = '#dc2626';
+        targetCtx.fillRect(-7, -6, 6, 1.6); targetCtx.fillRect(1, -6, 6, 1.6);
+        targetCtx.fillRect(-7, -3.5, 6, 1.4); targetCtx.fillRect(1, -3.5, 6, 1.4);
+      } else if (cfg.pants === 'neon_joggers') {
+        targetCtx.fillStyle = '#22d3ee';
+        targetCtx.fillRect(-7, -3, 6, 1.8); targetCtx.fillRect(1, -3, 6, 1.8);
+      } else if (cfg.pants === 'space_boots') {
+        targetCtx.fillStyle = '#94a3b8';
+        targetCtx.fillRect(-6.5, -7.5, 5, 2); targetCtx.fillRect(1.5, -7.5, 5, 2);
+        targetCtx.fillStyle = '#f97316';
+        targetCtx.fillRect(-7, -2.8, 6, 2.8); targetCtx.fillRect(1, -2.8, 6, 2.8);
+      } else if (cfg.pants === 'checker_pants') {
+        targetCtx.fillStyle = '#f8fafc';
+        targetCtx.fillRect(-7, -10, 3, 3); targetCtx.fillRect(-4, -7, 3, 3); targetCtx.fillRect(-7, -4, 3, 3);
+        targetCtx.fillRect(1, -10, 3, 3); targetCtx.fillRect(4, -7, 3, 3); targetCtx.fillRect(1, -4, 3, 3);
+      } else if (cfg.pants === 'flame_pants') {
+        targetCtx.fillStyle = '#f97316';
+        targetCtx.fillRect(-7, -3.2, 6, 3.2); targetCtx.fillRect(1, -3.2, 6, 3.2);
+        targetCtx.fillStyle = '#facc15';
+        targetCtx.fillRect(-6, -2, 4, 2); targetCtx.fillRect(2, -2, 4, 2);
+      }
+
+      // --- 2. T-SHIRT / OUTFIT & ARMS ---
+      // Arms (with sleeves matching shirt!)
       targetCtx.fillStyle = cfg.skin;
-      targetCtx.fillRect(-11, -22, 3, 10);
-      targetCtx.fillRect(8, -22, 3, 10);
-      // Head
+      targetCtx.fillRect(-11.5, -22, 3.5, 10);
+      targetCtx.fillRect(8, -22, 3.5, 10);
+      const longSleeve = ['gamer_hoodie', 'ninja_suit', 'gold_armor', 'royal_tux', 'astronaut', 'flame_jacket', 'pirate_coat'].includes(cfg.shirt);
+      targetCtx.fillStyle = shirtObj.col;
+      targetCtx.fillRect(-11.5, -22, 3.5, longSleeve ? 8 : 4.2);
+      targetCtx.fillRect(8, -22, 3.5, longSleeve ? 8 : 4.2);
+
+      // Torso base
+      targetCtx.fillStyle = shirtObj.col;
+      targetCtx.fillRect(-8, -22, 16, 11.5);
+
+      if (cfg.shirt === 'classic_green') {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.fillRect(-3, -22, 6, 2);
+        targetCtx.fillStyle = '#bbf7d0';
+        targetCtx.fillRect(-4, -17.5, 8, 2);
+      } else if (cfg.shirt === 'gamer_hoodie') {
+        targetCtx.fillStyle = '#312e81';
+        targetCtx.fillRect(-5, -14.5, 10, 3.5); // pocket
+        targetCtx.fillStyle = '#38bdf8'; // lightning bolt
+        targetCtx.beginPath();
+        targetCtx.moveTo(1, -21); targetCtx.lineTo(-2.5, -17); targetCtx.lineTo(0.2, -17); targetCtx.lineTo(-1.2, -14); targetCtx.lineTo(2.8, -18); targetCtx.lineTo(0.2, -18);
+        targetCtx.closePath();
+        targetCtx.fill();
+      } else if (cfg.shirt === 'soccer_jersey') {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.fillRect(-6, -22, 2.5, 11.5);
+        targetCtx.fillRect(-1.2, -22, 2.5, 11.5);
+        targetCtx.fillRect(3.5, -22, 2.5, 11.5);
+      } else if (cfg.shirt === 'ninja_suit') {
+        targetCtx.fillStyle = '#ef4444';
+        targetCtx.fillRect(-8, -13.5, 16, 2.4);
+        targetCtx.beginPath();
+        targetCtx.moveTo(-6, -22); targetCtx.lineTo(2, -14); targetCtx.lineTo(4, -14); targetCtx.lineTo(-4, -22);
+        targetCtx.closePath();
+        targetCtx.fill();
+      } else if (cfg.shirt === 'gold_armor') {
+        targetCtx.fillStyle = '#fef08a';
+        targetCtx.fillRect(-6, -20.5, 12, 4);
+        targetCtx.fillRect(-11.5, -23, 4.5, 3); targetCtx.fillRect(7, -23, 4.5, 3);
+        targetCtx.fillStyle = '#b45309';
+        targetCtx.fillRect(-1, -21, 2, 10);
+      } else if (cfg.shirt === 'galaxy_tee') {
+        targetCtx.fillStyle = '#e879f9';
+        targetCtx.fillRect(-5, -20, 2, 2); targetCtx.fillRect(3, -18, 2, 2); targetCtx.fillRect(-2, -15, 1.8, 1.8);
+        targetCtx.fillStyle = '#38bdf8';
+        targetCtx.fillRect(1, -20.5, 1.6, 1.6); targetCtx.fillRect(-6, -15.5, 1.6, 1.6);
+      } else if (cfg.shirt === 'tiger_stripes') {
+        targetCtx.fillStyle = '#1f2937';
+        targetCtx.fillRect(-8, -20, 6, 1.8); targetCtx.fillRect(2, -18, 6, 1.8); targetCtx.fillRect(-7, -15, 7, 1.8);
+      } else if (cfg.shirt === 'royal_tux') {
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.beginPath();
+        targetCtx.moveTo(-3.5, -22); targetCtx.lineTo(3.5, -22); targetCtx.lineTo(0, -13);
+        targetCtx.closePath();
+        targetCtx.fill();
+        targetCtx.fillStyle = '#ef4444';
+        targetCtx.fillRect(-2.5, -21, 5, 2);
+      } else if (cfg.shirt === 'astronaut') {
+        targetCtx.fillStyle = '#334155';
+        targetCtx.fillRect(-4.5, -19.5, 9, 5);
+        targetCtx.fillStyle = '#ef4444'; targetCtx.fillRect(-3.5, -18.5, 2.2, 2);
+        targetCtx.fillStyle = '#38bdf8'; targetCtx.fillRect(1, -18.5, 2.5, 2);
+      } else if (cfg.shirt === 'flame_jacket') {
+        targetCtx.fillStyle = '#f97316';
+        targetCtx.fillRect(-8, -14, 16, 3.5);
+        targetCtx.fillStyle = '#facc15';
+        targetCtx.beginPath();
+        targetCtx.moveTo(-7, -10.5); targetCtx.lineTo(-4, -16); targetCtx.lineTo(-1, -10.5);
+        targetCtx.moveTo(0, -10.5); targetCtx.lineTo(3, -16.5); targetCtx.lineTo(6, -10.5);
+        targetCtx.fill();
+      } else if (cfg.shirt === 'rainbow_tee') {
+        const rb = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#a855f7'];
+        rb.forEach((c, i) => { targetCtx.fillStyle = c; targetCtx.fillRect(-8, -22 + i * 1.9, 16, 2); });
+      } else if (cfg.shirt === 'pirate_coat') {
+        targetCtx.fillStyle = '#1e293b';
+        targetCtx.fillRect(-8, -13.5, 16, 2.2);
+        targetCtx.fillStyle = '#facc15';
+        targetCtx.fillRect(-2, -13.5, 4, 2.2);
+        targetCtx.fillRect(-4, -19.5, 1.6, 1.6); targetCtx.fillRect(2.4, -19.5, 1.6, 1.6);
+        targetCtx.fillRect(-4, -16.5, 1.6, 1.6); targetCtx.fillRect(2.4, -16.5, 1.6, 1.6);
+      }
+
+      // --- 3. HEAD & FACE ---
       targetCtx.fillStyle = cfg.skin;
       targetCtx.beginPath();
       targetCtx.roundRect(-7, -33, 14, 11, 3);
       targetCtx.fill();
 
-      // Face
       targetCtx.fillStyle = '#0f172a';
       if (cfg.face === 'shades') {
         targetCtx.fillRect(-6, -30, 5, 3.2);
@@ -12656,49 +12837,95 @@
         targetCtx.fillRect(2.1, -29.5, 2.4, 1.6);
         targetCtx.fillStyle = '#0f172a';
         targetCtx.fillRect(-3, -25, 6, 1.4);
+      } else if (cfg.face === 'robot') {
+        targetCtx.fillStyle = '#0f172a';
+        targetCtx.fillRect(-6.5, -30.5, 13, 3.8);
+        targetCtx.fillStyle = '#22d3ee';
+        targetCtx.fillRect(-5, -29.3, 10, 1.5);
+        targetCtx.fillStyle = '#0f172a';
+        targetCtx.fillRect(-3, -25, 6, 1.4);
+      } else if (cfg.face === 'star') {
+        targetCtx.fillStyle = '#eab308';
+        targetCtx.fillRect(-4.5, -29.8, 2.5, 2.5);
+        targetCtx.fillRect(2, -29.8, 2.5, 2.5);
+        targetCtx.fillStyle = '#0f172a';
+        targetCtx.fillRect(-3, -25, 6, 1.6);
       } else {
         targetCtx.fillRect(-4, -29.5, 2, 2.5);
         targetCtx.fillRect(2, -29.5, 2, 2.5);
         targetCtx.fillRect(-3, -25, 6, 1.5);
       }
 
-      // Hat / Accessory
+      // --- 4. HATS & HEADGEAR ---
       if (cfg.hat === 'crown') {
         targetCtx.fillStyle = '#facc15';
         targetCtx.beginPath();
-        targetCtx.moveTo(-6, -33); targetCtx.lineTo(-4, -39); targetCtx.lineTo(0, -35.5); targetCtx.lineTo(4, -39); targetCtx.lineTo(6, -33);
+        targetCtx.moveTo(-6.5, -33); targetCtx.lineTo(-4.5, -39.5); targetCtx.lineTo(0, -35.5); targetCtx.lineTo(4.5, -39.5); targetCtx.lineTo(6.5, -33);
         targetCtx.closePath();
         targetCtx.fill();
+        targetCtx.fillStyle = '#ef4444'; targetCtx.fillRect(-1, -35.2, 2, 1.8);
       } else if (cfg.hat === 'cap') {
         targetCtx.fillStyle = '#0284c7';
-        targetCtx.beginPath();
-        targetCtx.roundRect(-7.5, -37, 15, 5, 2);
-        targetCtx.fill();
-        targetCtx.fillStyle = '#0369a1';
-        targetCtx.fillRect(-8, -33.5, 19, 2.2);
+        targetCtx.beginPath(); targetCtx.roundRect(-7.5, -37.5, 15, 5.2, 2); targetCtx.fill();
+        targetCtx.fillStyle = '#0369a1'; targetCtx.fillRect(-8, -33.5, 19, 2.2);
+      } else if (cfg.hat === 'red_cap') {
+        targetCtx.fillStyle = '#dc2626';
+        targetCtx.beginPath(); targetCtx.roundRect(-7.5, -37.5, 15, 5.2, 2); targetCtx.fill();
+        targetCtx.fillStyle = '#991b1b'; targetCtx.fillRect(-11, -33.5, 19, 2.2);
       } else if (cfg.hat === 'tophat') {
         targetCtx.fillStyle = '#0f172a';
-        targetCtx.fillRect(-9, -34, 18, 2.5);
-        targetCtx.fillRect(-6, -42, 12, 8.5);
-        targetCtx.fillStyle = '#ef4444';
-        targetCtx.fillRect(-6, -36, 12, 2);
-      } else if (cfg.hat === 'horns') {
-        targetCtx.fillStyle = '#e2e8f0';
-        targetCtx.beginPath();
-        targetCtx.moveTo(-6, -33); targetCtx.lineTo(-10, -40); targetCtx.lineTo(-3, -34);
-        targetCtx.closePath();
-        targetCtx.fill();
-        targetCtx.beginPath();
-        targetCtx.moveTo(6, -33); targetCtx.lineTo(10, -40); targetCtx.lineTo(3, -34);
-        targetCtx.closePath();
-        targetCtx.fill();
+        targetCtx.fillRect(-9.5, -34, 19, 2.5);
+        targetCtx.fillRect(-6, -42.5, 12, 9);
+        targetCtx.fillStyle = '#ef4444'; targetCtx.fillRect(-6, -36, 12, 2);
+      } else if (cfg.hat === 'wizard') {
+        targetCtx.fillStyle = '#6d28d9';
+        targetCtx.fillRect(-10, -34, 20, 2.5);
+        targetCtx.beginPath(); targetCtx.moveTo(-7, -33.5); targetCtx.lineTo(1, -45); targetCtx.lineTo(7, -33.5); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.fillStyle = '#facc15'; targetCtx.fillRect(-1.5, -39, 2.2, 2.2); targetCtx.fillRect(2, -36.5, 1.8, 1.8);
+      } else if (cfg.hat === 'viking') {
+        targetCtx.fillStyle = '#64748b';
+        targetCtx.beginPath(); targetCtx.arc(0, -32.5, 7.6, Math.PI, 0); targetCtx.fill();
+        targetCtx.fillStyle = '#f8fafc';
+        targetCtx.beginPath(); targetCtx.moveTo(-7, -34); targetCtx.lineTo(-12, -41); targetCtx.lineTo(-5, -37); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.beginPath(); targetCtx.moveTo(7, -34); targetCtx.lineTo(12, -41); targetCtx.lineTo(5, -37); targetCtx.closePath(); targetCtx.fill();
+      } else if (cfg.hat === 'ninja_band') {
+        targetCtx.fillStyle = '#dc2626';
+        targetCtx.fillRect(-7.5, -32.5, 15, 2.8);
+        targetCtx.fillRect(7.5, -32, 4, 1.6); targetCtx.fillRect(7.5, -30, 3.2, 1.4);
+        targetCtx.fillStyle = '#cbd5e1'; targetCtx.fillRect(-3.5, -32.2, 7, 2.2);
+      } else if (cfg.hat === 'pirate_hat') {
+        targetCtx.fillStyle = '#1e293b';
+        targetCtx.beginPath(); targetCtx.moveTo(-10, -33); targetCtx.lineTo(-7, -40); targetCtx.lineTo(0, -38); targetCtx.lineTo(7, -40); targetCtx.lineTo(10, -33); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.fillStyle = '#facc15'; targetCtx.fillRect(-1.8, -37.2, 3.6, 2.5);
+      } else if (cfg.hat === 'astronaut_helmet') {
+        targetCtx.strokeStyle = '#38bdf8';
+        targetCtx.lineWidth = 2;
+        targetCtx.fillStyle = 'rgba(186, 230, 253, 0.28)';
+        targetCtx.beginPath(); targetCtx.arc(0, -28, 10.5, 0, Math.PI * 2); targetCtx.fill(); targetCtx.stroke();
+      } else if (cfg.hat === 'headphones') {
+        targetCtx.strokeStyle = '#06b6d4';
+        targetCtx.lineWidth = 2.4;
+        targetCtx.beginPath(); targetCtx.arc(0, -30, 8.8, Math.PI, 0); targetCtx.stroke();
+        targetCtx.fillStyle = '#0f172a';
+        targetCtx.fillRect(-9.5, -30.5, 2.8, 5.5); targetCtx.fillRect(6.7, -30.5, 2.8, 5.5);
+      } else if (cfg.hat === 'cat_ears') {
+        targetCtx.fillStyle = '#1e293b';
+        targetCtx.beginPath(); targetCtx.moveTo(-6.5, -33); targetCtx.lineTo(-5.5, -39); targetCtx.lineTo(-1.5, -33); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.beginPath(); targetCtx.moveTo(6.5, -33); targetCtx.lineTo(5.5, -39); targetCtx.lineTo(1.5, -33); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.fillStyle = '#f472b6';
+        targetCtx.beginPath(); targetCtx.moveTo(-5.5, -33.5); targetCtx.lineTo(-5, -37); targetCtx.lineTo(-2.8, -33.5); targetCtx.closePath(); targetCtx.fill();
+        targetCtx.beginPath(); targetCtx.moveTo(5.5, -33.5); targetCtx.lineTo(5, -37); targetCtx.lineTo(2.8, -33.5); targetCtx.closePath(); targetCtx.fill();
+      } else if (cfg.hat === 'beanie') {
+        targetCtx.fillStyle = '#10b981';
+        targetCtx.beginPath(); targetCtx.arc(0, -33, 7.6, Math.PI, 0); targetCtx.fill();
+        targetCtx.fillStyle = '#065f46'; targetCtx.fillRect(-7.8, -34.2, 15.6, 2.4);
+        targetCtx.fillStyle = '#fef08a'; targetCtx.beginPath(); targetCtx.arc(0, -41, 2.3, 0, Math.PI * 2); targetCtx.fill();
       } else if (cfg.hat === 'halo') {
         targetCtx.strokeStyle = '#fde047';
         targetCtx.lineWidth = 2.2;
-        targetCtx.beginPath();
-        targetCtx.ellipse(0, -39, 7, 2.4, 0, 0, Math.PI * 2);
-        targetCtx.stroke();
+        targetCtx.beginPath(); targetCtx.ellipse(0, -39.5, 7.2, 2.4, 0, 0, Math.PI * 2); targetCtx.stroke();
       }
+
       targetCtx.restore();
     }
 
