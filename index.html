@@ -12376,6 +12376,7 @@
       obby.coins = p.coins.map(c => ({ x: c.x, y: c.y, taken: false }));
       obby.finishX = p.fx;
       obby.finishY = p.fy;
+      initHubBotsForObby();
       updateMiniGameHUD();
     }
 
@@ -12407,6 +12408,7 @@
       survival = { state: 'ready', x: 290, y: 274, vy: 0, onGround: true, seconds: 0, frame: 0, lives: 3, hazards: [], coins: [], laser: null };
       miniParticles = [];
       miniPopups = [];
+      initHubBotsForSurvival();
       updateMiniGameHUD();
     }
 
@@ -12558,8 +12560,8 @@
       try { localStorage.setItem('snakeAvatarConfig_v1', JSON.stringify(avatarConfig)); } catch (e) {}
     }
 
-    function drawCustomAvatarOn(targetCtx, cx, bottomY, scale) {
-      const cfg = avatarConfig;
+    function drawCustomAvatarOn(targetCtx, cx, bottomY, scale, customCfg, nameTag) {
+      const cfg = customCfg || avatarConfig;
       const sc = scale || 1;
       const shirtObj = AVATAR_SHIRTS.find(x => x.id === cfg.shirt) || AVATAR_SHIRTS[0];
       const pantsObj = AVATAR_PANTS.find(x => x.id === cfg.pants) || AVATAR_PANTS[0];
@@ -12817,11 +12819,59 @@
         targetCtx.beginPath(); targetCtx.ellipse(0, -39.5, 7.2, 2.4, 0, 0, Math.PI * 2); targetCtx.stroke();
       }
 
+      if (nameTag) {
+        targetCtx.font = '800 8px system-ui, sans-serif';
+        targetCtx.textAlign = 'center';
+        const tw = targetCtx.measureText(nameTag).width + 8;
+        targetCtx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+        targetCtx.beginPath();
+        targetCtx.roundRect(-tw / 2, -52, tw, 11, 4);
+        targetCtx.fill();
+        targetCtx.fillStyle = '#ffffff';
+        targetCtx.fillText(nameTag, 0, -44);
+      }
       targetCtx.restore();
     }
 
+    const HUB_OTHER_PLAYERS = [
+      { name: 'AlexPro',   cfg: { skin: '#fed7aa', shirt: 'soccer_jersey', pants: 'track_pants',   hat: 'cap',        face: 'shades' } },
+      { name: 'MayaPlayz', cfg: { skin: '#d6a272', shirt: 'galaxy_tee',    pants: 'neon_joggers',  hat: 'cat_ears',   face: 'wink' } },
+      { name: 'LeoKing',   cfg: { skin: '#facc15', shirt: 'gold_armor',    pants: 'gold_greaves',  hat: 'crown',      face: 'hero' } },
+      { name: 'ZaraSky',   cfg: { skin: '#bae6fd', shirt: 'astronaut',     pants: 'space_boots',   hat: 'headphones', face: 'star' } },
+      { name: 'OmarX',     cfg: { skin: '#8d5524', shirt: 'ninja_suit',    pants: 'ninja_pants',   hat: 'ninja_band', face: 'robot' } }
+    ];
+
+    let obbyBots = [];
+    let tycoonBots = [];
+    let survivalBots = [];
+
+    function initHubBotsForObby() {
+      obbyBots = HUB_OTHER_PLAYERS.slice(0, 4).map((p, i) => ({
+        name: p.name, cfg: p.cfg,
+        x: 34 + i * 16, y: 240, vx: 0, vy: 0, onGround: false,
+        platIdx: 0, speed: 2.1 + (i % 3) * 0.45, jumpCd: 10 + i * 12
+      }));
+    }
+
+    function initHubBotsForTycoon() {
+      tycoonBots = HUB_OTHER_PLAYERS.slice(0, 3).map((p, i) => ({
+        name: p.name, cfg: p.cfg,
+        x: 160 + i * 125, y: 308, vy: 0, dir: i % 2 === 0 ? 1 : -1,
+        speed: 0.7 + i * 0.22, hopTimer: 40 + i * 35
+      }));
+    }
+
+    function initHubBotsForSurvival() {
+      survivalBots = HUB_OTHER_PLAYERS.slice(0, 4).map((p, i) => ({
+        name: p.name, cfg: p.cfg,
+        x: 100 + i * 120, y: 304, vy: 0, onGround: true,
+        alive: true, respawnTimer: 0, targetX: 140 + i * 100, speed: 3.1 + (i % 2) * 0.6
+      }));
+    }
+
     function drawBlockyAvatar(cx, bottomY) {
-      drawCustomAvatarOn(miniCtx, cx, bottomY, 1);
+      const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'You';
+      drawCustomAvatarOn(miniCtx, cx, bottomY, 1, avatarConfig, myName);
     }
 
     function drawMiniEffects() {
@@ -12995,8 +13045,41 @@
       miniCtx.fillRect(-9, 12, 18, 4);
       miniCtx.restore();
 
-      // Draw blocky Roblox avatar
-      drawBlockyAvatar(obby.x, obby.y, '#22c55e', '#1d4ed8');
+      // Update & draw other players racing through the Obby alongside you!
+      if (!obbyBots.length) initHubBotsForObby();
+      obbyBots.forEach(bot => {
+        const nextPlat = obby.platforms[Math.min(bot.platIdx + 1, obby.platforms.length - 1)];
+        const curPlat = obby.platforms[Math.min(bot.platIdx, obby.platforms.length - 1)];
+        const targetX = nextPlat ? (nextPlat.x + nextPlat.w * 0.5) : obby.finishX;
+        const dx = targetX - bot.x;
+        bot.vx = Math.abs(dx) > 4 ? Math.sign(dx) * bot.speed : 0;
+        if (bot.jumpCd > 0) bot.jumpCd--;
+        if (bot.onGround && bot.jumpCd <= 0 && curPlat && (bot.x > curPlat.x + curPlat.w - 14 || (nextPlat && nextPlat.y < bot.y - 8))) {
+          bot.vy = -8.5;
+          bot.onGround = false;
+          bot.jumpCd = 24;
+        }
+        bot.vy = Math.min(10, bot.vy + 0.42);
+        const prevB = bot.y;
+        bot.x = Math.max(12, Math.min(W - 12, bot.x + bot.vx));
+        bot.y += bot.vy;
+        bot.onGround = false;
+        obby.platforms.forEach((pl, pi) => {
+          if (bot.vy >= 0 && bot.x + 8 > pl.x && bot.x - 8 < pl.x + pl.w && prevB <= pl.y + 5 && bot.y >= pl.y) {
+            bot.y = pl.y;
+            bot.platIdx = Math.max(bot.platIdx, pi);
+            if (pl.bounce) { bot.vy = -10.6; bot.onGround = false; }
+            else { bot.vy = 0; bot.onGround = true; }
+          }
+        });
+        if (bot.y > H + 26 || Math.hypot(obby.finishX - bot.x, obby.finishY - (bot.y - 16)) < 24) {
+          bot.x = 34 + Math.random() * 28; bot.y = 240; bot.vx = 0; bot.vy = 0; bot.platIdx = 0;
+        }
+        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+      });
+
+      // Draw your custom avatar
+      drawBlockyAvatar(obby.x, obby.y);
       drawMiniEffects();
 
       if (obby.bannerTimer > 0) {
@@ -13135,8 +13218,25 @@
         }
       }
 
-      // Draw your Roblox character standing beside the factory
-      drawBlockyAvatar(70, 308, '#6366f1', '#1e293b');
+      // Update & draw other players exploring the factory floor with you!
+      if (!tycoonBots.length) initHubBotsForTycoon();
+      tycoonBots.forEach(bot => {
+        bot.x += bot.dir * bot.speed;
+        if (bot.x < 120) bot.dir = 1;
+        if (bot.x > W - 55) bot.dir = -1;
+        bot.hopTimer--;
+        if (bot.hopTimer <= 0 && bot.y >= 308) {
+          bot.vy = -4.5;
+          bot.hopTimer = 70 + Math.floor(Math.random() * 80);
+        }
+        bot.vy += 0.35;
+        bot.y = Math.min(308, bot.y + bot.vy);
+        if (bot.y >= 308) bot.vy = 0;
+        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+      });
+
+      // Draw your custom avatar standing beside your factory
+      drawBlockyAvatar(70, 308);
       miniCtx.fillStyle = '#cbd5e1';
       miniCtx.font = '800 12px system-ui, sans-serif';
       miniCtx.textAlign = 'left';
@@ -13316,7 +13416,63 @@
         miniCtx.fill();
       }
 
-      drawBlockyAvatar(survival.x, survival.y, '#ec4899', '#1e293b');
+      // Update & draw other players dodging meteors and jumping over lasers with you!
+      if (!survivalBots.length) initHubBotsForSurvival();
+      survivalBots.forEach(bot => {
+        if (!bot.alive) {
+          bot.respawnTimer--;
+          if (bot.respawnTimer <= 0) {
+            bot.alive = true;
+            bot.x = 60 + Math.random() * (W - 120);
+            bot.y = floorY;
+            bot.vy = 0;
+            bot.onGround = true;
+          }
+          return;
+        }
+        if (survival.state === 'playing') {
+          // Dodge nearest falling meteor
+          let dodgeDir = 0;
+          let danger = null;
+          let minDist = 85;
+          survival.hazards.forEach(h => {
+            if (h.y > 40 && h.y < floorY) {
+              const d = Math.abs(h.x - bot.x);
+              if (d < minDist) { minDist = d; danger = h; }
+            }
+          });
+          if (danger) {
+            dodgeDir = bot.x < danger.x ? -1 : 1;
+            if (bot.x < 35) dodgeDir = 1;
+            if (bot.x > W - 35) dodgeDir = -1;
+          } else {
+            if (Math.abs(bot.targetX - bot.x) < 12) bot.targetX = 40 + Math.random() * (W - 80);
+            dodgeDir = Math.sign(bot.targetX - bot.x);
+          }
+          bot.x = Math.max(18, Math.min(W - 18, bot.x + dodgeDir * bot.speed));
+          // Jump when laser warns or activates
+          if (survival.laser && survival.laser.warn <= 14 && bot.onGround) {
+            bot.vy = -8.4;
+            bot.onGround = false;
+          }
+          bot.vy += 0.44;
+          bot.y += bot.vy;
+          if (bot.y >= floorY) { bot.y = floorY; bot.vy = 0; bot.onGround = true; }
+          // Check meteor hit on bot
+          for (let hi = 0; hi < survival.hazards.length; hi++) {
+            const h = survival.hazards[hi];
+            if (Math.hypot(h.x - bot.x, h.y - (bot.y - 16)) < h.r + 9) {
+              bot.alive = false;
+              bot.respawnTimer = 140;
+              spawnMiniBurst(bot.x, bot.y - 16, '#f97316', 10);
+              break;
+            }
+          }
+        }
+        if (bot.alive) drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+      });
+
+      drawBlockyAvatar(survival.x, survival.y);
       drawMiniEffects();
 
       if (survival.state === 'ready' || survival.state === 'over') {
@@ -13388,6 +13544,7 @@
       reloadSavedHubGamesFromStorage();
       miniGameSessionEarned = 0;
       buildObbyStage(obbySavedStage || 1);
+      initHubBotsForTycoon();
       resetSurvival();
       if (survivalSavedRun && survivalSavedRun.seconds > 0 && survivalSavedRun.lives > 0) {
         survival.seconds = survivalSavedRun.seconds;
