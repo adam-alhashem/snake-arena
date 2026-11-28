@@ -15400,7 +15400,8 @@
         if (use3D) miniGameCanvas.classList.add('hidden');
         else miniGameCanvas.classList.remove('hidden');
       }
-      if (joyEl) { if (use3D) joyEl.classList.remove('hidden'); else joyEl.classList.add('hidden'); }
+      // 2D shows ← → arrow buttons; 3D shows NO on-screen movement buttons (keyboard / drag only!)
+      if (joyEl) joyEl.classList.add('hidden');
       if (arrowsEl) { if (use3D) arrowsEl.classList.add('hidden'); else arrowsEl.classList.remove('hidden'); }
       if (use3D) {
         initReal3DObby();
