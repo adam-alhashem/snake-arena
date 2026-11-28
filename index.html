@@ -292,6 +292,9 @@
   </div>
 
   <!-- Minimal In-Game Sound ON/OFF Button (Top-Right, only shown while playing) -->
+  <button id="btnToggle3DSnake" type="button" title="Toggle 3D / 2D Mode" class="hidden fixed top-3 right-[174px] z-30 px-2.5 py-1.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-400 shadow-md active:scale-95 transition-all cursor-pointer">
+    3D
+  </button>
   <button id="btnInGameMic" type="button" title="Toggle Microphone ON/OFF" class="hidden fixed top-3 right-16 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
     <svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     <span>Mic: OFF</span>
@@ -555,6 +558,9 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
+        <button id="btnToggle3DHub" type="button" title="Toggle 3D / 2D Mode" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer">
+          3D: ON
+        </button>
         <button id="btnHubFriends" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
           <span>Players</span>
           <span id="hubFriendsCountBadge" class="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black leading-none">0</span>
@@ -1309,6 +1315,7 @@
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">Best: <span id="miniGameBest" class="font-black text-amber-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black"><span id="miniGameCurrencyLabel">Coins</span>: <span id="miniGameMoney">0</span></span>
+        <button id="btnToggle3DMini" type="button" title="Toggle 3D / 2D Mode" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">3D</button>
         <button id="btnHubGameMic" type="button" title="Toggle Microphone ON/OFF" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
           <svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <span>Mic: OFF</span>
@@ -7779,6 +7786,8 @@
       if (btnInGameSound) btnInGameSound.classList.add('hidden');
       const _micBtnHide = document.getElementById('btnInGameMic');
       if (_micBtnHide) _micBtnHide.classList.add('hidden');
+      const _3dBtnHide = document.getElementById('btnToggle3DSnake');
+      if (_3dBtnHide) _3dBtnHide.classList.add('hidden');
       if (welcomeBlankPage) welcomeBlankPage.classList.remove('hidden');
       startLobbyLivePreview();
     }
@@ -7825,6 +7834,8 @@
       if (btnInGameSound) btnInGameSound.classList.remove('hidden');
       const _micBtnShow = document.getElementById('btnInGameMic');
       if (_micBtnShow) _micBtnShow.classList.remove('hidden');
+      const _3dBtnShow = document.getElementById('btnToggle3DSnake');
+      if (_3dBtnShow) _3dBtnShow.classList.remove('hidden');
       initGame();
       if (pendingSpinStartArrows >0) {
         playerArrowAmmo = Math.min(MAX_PLAYER_ARROWS, playerArrowAmmo + pendingSpinStartArrows);
@@ -8158,6 +8169,14 @@
       const baseR = isLoot ? 7.4 : 6.6;
       ctx.save();
       ctx.translate(cx, cy);
+
+      // 3D Floating Ground Shadow when 3D Mode is ON
+      if (typeof is3DMode !== 'undefined' && is3DMode) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.24)';
+        ctx.beginPath();
+        ctx.ellipse(3.5, 5.8, baseR * 0.85, baseR * 0.45, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       // Outer Radiant Glow
       ctx.shadowColor = color;
@@ -8505,8 +8524,19 @@
                               return sx >= vMinX && sx <= vMaxX && sy >= vMinY && sy <= vMaxY;
                             });
           if (isVisible) {
-            drawConnectedBody(bot.snake, bot.config);
-            drawHead(hx, hy, bot.dx, bot.dy, bot.config);
+            if (typeof is3DMode !== 'undefined' && is3DMode) {
+              ctx.save();
+              ctx.shadowColor = 'rgba(15, 23, 42, 0.32)';
+              ctx.shadowBlur = 9;
+              ctx.shadowOffsetX = 4;
+              ctx.shadowOffsetY = 6;
+              drawConnectedBody(bot.snake, bot.config);
+              drawHead(hx, hy, bot.dx, bot.dy, bot.config);
+              ctx.restore();
+            } else {
+              drawConnectedBody(bot.snake, bot.config);
+              drawHead(hx, hy, bot.dx, bot.dy, bot.config);
+            }
             if (bot.isBoss) {
               ctx.save();
               const bp = Math.sin(Date.now() / 160) * 3;
@@ -8560,9 +8590,20 @@
               alpha: 0.95
             });
           }
-          drawConnectedBody(snake, pSkin);
           const pHead = snake[0];
-          drawHead(pHead.x * GRID_SIZE + GRID_SIZE / 2, pHead.y * GRID_SIZE + GRID_SIZE / 2, dx, dy, pSkin);
+          if (typeof is3DMode !== 'undefined' && is3DMode) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(15, 23, 42, 0.36)';
+            ctx.shadowBlur = 11;
+            ctx.shadowOffsetX = 5;
+            ctx.shadowOffsetY = 7;
+            drawConnectedBody(snake, pSkin);
+            drawHead(pHead.x * GRID_SIZE + GRID_SIZE / 2, pHead.y * GRID_SIZE + GRID_SIZE / 2, dx, dy, pSkin);
+            ctx.restore();
+          } else {
+            drawConnectedBody(snake, pSkin);
+            drawHead(pHead.x * GRID_SIZE + GRID_SIZE / 2, pHead.y * GRID_SIZE + GRID_SIZE / 2, dx, dy, pSkin);
+          }
           drawOrbPet();
           if (typeof drawRemoteOnlineSnakes === 'function') drawRemoteOnlineSnakes();
 
@@ -12717,6 +12758,34 @@
       targetCtx.translate(cx, bottomY);
       targetCtx.scale(sc, sc);
 
+      // --- 3D GROUND SHADOW & 3D EXTRUDED BLOCK DEPTH (when 3D Mode is ON) ---
+      if (typeof is3DMode !== 'undefined' && is3DMode) {
+        // Soft ground shadow under feet
+        targetCtx.fillStyle = 'rgba(15, 23, 42, 0.32)';
+        targetCtx.beginPath();
+        targetCtx.ellipse(1.5, 1.2, 11, 3.6, 0, 0, Math.PI * 2);
+        targetCtx.fill();
+        // Extruded 3D right-side depth on legs, torso, right arm & head
+        targetCtx.fillStyle = 'rgba(15, 23, 42, 0.42)';
+        // Leg side depth
+        targetCtx.beginPath();
+        targetCtx.moveTo(7, -11); targetCtx.lineTo(10.5, -13.5); targetCtx.lineTo(10.5, -2.5); targetCtx.lineTo(7, 0);
+        targetCtx.closePath(); targetCtx.fill();
+        // Right arm & torso side depth
+        targetCtx.beginPath();
+        targetCtx.moveTo(11.5, -22); targetCtx.lineTo(14.8, -24.5); targetCtx.lineTo(14.8, -14.5); targetCtx.lineTo(11.5, -12);
+        targetCtx.closePath(); targetCtx.fill();
+        // Head side & top depth
+        targetCtx.fillStyle = 'rgba(15, 23, 42, 0.34)';
+        targetCtx.beginPath();
+        targetCtx.moveTo(7, -33); targetCtx.lineTo(10.5, -35.5); targetCtx.lineTo(10.5, -24.5); targetCtx.lineTo(7, -22);
+        targetCtx.closePath(); targetCtx.fill();
+        targetCtx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+        targetCtx.beginPath();
+        targetCtx.moveTo(-7, -33); targetCtx.lineTo(-3.5, -35.5); targetCtx.lineTo(10.5, -35.5); targetCtx.lineTo(7, -33);
+        targetCtx.closePath(); targetCtx.fill();
+      }
+
       // --- 1. PANTS & SHOES ---
       targetCtx.fillStyle = pantsObj.col;
       targetCtx.fillRect(-7, -11, 6, 11);
@@ -13195,13 +13264,43 @@
       miniCtx.fillStyle = 'rgba(239, 68, 68, 0.35)';
       miniCtx.fillRect(0, H - 10, W, 10);
 
-      // Draw platforms
+      // Draw platforms (3D extruded blocks when 3D Mode is ON!)
       obby.platforms.forEach(pl => {
+        if (typeof is3DMode !== 'undefined' && is3DMode) {
+          const dx3 = 9, dy3 = -6;
+          // Drop shadow below floating platform
+          miniCtx.fillStyle = 'rgba(15, 23, 42, 0.28)';
+          miniCtx.beginPath();
+          miniCtx.ellipse(pl.x + pl.w / 2 + 4, pl.y + pl.h + 14, pl.w * 0.45, 5, 0, 0, Math.PI * 2);
+          miniCtx.fill();
+          // 3D Top Face (brighter)
+          miniCtx.fillStyle = pl.col;
+          miniCtx.beginPath();
+          miniCtx.moveTo(pl.x, pl.y);
+          miniCtx.lineTo(pl.x + dx3, pl.y + dy3);
+          miniCtx.lineTo(pl.x + pl.w + dx3, pl.y + dy3);
+          miniCtx.lineTo(pl.x + pl.w, pl.y);
+          miniCtx.closePath();
+          miniCtx.fill();
+          miniCtx.fillStyle = 'rgba(255,255,255,0.34)';
+          miniCtx.fill();
+          // 3D Right Side Face (darker)
+          miniCtx.fillStyle = pl.col;
+          miniCtx.beginPath();
+          miniCtx.moveTo(pl.x + pl.w, pl.y);
+          miniCtx.lineTo(pl.x + pl.w + dx3, pl.y + dy3);
+          miniCtx.lineTo(pl.x + pl.w + dx3, pl.y + pl.h + dy3);
+          miniCtx.lineTo(pl.x + pl.w, pl.y + pl.h);
+          miniCtx.closePath();
+          miniCtx.fill();
+          miniCtx.fillStyle = 'rgba(15,23,42,0.38)';
+          miniCtx.fill();
+        }
         miniCtx.fillStyle = pl.col;
         miniCtx.strokeStyle = 'rgba(255,255,255,0.45)';
-        miniCtx.lineWidth = 2;
+        miniCtx.lineWidth = 1.6;
         miniCtx.beginPath();
-        miniCtx.roundRect(pl.x, pl.y, pl.w, pl.h, 5);
+        miniCtx.roundRect(pl.x, pl.y, pl.w, pl.h, 4);
         miniCtx.fill();
         miniCtx.stroke();
         if (pl.bounce) {
@@ -13407,10 +13506,23 @@
         miniCtx.save();
         miniCtx.shadowColor = c.col;
         miniCtx.shadowBlur = 8;
+        if (typeof is3DMode !== 'undefined' && is3DMode) {
+          // 3D Isometric Money Cube (top + side + front faces)
+          miniCtx.fillStyle = c.col;
+          miniCtx.beginPath();
+          miniCtx.moveTo(c.x - 8, c.y - 8); miniCtx.lineTo(c.x - 3, c.y - 13); miniCtx.lineTo(c.x + 13, c.y - 13); miniCtx.lineTo(c.x + 8, c.y - 8);
+          miniCtx.closePath(); miniCtx.fill();
+          miniCtx.fillStyle = 'rgba(255,255,255,0.4)'; miniCtx.fill();
+          miniCtx.fillStyle = c.col;
+          miniCtx.beginPath();
+          miniCtx.moveTo(c.x + 8, c.y - 8); miniCtx.lineTo(c.x + 13, c.y - 13); miniCtx.lineTo(c.x + 13, c.y + 3); miniCtx.lineTo(c.x + 8, c.y + 8);
+          miniCtx.closePath(); miniCtx.fill();
+          miniCtx.fillStyle = 'rgba(15,23,42,0.38)'; miniCtx.fill();
+        }
         miniCtx.fillStyle = c.col;
         miniCtx.fillRect(c.x - 8, c.y - 8, 16, 16);
         miniCtx.strokeStyle = '#ffffff';
-        miniCtx.lineWidth = 1.5;
+        miniCtx.lineWidth = 1.3;
         miniCtx.strokeRect(c.x - 8, c.y - 8, 16, 16);
         miniCtx.restore();
 
@@ -13559,18 +13671,25 @@
         }
       }
 
-      // Draw meteors
+      // Draw meteors (with 3D ground impact shadows & 3D sphere lighting!)
       survival.hazards.forEach(h => {
+        if (typeof is3DMode !== 'undefined' && is3DMode) {
+          const proximity = Math.max(0.25, Math.min(1, h.y / floorY));
+          miniCtx.fillStyle = `rgba(239, 68, 68, ${0.18 + proximity * 0.32})`;
+          miniCtx.beginPath();
+          miniCtx.ellipse(h.x, floorY + 2, h.r * (0.5 + proximity * 0.7), 3.5, 0, 0, Math.PI * 2);
+          miniCtx.fill();
+        }
         miniCtx.save();
         miniCtx.shadowColor = '#f97316';
-        miniCtx.shadowBlur = 12;
-        miniCtx.fillStyle = '#dc2626';
+        miniCtx.shadowBlur = 14;
+        const grad = miniCtx.createRadialGradient(h.x - h.r * 0.3, h.y - h.r * 0.3, h.r * 0.1, h.x, h.y, h.r);
+        grad.addColorStop(0, '#fef08a');
+        grad.addColorStop(0.45, '#f97316');
+        grad.addColorStop(1, '#991b1b');
+        miniCtx.fillStyle = grad;
         miniCtx.beginPath();
         miniCtx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
-        miniCtx.fill();
-        miniCtx.fillStyle = '#facc15';
-        miniCtx.beginPath();
-        miniCtx.arc(h.x, h.y - 2, h.r * 0.45, 0, Math.PI * 2);
         miniCtx.fill();
         miniCtx.restore();
       });
@@ -15104,6 +15223,49 @@
         syncServerPlayersForFriends();
       }
     }, 2000);
+
+    // =========================================================================
+    // 3D MODE TOGGLE (DEFAULT ON ACROSS ALL 4 GAMES)
+    // =========================================================================
+    let is3DMode = localStorage.getItem('snake3DMode_v1') !== 'false';
+    const btnToggle3DHub = document.getElementById('btnToggle3DHub');
+    const btnToggle3DMini = document.getElementById('btnToggle3DMini');
+    const btnToggle3DSnake = document.getElementById('btnToggle3DSnake');
+
+    function update3DButtonsUI() {
+      if (btnToggle3DHub) {
+        btnToggle3DHub.textContent = is3DMode ? '3D: ON' : '2D Mode';
+        btnToggle3DHub.className = is3DMode
+          ? 'px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-2xs active:scale-95 transition-all cursor-pointer'
+          : 'px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-black active:scale-95 transition-all cursor-pointer';
+      }
+      if (btnToggle3DMini) {
+        btnToggle3DMini.textContent = is3DMode ? '3D' : '2D';
+        btnToggle3DMini.className = is3DMode
+          ? 'px-2.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer'
+          : 'px-2.5 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-black active:scale-95 transition-all cursor-pointer';
+      }
+      if (btnToggle3DSnake) {
+        btnToggle3DSnake.textContent = is3DMode ? '3D' : '2D';
+        const isHidden = btnToggle3DSnake.classList.contains('hidden');
+        btnToggle3DSnake.className = (isHidden ? 'hidden ' : '') + (is3DMode
+          ? 'fixed top-3 right-[174px] z-30 px-2.5 py-1.5 rounded-xl text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-400 shadow-md active:scale-95 transition-all cursor-pointer'
+          : 'fixed top-3 right-[174px] z-30 px-2.5 py-1.5 rounded-xl text-xs font-black bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer');
+      }
+    }
+
+    function toggle3DMode(e) {
+      if (e) e.stopPropagation();
+      is3DMode = !is3DMode;
+      try { localStorage.setItem('snake3DMode_v1', is3DMode ? 'true' : 'false'); } catch (err) {}
+      update3DButtonsUI();
+      if (typeof playSFX === 'function') playSFX('eat');
+    }
+
+    if (btnToggle3DHub) btnToggle3DHub.addEventListener('click', toggle3DMode);
+    if (btnToggle3DMini) btnToggle3DMini.addEventListener('click', toggle3DMode);
+    if (btnToggle3DSnake) btnToggle3DSnake.addEventListener('click', toggle3DMode);
+    update3DButtonsUI();
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
