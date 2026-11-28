@@ -1356,7 +1356,7 @@
         <div class="absolute bottom-4 right-4 bg-slate-950/80 backdrop-blur-sm border border-white/15 rounded-2xl px-4 py-3 text-white shadow-2xl flex flex-col items-end gap-2">
           <div class="flex items-center gap-1.5">
             <button id="btnCar3DModel" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Car: GT Red</button>
-            <button id="btnCar3DSky" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Sakura Day</button>
+            <button id="btnCar3DSky" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Paris Day</button>
             <button id="btnCar3DCam" type="button" class="pointer-events-auto px-2 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-[10px] font-black uppercase tracking-wider text-white cursor-pointer active:scale-95 transition-all">Cam: Chase</button>
           </div>
           <div class="flex items-center gap-3">
@@ -16428,9 +16428,9 @@
       { name: 'Drift White',  col: '#f8fafc', stripe: '#ec4899', maxKmh: 285, accel: 1.50 }
     ];
     const FH6_SKIES = [
-      { label: 'Sakura Day',    bg: '#38bdf8', fog: '#bae6fd', sunCol: '#fffbeb', hemiTop: '#ffffff', hemiBot: '#15803d', sunInt: 1.35 },
-      { label: 'Golden Sunset', bg: '#0c4a6e', fog: '#ea580c', sunCol: '#fde68a', hemiTop: '#fed7aa', hemiBot: '#0f172a', sunInt: 1.25 },
-      { label: 'Tokyo Night',   bg: '#020617', fog: '#0f172a', sunCol: '#818cf8', hemiTop: '#312e81', hemiBot: '#020617', sunInt: 0.55 }
+      { label: 'Paris Day',     bg: '#60a5fa', fog: '#dbeafe', sunCol: '#fffbeb', hemiTop: '#ffffff', hemiBot: '#94a3b8', sunInt: 1.35 },
+      { label: 'Seine Sunset',  bg: '#1e3a5f', fog: '#fb923c', sunCol: '#fde68a', hemiTop: '#fed7aa', hemiBot: '#334155', sunInt: 1.25 },
+      { label: 'Paris Night',   bg: '#020617', fog: '#0f172a', sunCol: '#fcd34d', hemiTop: '#1e293b', hemiBot: '#020617', sunInt: 0.62 }
     ];
 
     let c3 = {
@@ -16480,19 +16480,29 @@
       const c = document.createElement('canvas');
       c.width = 256; c.height = 256;
       const g = c.getContext('2d');
-      g.fillStyle = '#1f2430';
+      // Parisian stone pave / Champs-Elysees granite cobble street
+      g.fillStyle = '#3d424d';
       g.fillRect(0, 0, 256, 256);
-      for (let i = 0; i < 2000; i++) {
-        const v = 26 + Math.floor(Math.random() * 24);
-        g.fillStyle = `rgb(${v},${v + 2},${v + 8})`;
-        g.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+      const rowH = 16, colW = 24;
+      for (let row = 0; row < 16; row++) {
+        const offset = (row % 2) * (colW / 2);
+        for (let col = -1; col < 12; col++) {
+          const shade = 56 + ((row * 17 + col * 31) % 22);
+          g.fillStyle = `rgb(${shade + 4},${shade + 2},${shade})`;
+          g.fillRect(col * colW + offset + 1, row * rowH + 1, colW - 2, rowH - 2);
+        }
       }
-      g.fillStyle = 'rgba(250,204,21,0.85)';
-      g.fillRect(124, 16, 8, 96);
-      g.fillRect(124, 144, 8, 96);
-      g.fillStyle = 'rgba(248,250,252,0.85)';
-      g.fillRect(6, 0, 6, 256);
-      g.fillRect(244, 0, 6, 256);
+      // Subtle limestone sidewalk curb strips on both edges
+      g.fillStyle = '#cbd5e1';
+      g.fillRect(0, 0, 10, 256);
+      g.fillRect(246, 0, 10, 256);
+      // Clean European white dashed center line & lane edge lines
+      g.fillStyle = 'rgba(248,250,252,0.88)';
+      g.fillRect(125, 16, 6, 88);
+      g.fillRect(125, 144, 6, 88);
+      g.fillStyle = 'rgba(248,250,252,0.72)';
+      g.fillRect(14, 0, 4, 256);
+      g.fillRect(238, 0, 4, 256);
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
@@ -16626,7 +16636,7 @@
 
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(600, 600),
-        new THREE.MeshStandardMaterial({ color: '#166534', roughness: 0.95 })
+        new THREE.MeshStandardMaterial({ color: '#a8a29e', roughness: 0.92 })
       );
       ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true;
       c3.scene.add(ground);
@@ -16753,63 +16763,151 @@
       addRoadStrip(0, 0, 14, 206, 0, 0.012);
       addRoadStrip(0, 0, 14, 206, Math.PI / 2, 0.014);
 
-      // Iconic Snow-Capped Mount Fuji towering in the North!
-      const fujiGrp = new THREE.Group();
-      const fujiBase = new THREE.Mesh(new THREE.ConeGeometry(88, 72, 24), new THREE.MeshStandardMaterial({ color: '#334155', roughness: 0.95 }));
-      fujiBase.position.y = 36;
-      const fujiSnow = new THREE.Mesh(new THREE.ConeGeometry(34, 28, 24), new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.8 }));
-      fujiSnow.position.y = 58.5;
-      fujiGrp.add(fujiBase, fujiSnow);
-      fujiGrp.position.set(0, 0, -255);
-      c3.scene.add(fujiGrp);
-
-      // Red Japanese Torii Gates you can drive right under!
-      const toriiMat = new THREE.MeshStandardMaterial({ color: '#dc2626', roughness: 0.45 });
-      const addTorii = (x, z, rotY) => {
-        const tg = new THREE.Group();
-        const pL = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 9.5, 10), toriiMat); pL.position.set(-8.5, 4.75, 0);
-        const pR = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.5, 9.5, 10), toriiMat); pR.position.set(8.5, 4.75, 0);
-        const top1 = new THREE.Mesh(new THREE.BoxGeometry(21, 0.9, 1.1), toriiMat); top1.position.set(0, 9.4, 0);
-        const top2 = new THREE.Mesh(new THREE.BoxGeometry(18.5, 0.65, 0.8), toriiMat); top2.position.set(0, 7.6, 0);
-        tg.add(pL, pR, top1, top2);
-        tg.position.set(x, 0, z);
-        tg.rotation.y = rotY || 0;
-        c3.scene.add(tg);
-      };
-      addTorii(0, 55, 0); addTorii(0, -55, 0); addTorii(55, 0, Math.PI / 2); addTorii(-55, 0, Math.PI / 2);
-
-      // Tokyo Neon Skyscrapers!
-      const neonCols = ['#38bdf8', '#f472b6', '#a855f7', '#facc15', '#34d399'];
-      const bldgSpots = [
-        [-45, -45], [-72, -48], [-48, -74], [45, -45], [74, -48], [48, -74],
-        [-45, 45], [-72, 48], [45, 45], [74, 48], [-145, -60], [145, -60], [-145, 50], [145, 50]
-      ];
-      bldgSpots.forEach(([bx, bz], i) => {
-        const bh = 22 + (i % 4) * 14;
-        const bw = 12 + (i % 3) * 4;
-        const bldg = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bw), new THREE.MeshStandardMaterial({ color: '#1e293b', roughness: 0.4, metalness: 0.4 }));
-        bldg.position.set(bx, bh / 2, bz);
-        c3.scene.add(bldg);
-        const neon = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.3, 0.9, bw + 0.3), new THREE.MeshBasicMaterial({ color: neonCols[i % neonCols.length] }));
-        neon.position.set(bx, bh - 2.5, bz);
-        c3.scene.add(neon);
+      // Tuileries-style manicured green Paris park lawns inside the 4 grand city blocks
+      const lawnMat = new THREE.MeshStandardMaterial({ color: '#2f6f3e', roughness: 0.9 });
+      [[-55, -55], [55, -55], [-55, 55], [55, 55]].forEach(([lx, lz]) => {
+        const lawn = new THREE.Mesh(new THREE.PlaneGeometry(76, 76), lawnMat);
+        lawn.rotation.x = -Math.PI / 2;
+        lawn.position.set(lx, -0.02, lz);
+        lawn.receiveShadow = true;
+        c3.scene.add(lawn);
       });
 
-      // Pink Cherry Blossom (Sakura) Trees!
-      const trunkMat = new THREE.MeshStandardMaterial({ color: '#78350f' });
-      const sakuraMat = new THREE.MeshStandardMaterial({ color: '#f9a8d4', roughness: 0.7 });
-      const addSakura = (tx, tz) => {
+      // Iconic Eiffel Tower towering in the North of Paris!
+      const eiffelGrp = new THREE.Group();
+      const eiffelIron = new THREE.MeshStandardMaterial({ color: '#6b5744', metalness: 0.55, roughness: 0.45 });
+      const eiffelGlow = new THREE.MeshBasicMaterial({ color: '#fde68a' });
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(5.5, 36, 5.5), eiffelIron);
+        leg.position.set(sx * 11, 16, sz * 11);
+        leg.rotation.z = sx * 0.24;
+        leg.rotation.x = -sz * 0.24;
+        eiffelGrp.add(leg);
+      });
+      const deck1 = new THREE.Mesh(new THREE.BoxGeometry(24, 3.2, 24), eiffelIron); deck1.position.y = 32;
+      const midShaft = new THREE.Mesh(new THREE.CylinderGeometry(5.5, 10.5, 34, 4), eiffelIron); midShaft.position.y = 49; midShaft.rotation.y = Math.PI / 4;
+      const deck2 = new THREE.Mesh(new THREE.BoxGeometry(14, 2.6, 14), eiffelIron); deck2.position.y = 66;
+      const topSpire = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 5.0, 56, 4), eiffelIron); topSpire.position.y = 95; topSpire.rotation.y = Math.PI / 4;
+      const deck3 = new THREE.Mesh(new THREE.BoxGeometry(5.4, 2.2, 5.4), eiffelIron); deck3.position.y = 122;
+      const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.55, 14, 6), eiffelIron); antenna.position.y = 130;
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.6, 10, 10), eiffelGlow); beacon.position.y = 137;
+      eiffelGrp.add(deck1, midShaft, deck2, topSpire, deck3, antenna, beacon);
+      eiffelGrp.position.set(0, 0, -210);
+      c3.scene.add(eiffelGrp);
+
+      // Grand Limestone Arc de Triomphe Arches you can drive right under!
+      const stoneMat = new THREE.MeshStandardMaterial({ color: '#e7dcc6', roughness: 0.72 });
+      const stoneTrimMat = new THREE.MeshStandardMaterial({ color: '#d4c5a9', roughness: 0.68 });
+      const addArcDeTriomphe = (x, z, rotY) => {
+        const ag = new THREE.Group();
+        const pL = new THREE.Mesh(new THREE.BoxGeometry(4.2, 11.5, 5.2), stoneMat); pL.position.set(-9.6, 5.75, 0);
+        const pR = new THREE.Mesh(new THREE.BoxGeometry(4.2, 11.5, 5.2), stoneMat); pR.position.set(9.6, 5.75, 0);
+        const attic = new THREE.Mesh(new THREE.BoxGeometry(24.2, 5.2, 5.6), stoneMat); attic.position.set(0, 13.8, 0);
+        const cornice = new THREE.Mesh(new THREE.BoxGeometry(25.2, 1.1, 6.2), stoneTrimMat); cornice.position.set(0, 16.6, 0);
+        const frieze = new THREE.Mesh(new THREE.BoxGeometry(24.6, 0.9, 5.8), stoneTrimMat); frieze.position.set(0, 11.4, 0);
+        ag.add(pL, pR, attic, cornice, frieze);
+        ag.position.set(x, 0, z);
+        ag.rotation.y = rotY || 0;
+        c3.scene.add(ag);
+      };
+      addArcDeTriomphe(0, 56, 0); addArcDeTriomphe(0, -56, 0); addArcDeTriomphe(56, 0, Math.PI / 2); addArcDeTriomphe(-56, 0, Math.PI / 2);
+
+      // Classic Paris Haussmann Limestone Buildings with French Windows, Slate Mansard Roofs & Cafe Awnings
+      const hCanvas = document.createElement('canvas');
+      hCanvas.width = 256; hCanvas.height = 256;
+      const hg = hCanvas.getContext('2d');
+      hg.fillStyle = '#efe5d4';
+      hg.fillRect(0, 0, 256, 256);
+      // Stone floor cornice lines
+      hg.fillStyle = '#d6c7ad';
+      for (let y = 0; y < 256; y += 52) hg.fillRect(0, y, 256, 5);
+      // Tall French windows with wrought-iron balcony rails
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 5; col++) {
+          const wx = 14 + col * 48, wy = 12 + row * 52;
+          hg.fillStyle = '#334155';
+          hg.fillRect(wx, wy, 28, 34);
+          hg.fillStyle = '#94a3b8';
+          hg.fillRect(wx + 3, wy + 3, 10, 26);
+          hg.fillRect(wx + 15, wy + 3, 10, 26);
+          hg.fillStyle = '#0f172a';
+          hg.fillRect(wx - 2, wy + 25, 32, 9);
+        }
+      }
+      // Ground floor warm Parisian shopfront
+      hg.fillStyle = '#7c2d12';
+      hg.fillRect(0, 214, 256, 42);
+      hg.fillStyle = '#fef3c7';
+      for (let col = 0; col < 4; col++) hg.fillRect(14 + col * 60, 222, 42, 28);
+      const haussTex = new THREE.CanvasTexture(hCanvas);
+      haussTex.wrapS = THREE.RepeatWrapping; haussTex.wrapT = THREE.RepeatWrapping;
+      const haussMat = new THREE.MeshStandardMaterial({ map: haussTex, roughness: 0.78 });
+      const mansardMat = new THREE.MeshStandardMaterial({ color: '#334155', roughness: 0.55, metalness: 0.25 });
+      const awningCols = ['#b91c1c', '#166534', '#1e3a8a', '#991b1b'];
+
+      const bldgSpots = [
+        [-30, -34], [-30, -68], [-68, -34], [-68, -68],
+        [30, -34], [30, -68], [68, -34], [68, -68],
+        [-30, 34], [-30, 68], [-68, 34], [-68, 68],
+        [30, 34], [30, 68], [68, 34], [68, 68],
+        [-136, -65], [-136, -22], [-136, 22], [-136, 65],
+        [136, -65], [136, -22], [136, 22], [136, 65],
+        [-65, -136], [-22, -136], [22, -136], [65, -136],
+        [-65, 136], [-22, 136], [22, 136], [65, 136]
+      ];
+      bldgSpots.forEach(([bx, bz], i) => {
+        const bh = 16 + (i % 3) * 3;
+        const bw = 18 + (i % 2) * 4;
+        const bd = 16 + (i % 2) * 3;
+        const bGrp = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), haussMat);
+        body.position.y = bh / 2;
+        body.castShadow = true;
+        bGrp.add(body);
+        // Parisian zinc mansard roof
+        const roof = new THREE.Mesh(new THREE.CylinderGeometry(bw * 0.56, bw * 0.72, 3.6, 4), mansardMat);
+        roof.position.y = bh + 1.8;
+        roof.rotation.y = Math.PI / 4;
+        roof.scale.set(1, 1, bd / bw);
+        bGrp.add(roof);
+        // Parisian cafe awning
+        const awn = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.8, 0.45, bd + 0.8), new THREE.MeshStandardMaterial({ color: awningCols[i % awningCols.length], roughness: 0.7 }));
+        awn.position.y = 3.4;
+        bGrp.add(awn);
+        bGrp.position.set(bx, 0, bz);
+        c3.scene.add(bGrp);
+      });
+
+      // Champs-Elysees Green Boulevard Plane Trees & Classic Parisian Streetlamps!
+      const trunkMat = new THREE.MeshStandardMaterial({ color: '#5c4033' });
+      const parisLeafMat = new THREE.MeshStandardMaterial({ color: '#2e6f40', roughness: 0.78 });
+      const lampIronMat = new THREE.MeshStandardMaterial({ color: '#1e293b', metalness: 0.6, roughness: 0.4 });
+      const lampGlobeMat = new THREE.MeshBasicMaterial({ color: '#fef08a' });
+      const addParisTree = (tx, tz) => {
         const t = new THREE.Group();
-        const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.4, 3.6, 8), trunkMat); tr.position.y = 1.8;
-        const bl = new THREE.Mesh(new THREE.SphereGeometry(2.4, 10, 8), sakuraMat); bl.position.y = 4.6;
-        t.add(tr, bl);
+        const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.34, 3.8, 8), trunkMat); tr.position.y = 1.9;
+        const crown = new THREE.Mesh(new THREE.SphereGeometry(2.2, 10, 8), parisLeafMat); crown.position.y = 4.9;
+        t.add(tr, crown);
         t.position.set(tx, 0, tz);
         c3.scene.add(t);
       };
-      for (let d = -92; d <= 92; d += 22) {
-        if (Math.abs(d) > 14) {
-          addSakura(-11.5, d); addSakura(11.5, d);
-          addSakura(d, -11.5); addSakura(d, 11.5);
+      const addParisLamp = (lx, lz) => {
+        const l = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 5.2, 8), lampIronMat); pole.position.y = 2.6;
+        const globe = new THREE.Mesh(new THREE.SphereGeometry(0.38, 8, 8), lampGlobeMat); globe.position.y = 5.45;
+        l.add(pole, globe);
+        l.position.set(lx, 0, lz);
+        c3.scene.add(l);
+      };
+      for (let d = -92; d <= 92; d += 18) {
+        if (Math.abs(d) > 13) {
+          if (Math.abs(d) % 36 === 0) {
+            addParisLamp(-9.2, d); addParisLamp(9.2, d);
+            addParisLamp(d, -9.2); addParisLamp(d, 9.2);
+          } else {
+            addParisTree(-10.8, d); addParisTree(10.8, d);
+            addParisTree(d, -10.8); addParisTree(d, 10.8);
+          }
         }
       }
 
