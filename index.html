@@ -1359,7 +1359,7 @@
           </div>
         </div>
 
-        <div id="car3DLivesRow" class="flex items-center gap-1 mt-0.5"></div>
+
       </div>
 
       <!-- Floating Translucent Single-Row Top Bar (never wraps or shrinks the game on mobile!) -->
@@ -14103,12 +14103,11 @@
           t.y += carGame.speed - t.vy * 0.35;
           if (carGame.invuln <= 0 && Math.abs(t.x - carGame.x) < 26 && Math.abs(t.y - carGame.y) < 42) {
             carGame.traffic.splice(i, 1);
-            carGame.lives--;
-            carGame.invuln = 75;
+            carGame.invuln = 55;
+            carGame.speed = Math.max(2.5, carGame.speed * 0.5);
             spawnMiniBurst(carGame.x, carGame.y - 10, '#f97316', 18);
-            pushMiniPopup(carGame.x, carGame.y - 30, 'CRASH!', '#f87171');
+            pushMiniPopup(carGame.x, carGame.y - 30, 'BUMP!', '#f87171');
             if (typeof playSFX === 'function') playSFX('gameover');
-            if (carGame.lives <= 0) carGame.state = 'over';
             continue;
           }
           if (t.y > H + 50) carGame.traffic.splice(i, 1);
@@ -14173,11 +14172,7 @@
         drawSportsCar(carGame.x, carGame.y, '#ef4444', '#fef08a', true, boosting);
       }
 
-      // Draw lives + Nitro gauge + Speedometer (top-left)
-      for (let i = 0; i < 3; i++) {
-        miniCtx.fillStyle = i < carGame.lives ? '#ef4444' : 'rgba(255,255,255,0.25)';
-        miniCtx.beginPath(); miniCtx.arc(22 + i * 18, 62, 6, 0, Math.PI * 2); miniCtx.fill();
-      }
+
 
       miniCtx.fillStyle = '#ffffff';
       miniCtx.font = '900 11px system-ui, sans-serif';
@@ -16824,11 +16819,9 @@
         if (c3.invuln <= 0 && Math.abs(t.x - c3.px) < 1.85 && Math.abs(t.z) < 3.6) {
           c3.scene.remove(t.mesh);
           c3.traffic.splice(i, 1);
-          c3.lives--;
-          c3.invuln = 75;
+          c3.invuln = 55;
           c3.kmh *= 0.35;
           if (typeof playSFX === 'function') playSFX('gameover');
-          if (c3.lives <= 0) { resetReal3DCar(); break; }
           continue;
         }
         if (t.z > 24 || t.z < -200) {
