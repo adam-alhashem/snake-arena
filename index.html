@@ -13949,15 +13949,68 @@
       }
     }
 
+    const livePlayersPresence = {}; // lowerName -> { online: bool, game: string }
+
+    function formatPlayerPresence(name) {
+      const key = (name || '').trim().toLowerCase();
+      const pr = livePlayersPresence[key];
+      if (!pr || !pr.online) {
+        return { label: 'Offline', dotCls: 'bg-slate-400', chipCls: 'bg-slate-50 border-slate-200 text-slate-600' };
+      }
+      if (pr.game === 'snake') {
+        return { label: 'Playing Snake Arena', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+      }
+      if (pr.game === 'obby') {
+        return { label: 'Playing Mega Obby', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+      }
+      if (pr.game === 'tycoon') {
+        return { label: 'Playing Money Tycoon', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+      }
+      if (pr.game === 'survival') {
+        return { label: 'Playing Disaster Survival', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+      }
+      return { label: 'In Lobby', dotCls: 'bg-sky-500', chipCls: 'bg-sky-50 border-sky-300 text-sky-900' };
+    }
+
+    function sendMyPresenceHeartbeat(isOnline) {
+      if (window.location.protocol === 'file:') return;
+      if (!playerProfile || !playerProfile.name) return;
+      let curGame = 'hub';
+      if (typeof miniGameModal !== 'undefined' && miniGameModal && !miniGameModal.classList.contains('hidden')) {
+        curGame = miniGameMode || 'obby';
+      } else if (typeof isRunning !== 'undefined' && isRunning) {
+        curGame = 'snake';
+      } else if (typeof welcomeBlankPage !== 'undefined' && welcomeBlankPage && !welcomeBlankPage.classList.contains('hidden')) {
+        curGame = 'hub';
+      }
+      const payload = JSON.stringify({
+        name: playerProfile.name,
+        avatar: typeof avatarConfig !== 'undefined' ? avatarConfig : null,
+        game: curGame,
+        online: isOnline !== false
+      });
+      if (isOnline === false && navigator.sendBeacon) {
+        try { navigator.sendBeacon('/api/presence', new Blob([payload], { type: 'application/json' })); return; } catch (e) {}
+      }
+      fetch('/api/presence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload
+      }).catch(() => {});
+    }
+
     function syncServerPlayersForFriends() {
       if (window.location.protocol === 'file:') return;
       fetch('/api/players')
         .then(r => r.ok ? r.json() : null)
         .then(data => {
           if (!data || !Array.isArray(data.players)) return;
+          Object.keys(livePlayersPresence).forEach(k => delete livePlayersPresence[k]);
           data.players.forEach(p => {
             if (!p || !p.name) return;
-            const ex = registeredPlayers.find(x => x.name.toLowerCase() === p.name.toLowerCase());
+            const key = p.name.toLowerCase();
+            livePlayersPresence[key] = { online: !!p.online, game: p.game || 'offline' };
+            const ex = registeredPlayers.find(x => x.name.toLowerCase() === key);
             if (!ex) {
               registeredPlayers.push({ name: p.name, cfg: p.avatar || generateAvatarForFriendName(p.name), lastPlayed: (p.last_seen || 0) * 1000 });
             } else if (p.avatar) {
@@ -14022,19 +14075,18 @@
           strip.appendChild(empty);
         } else {
           friendsList.forEach(fr => {
+            const pres = formatPlayerPresence(fr.name);
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = `px-2.5 py-1.5 rounded-2xl border flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95 ${
-              fr.inParty !== false ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-600'
-            }`;
+            chip.className = `px-2.5 py-1.5 rounded-2xl border flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95 ${pres.chipCls}`;
             const dot = document.createElement('span');
-            dot.className = `w-2.5 h-2.5 rounded-full ${fr.inParty !== false ? 'bg-emerald-500' : 'bg-slate-400'}`;
+            dot.className = `w-2.5 h-2.5 rounded-full shrink-0 ${pres.dotCls}`;
             const nm = document.createElement('span');
             nm.className = 'text-xs font-black';
             nm.textContent = fr.name;
             const st = document.createElement('span');
-            st.className = 'text-[10px] font-bold opacity-75';
-            st.textContent = fr.inParty !== false ? 'Playing' : 'Offline';
+            st.className = 'text-[10px] font-bold opacity-85';
+            st.textContent = pres.label;
             chip.appendChild(dot);
             chip.appendChild(nm);
             chip.appendChild(st);
@@ -14053,17 +14105,25 @@
           listEl.appendChild(empty);
         } else {
           friendsList.forEach((fr, idx) => {
+            const pres = formatPlayerPresence(fr.name);
             const row = document.createElement('div');
             row.className = 'p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2';
             const left = document.createElement('div');
             left.className = 'flex items-center gap-2 min-w-0';
             const dot = document.createElement('span');
-            dot.className = `w-2.5 h-2.5 rounded-full shrink-0 ${fr.inParty !== false ? 'bg-emerald-500' : 'bg-slate-400'}`;
+            dot.className = `w-2.5 h-2.5 rounded-full shrink-0 ${pres.dotCls}`;
+            const txtWrap = document.createElement('div');
+            txtWrap.className = 'flex flex-col leading-tight min-w-0';
             const nm = document.createElement('span');
             nm.className = 'text-xs font-black text-slate-800 truncate';
             nm.textContent = fr.name;
+            const subSt = document.createElement('span');
+            subSt.className = 'text-[10px] font-bold text-slate-500 truncate';
+            subSt.textContent = pres.label;
+            txtWrap.appendChild(nm);
+            txtWrap.appendChild(subSt);
             left.appendChild(dot);
-            left.appendChild(nm);
+            left.appendChild(txtWrap);
 
             const btns = document.createElement('div');
             btns.className = 'flex items-center gap-1.5 shrink-0';
@@ -14945,9 +15005,19 @@
       }
     });
 
-    window.addEventListener('beforeunload', mpDisconnectRoom);
+    window.addEventListener('beforeunload', () => {
+      sendMyPresenceHeartbeat(false);
+      mpDisconnectRoom();
+    });
     updateOnlineRoomUI();
+    sendMyPresenceHeartbeat(true);
     syncServerPlayersForFriends();
+    setInterval(() => {
+      sendMyPresenceHeartbeat(true);
+      if ((platformHomePage && !platformHomePage.classList.contains('hidden')) || (friendsModal && !friendsModal.classList.contains('hidden'))) {
+        syncServerPlayersForFriends();
+      }
+    }, 5000);
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();

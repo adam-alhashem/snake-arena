@@ -209,11 +209,22 @@ class GameServerHandler(BaseHTTPRequestHandler):
         if path == "/api/players":
             qs = parse_qs(parsed.query)
             q = (qs.get("q", [""])[0] or "").strip().lower()
+            now = time.time()
             with players_lock:
-                items = list(players_db.values())
+                items = []
+                for p in players_db.values():
+                    last_s = p.get("last_seen", 0) or 0
+                    is_online = bool(p.get("online", False)) and (now - last_s < 16)
+                    items.append({
+                        "name": p.get("name", ""),
+                        "avatar": p.get("avatar"),
+                        "last_seen": last_s,
+                        "online": is_online,
+                        "game": p.get("game", "hub") if is_online else "offline",
+                    })
             if q:
                 items = [p for p in items if q in p.get("name", "").lower()]
-            items.sort(key=lambda x: x.get("last_seen", 0), reverse=True)
+            items.sort(key=lambda x: (1 if x.get("online") else 0, x.get("last_seen", 0)), reverse=True)
             self._send_json(200, {"players": items[:50]})
             return
 
@@ -332,15 +343,40 @@ class GameServerHandler(BaseHTTPRequestHandler):
         if path == "/api/register_player":
             name = (body.get("name") or "").strip()[:24]
             avatar = body.get("avatar")
+            game = (body.get("game") or "hub").strip()[:24]
             if not name:
                 self._send_json(400, {"error": "missing name"})
                 return
             key = name.lower()
             with players_lock:
+                prev = players_db.get(key, {})
                 players_db[key] = {
                     "name": name,
-                    "avatar": avatar,
+                    "avatar": avatar if avatar is not None else prev.get("avatar"),
+                    "game": game,
+                    "online": True,
                     "last_seen": time.time(),
+                }
+                save_players_db()
+            self._send_json(200, {"ok": True})
+            return
+
+        if path == "/api/presence":
+            name = (body.get("name") or "").strip()[:24]
+            game = (body.get("game") or "hub").strip()[:24]
+            online = body.get("online", True)
+            if not name:
+                self._send_json(400, {"error": "missing name"})
+                return
+            key = name.lower()
+            with players_lock:
+                prev = players_db.get(key, {})
+                players_db[key] = {
+                    "name": prev.get("name") or name,
+                    "avatar": body.get("avatar") if body.get("avatar") is not None else prev.get("avatar"),
+                    "game": game if online else "offline",
+                    "online": bool(online),
+                    "last_seen": time.time() if online else 0,
                 }
                 save_players_db()
             self._send_json(200, {"ok": True})
