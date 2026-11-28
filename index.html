@@ -557,6 +557,26 @@
 
     <!-- Main Discover Games Grid -->
     <div class="w-full max-w-6xl mx-auto px-4 sm:px-8 py-5 sm:py-8 flex flex-col gap-6 flex-1">
+      <!-- Live Online Multiplayer & Voice Chat Room Bar -->
+      <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl border border-indigo-500/40 p-3.5 shadow-md text-white flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="onlineStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
+          <div class="flex flex-col leading-tight min-w-0">
+            <span class="text-xs font-black tracking-tight">Live Multiplayer &amp; Voice Room</span>
+            <span id="onlineRoomStatus" class="text-[11px] font-semibold text-indigo-200 truncate">Join the same Room Code on 2 tabs or devices to play &amp; talk live</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <input id="onlineRoomInput" type="text" maxlength="16" value="ROOM1" placeholder="Room code..." class="w-24 sm:w-28 px-2.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-400 text-xs font-black uppercase tracking-wider focus:outline-none focus:border-emerald-400" />
+          <button id="btnOnlineRoomToggle" type="button" class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Join Room</button>
+          <button id="btnOnlineRoomMic" type="button" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
+            <svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <span>Mic: OFF</span>
+          </button>
+        </div>
+        <div id="remoteVoiceAudioContainer" class="hidden"></div>
+      </div>
+
       <!-- Roblox-style Friends Row -->
       <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs flex flex-col gap-2.5">
         <div class="flex items-center justify-between gap-2">
@@ -13207,6 +13227,8 @@
         drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
+      // Draw real live online players in your room playing Mega Obby!
+      if (typeof drawRemoteOnlinePlayers === 'function') drawRemoteOnlinePlayers('obby');
       // Draw your custom avatar
       drawBlockyAvatar(obby.x, obby.y);
       drawMiniEffects();
@@ -13364,6 +13386,8 @@
         drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
+      // Draw real live online players in your room visiting Money Tycoon!
+      if (typeof drawRemoteOnlinePlayers === 'function') drawRemoteOnlinePlayers('tycoon');
       // Draw your custom avatar standing beside your factory
       drawBlockyAvatar(70, 308);
       miniCtx.fillStyle = '#cbd5e1';
@@ -13601,6 +13625,8 @@
         if (bot.alive) drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
+      // Draw real live online players in your room playing Disaster Survival!
+      if (typeof drawRemoteOnlinePlayers === 'function') drawRemoteOnlinePlayers('survival');
       drawBlockyAvatar(survival.x, survival.y);
       drawMiniEffects();
 
@@ -14314,6 +14340,13 @@
           ? 'px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5'
           : 'px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5';
       }
+      const btnOnlineMic = document.getElementById('btnOnlineRoomMic');
+      if (btnOnlineMic) {
+        btnOnlineMic.innerHTML = micSvg + label;
+        btnOnlineMic.className = micActive
+          ? 'px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5'
+          : 'px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5';
+      }
     }
 
     function stopMicrophone() {
@@ -14404,7 +14437,305 @@
 
     if (btnInGameMic) btnInGameMic.addEventListener('click', (e) => { e.stopPropagation(); toggleMicrophone(); });
     if (btnHubGameMic) btnHubGameMic.addEventListener('click', (e) => { e.stopPropagation(); toggleMicrophone(); });
+    const btnOnlineRoomMic = document.getElementById('btnOnlineRoomMic');
+    if (btnOnlineRoomMic) btnOnlineRoomMic.addEventListener('click', (e) => { e.stopPropagation(); toggleMicrophone(); });
     updateMicButtonsUI();
+
+    // =========================================================================
+    // LIVE MULTIPLAYER + REAL WEBRTC VOICE CHAT CLIENT (CONNECTS TO server.py)
+    // =========================================================================
+    const mpMyId = 'p_' + Math.random().toString(36).slice(2, 10);
+    let mpRoom = '';
+    let mpConnected = false;
+    let mpEventSource = null;
+    let mpStateTimer = null;
+    const mpRemotePlayers = {}; // id -> { id, name, avatar, game, x, y, drawX, drawY, speaking }
+    const mpPeerConns = {};     // peerId -> RTCPeerConnection
+    const mpRemoteAudios = {};  // peerId -> HTMLAudioElement
+
+    const onlineRoomInput = document.getElementById('onlineRoomInput');
+    const btnOnlineRoomToggle = document.getElementById('btnOnlineRoomToggle');
+    const onlineRoomStatus = document.getElementById('onlineRoomStatus');
+    const onlineStatusDot = document.getElementById('onlineStatusDot');
+    const remoteVoiceAudioContainer = document.getElementById('remoteVoiceAudioContainer');
+
+    function updateOnlineRoomUI() {
+      const peerCount = Object.keys(mpRemotePlayers).length;
+      if (onlineStatusDot) {
+        onlineStatusDot.className = mpConnected
+          ? 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-pulse'
+          : 'w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0';
+      }
+      if (btnOnlineRoomToggle) {
+        btnOnlineRoomToggle.textContent = mpConnected ? 'Leave Room' : 'Join Room';
+        btnOnlineRoomToggle.className = mpConnected
+          ? 'px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer'
+          : 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer';
+      }
+      if (onlineRoomStatus) {
+        if (mpConnected) {
+          const names = Object.values(mpRemotePlayers).map(p => p.name);
+          onlineRoomStatus.textContent = peerCount > 0
+            ? `Live in ${mpRoom} (${peerCount + 1} Players): You, ${names.join(', ')}`
+            : `Live in ${mpRoom} (1 Player) — open another tab/device and join ${mpRoom}!`;
+        } else {
+          onlineRoomStatus.textContent = 'Join the same Room Code on 2 tabs or devices to play & talk live';
+        }
+      }
+    }
+
+    function mpSendSignal(toId, type, data) {
+      if (!mpConnected || !mpRoom) return;
+      fetch('/api/signal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: mpRoom, from: mpMyId, to: toId, type, data })
+      }).catch(() => {});
+    }
+
+    function mpClosePeer(peerId) {
+      if (mpPeerConns[peerId]) {
+        try { mpPeerConns[peerId].close(); } catch (e) {}
+        delete mpPeerConns[peerId];
+      }
+      if (mpRemoteAudios[peerId]) {
+        try { mpRemoteAudios[peerId].remove(); } catch (e) {}
+        delete mpRemoteAudios[peerId];
+      }
+    }
+
+    function mpEnsurePeerConnection(peerId, shouldOffer) {
+      if (typeof RTCPeerConnection === 'undefined') return null;
+      let pc = mpPeerConns[peerId];
+      if (!pc) {
+        pc = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
+        mpPeerConns[peerId] = pc;
+
+        pc.onicecandidate = (ev) => {
+          if (ev.candidate) mpSendSignal(peerId, 'ice', ev.candidate);
+        };
+        pc.ontrack = (ev) => {
+          const stream = ev.streams && ev.streams[0];
+          if (!stream) return;
+          let audioEl = mpRemoteAudios[peerId];
+          if (!audioEl) {
+            audioEl = document.createElement('audio');
+            audioEl.autoplay = true;
+            audioEl.playsInline = true;
+            if (remoteVoiceAudioContainer) remoteVoiceAudioContainer.appendChild(audioEl);
+            mpRemoteAudios[peerId] = audioEl;
+          }
+          audioEl.srcObject = stream;
+          audioEl.play().catch(() => {});
+        };
+      }
+      // Attach local mic track if Mic is currently ON
+      if (micActive && micStream) {
+        const senders = pc.getSenders();
+        micStream.getAudioTracks().forEach(track => {
+          const existing = senders.find(s => s.track && s.track.kind === 'audio');
+          if (existing) existing.replaceTrack(track).catch(() => {});
+          else pc.addTrack(track, micStream);
+        });
+      }
+      if (shouldOffer) {
+        pc.createOffer({ offerToReceiveAudio: true })
+          .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
+          .catch(() => {});
+      }
+      return pc;
+    }
+
+    function mpSyncMicToAllPeers() {
+      if (!mpConnected) return;
+      Object.keys(mpRemotePlayers).forEach(peerId => {
+        const pc = mpEnsurePeerConnection(peerId, false);
+        if (!pc) return;
+        if (micActive && micStream) {
+          const senders = pc.getSenders();
+          micStream.getAudioTracks().forEach(track => {
+            const existing = senders.find(s => s.track && s.track.kind === 'audio');
+            if (existing) existing.replaceTrack(track).catch(() => {});
+            else pc.addTrack(track, micStream);
+          });
+        }
+        pc.createOffer({ offerToReceiveAudio: true })
+          .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
+          .catch(() => {});
+      });
+    }
+
+    // Hook into Mic ON so turning on your mic immediately streams voice to everyone in the room!
+    const _origToggleMic = toggleMicrophone;
+    toggleMicrophone = async function() {
+      await _origToggleMic();
+      if (mpConnected) mpSyncMicToAllPeers();
+    };
+
+    function mpGetMyCurrentGameAndPos() {
+      if (miniGameModal && !miniGameModal.classList.contains('hidden')) {
+        if (miniGameMode === 'obby') return { game: 'obby', x: obby.x, y: obby.y };
+        if (miniGameMode === 'tycoon') return { game: 'tycoon', x: 70, y: 308 };
+        return { game: 'survival', x: survival.x, y: survival.y };
+      }
+      if (isRunning) return { game: 'snake', x: snake[0] ? snake[0].x : 0, y: snake[0] ? snake[0].y : 0 };
+      return { game: 'hub', x: 0, y: 0 };
+    }
+
+    function mpSendMyState() {
+      if (!mpConnected || !mpRoom) return;
+      const cur = mpGetMyCurrentGameAndPos();
+      const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'Player';
+      fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room: mpRoom, id: mpMyId, name: myName,
+          avatar: avatarConfig, game: cur.game, x: cur.x, y: cur.y, speaking: micActive
+        })
+      }).catch(() => {});
+    }
+
+    function mpDisconnectRoom() {
+      if (mpEventSource) { try { mpEventSource.close(); } catch (e) {} mpEventSource = null; }
+      if (mpStateTimer) { clearInterval(mpStateTimer); mpStateTimer = null; }
+      if (mpConnected && mpRoom) {
+        fetch('/api/leave', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room: mpRoom, id: mpMyId })
+        }).catch(() => {});
+      }
+      Object.keys(mpPeerConns).forEach(mpClosePeer);
+      Object.keys(mpRemotePlayers).forEach(k => delete mpRemotePlayers[k]);
+      mpConnected = false;
+      updateOnlineRoomUI();
+    }
+
+    function mpConnectRoom(roomCode) {
+      if (window.location.protocol === 'file:') {
+        showVoiceToast('Open http://localhost:8080 (via server.py) for live multiplayer & voice!', 4000);
+        if (onlineRoomStatus) onlineRoomStatus.textContent = 'Run python3 server.py and open http://localhost:8080 to connect!';
+        return;
+      }
+      mpDisconnectRoom();
+      mpRoom = (roomCode || 'ROOM1').trim().toUpperCase().slice(0, 16) || 'ROOM1';
+      const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'Player';
+      const url = `/api/events?room=${encodeURIComponent(mpRoom)}&id=${encodeURIComponent(mpMyId)}&name=${encodeURIComponent(myName)}`;
+      const es = new EventSource(url);
+      mpEventSource = es;
+      mpConnected = true;
+      updateOnlineRoomUI();
+
+      es.addEventListener('snapshot', (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          (data.players || []).forEach(p => {
+            if (p.id === mpMyId) return;
+            mpRemotePlayers[p.id] = Object.assign({ drawX: p.x || 120, drawY: p.y || 240 }, p);
+            mpEnsurePeerConnection(p.id, mpMyId > p.id);
+          });
+          updateOnlineRoomUI();
+        } catch (e) {}
+      });
+
+      es.addEventListener('join', (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.id && data.id !== mpMyId) {
+            mpRemotePlayers[data.id] = { id: data.id, name: data.name || 'Player', avatar: null, game: 'hub', x: 120, y: 240, drawX: 120, drawY: 240, speaking: false };
+            mpEnsurePeerConnection(data.id, mpMyId > data.id);
+            showVoiceToast(`${data.name || 'Player'} joined ${mpRoom}!`, 2600);
+            updateOnlineRoomUI();
+          }
+        } catch (e) {}
+      });
+
+      es.addEventListener('state', (ev) => {
+        try {
+          const p = JSON.parse(ev.data);
+          if (!p.id || p.id === mpMyId) return;
+          if (!mpRemotePlayers[p.id]) {
+            mpRemotePlayers[p.id] = Object.assign({ drawX: p.x || 120, drawY: p.y || 240 }, p);
+            mpEnsurePeerConnection(p.id, mpMyId > p.id);
+            updateOnlineRoomUI();
+          } else {
+            Object.assign(mpRemotePlayers[p.id], p);
+          }
+        } catch (e) {}
+      });
+
+      es.addEventListener('leave', (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.id && mpRemotePlayers[data.id]) {
+            const leftName = mpRemotePlayers[data.id].name;
+            delete mpRemotePlayers[data.id];
+            mpClosePeer(data.id);
+            showVoiceToast(`${leftName} left ${mpRoom}`, 2200);
+            updateOnlineRoomUI();
+          }
+        } catch (e) {}
+      });
+
+      es.addEventListener('signal', async (ev) => {
+        try {
+          const msg = JSON.parse(ev.data);
+          if (!msg.from || msg.from === mpMyId) return;
+          const pc = mpEnsurePeerConnection(msg.from, false);
+          if (!pc) return;
+          if (msg.type === 'offer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            mpSendSignal(msg.from, 'answer', answer);
+          } else if (msg.type === 'answer') {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+          } else if (msg.type === 'ice' && msg.data) {
+            await pc.addIceCandidate(new RTCIceCandidate(msg.data));
+          }
+        } catch (e) {}
+      });
+
+      es.onerror = () => {
+        if (onlineRoomStatus) onlineRoomStatus.textContent = 'Connection lost — make sure server.py is running!';
+      };
+
+      mpSendMyState();
+      mpStateTimer = setInterval(mpSendMyState, 75);
+    }
+
+    function drawRemoteOnlinePlayers(gameKey) {
+      if (!mpConnected || !miniCtx) return;
+      Object.values(mpRemotePlayers).forEach(p => {
+        if (p.game !== gameKey) return;
+        p.drawX = p.drawX + ((p.x || 120) - p.drawX) * 0.3;
+        p.drawY = p.drawY + ((p.y || 240) - p.drawY) * 0.3;
+        const px = gameKey === 'tycoon' ? Math.max(130, p.drawX + 80) : p.drawX;
+        const py = p.drawY;
+        if (p.speaking) {
+          miniCtx.save();
+          miniCtx.strokeStyle = '#34d399';
+          miniCtx.lineWidth = 2;
+          miniCtx.beginPath();
+          miniCtx.arc(px, py - 18, 18 + Math.sin(Date.now() / 120) * 2.5, 0, Math.PI * 2);
+          miniCtx.stroke();
+          miniCtx.restore();
+        }
+        drawCustomAvatarOn(miniCtx, px, py, 1, p.avatar || avatarConfig, { text: p.name + (p.speaking ? ' (Mic)' : ''), friend: true });
+      });
+    }
+
+    if (btnOnlineRoomToggle) {
+      btnOnlineRoomToggle.addEventListener('click', () => {
+        if (mpConnected) mpDisconnectRoom();
+        else mpConnectRoom(onlineRoomInput ? onlineRoomInput.value : 'ROOM1');
+      });
+    }
+    window.addEventListener('beforeunload', mpDisconnectRoom);
+    updateOnlineRoomUI();
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
