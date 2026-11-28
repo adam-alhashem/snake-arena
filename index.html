@@ -1215,6 +1215,7 @@
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">Best: <span id="miniGameBest" class="font-black text-amber-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black"><span id="miniGameCurrencyLabel">Coins</span>: <span id="miniGameMoney">0</span></span>
+        <button id="btnMiniGameSave" type="button" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Save</button>
         <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Restart</button>
       </div>
     </div>
@@ -12285,9 +12286,17 @@
 
     // Completely separate persisted progress & currency for each of the 3 games
     let obbyBestStage = parseInt(localStorage.getItem('snakeHubObbyBest_v1') || '1', 10) || 1;
+    let obbySavedStage = parseInt(localStorage.getItem('snakeHubObbySavedStage_v1') || '1', 10) || 1;
     let obbyCoins = parseInt(localStorage.getItem('snakeHubObbyCoins_v1') || '0', 10) || 0;
     let survivalBestSec = parseInt(localStorage.getItem('snakeHubSurvivalBest_v1') || '0', 10) || 0;
     let survivalGems = parseInt(localStorage.getItem('snakeHubSurvivalGems_v1') || '0', 10) || 0;
+    let survivalSavedRun = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeHubSurvivalSaved_v1') || 'null');
+        if (s && typeof s === 'object' && s.seconds > 0 && s.lives > 0) return s;
+      } catch (e) {}
+      return null;
+    })();
     let tycoonState = (() => {
       try {
         const s = JSON.parse(localStorage.getItem('snakeHubTycoon_v1') || 'null');
@@ -12924,6 +12933,8 @@
         awardMiniMoney(100, obby.finishX, obby.finishY - 14, '#4ade80');
         if (typeof playSFX === 'function') playSFX('powerup');
         const nextStage = obby.stage + 1;
+        obbySavedStage = nextStage;
+        try { localStorage.setItem('snakeHubObbySavedStage_v1', String(obbySavedStage)); } catch (e) {}
         if (nextStage > obbyBestStage) {
           obbyBestStage = nextStage;
           try { localStorage.setItem('snakeHubObbyBest_v1', String(obbyBestStage)); } catch (e) {}
@@ -13355,8 +13366,12 @@
       if (!miniGameModal) return;
       if (initialMode) miniGameMode = initialMode;
       miniGameSessionEarned = 0;
-      buildObbyStage(obby.stage || 1);
+      buildObbyStage(obbySavedStage || obby.stage || 1);
       resetSurvival();
+      if (survivalSavedRun && survivalSavedRun.seconds > 0 && survivalSavedRun.lives > 0) {
+        survival.seconds = survivalSavedRun.seconds;
+        survival.lives = survivalSavedRun.lives;
+      }
       miniGameModal.classList.remove('hidden');
       updateMiniGameHUD();
       if (!miniGameRafId) miniGameRafId = requestAnimationFrame(miniGameLoop);
@@ -13533,11 +13548,53 @@
     if (tabMiniTycoon) tabMiniTycoon.addEventListener('click', () => { miniGameMode = 'tycoon'; updateMiniGameHUD(); });
     if (tabMiniSurvival) tabMiniSurvival.addEventListener('click', () => { miniGameMode = 'survival'; resetSurvival(); updateMiniGameHUD(); });
 
+    const btnMiniGameSave = document.getElementById('btnMiniGameSave');
+    if (btnMiniGameSave) {
+      btnMiniGameSave.addEventListener('click', () => {
+        if (miniGameMode === 'obby') {
+          obbySavedStage = obby.stage || 1;
+          try {
+            localStorage.setItem('snakeHubObbySavedStage_v1', String(obbySavedStage));
+            localStorage.setItem('snakeHubObbyCoins_v1', String(obbyCoins));
+            localStorage.setItem('snakeHubObbyBest_v1', String(obbyBestStage));
+          } catch (e) {}
+          pushMiniPopup(obby.x, obby.y - 36, `SAVED STAGE ${obbySavedStage}!`, '#38bdf8');
+        } else if (miniGameMode === 'tycoon') {
+          saveTycoonState();
+          pushMiniPopup(290, 120, 'TYCOON SAVED!', '#38bdf8');
+        } else {
+          survivalSavedRun = { seconds: survival.seconds, lives: Math.max(1, survival.lives) };
+          try {
+            localStorage.setItem('snakeHubSurvivalSaved_v1', JSON.stringify(survivalSavedRun));
+            localStorage.setItem('snakeHubSurvivalGems_v1', String(survivalGems));
+            localStorage.setItem('snakeHubSurvivalBest_v1', String(survivalBestSec));
+          } catch (e) {}
+          pushMiniPopup(survival.x, survival.y - 42, `SAVED (${survival.seconds}s)!`, '#38bdf8');
+        }
+        if (typeof playSFX === 'function') playSFX('powerup');
+        btnMiniGameSave.textContent = 'Saved!';
+        btnMiniGameSave.className = 'px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-black transition-all cursor-pointer';
+        setTimeout(() => {
+          btnMiniGameSave.textContent = 'Save';
+          btnMiniGameSave.className = 'px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer';
+        }, 1400);
+      });
+    }
+
     if (btnMiniGameRestart) {
       btnMiniGameRestart.addEventListener('click', () => {
-        if (miniGameMode === 'obby') buildObbyStage(1);
-        else if (miniGameMode === 'survival') resetSurvival();
-        else { tycoonCubes = []; updateMiniGameHUD(); }
+        if (miniGameMode === 'obby') {
+          obbySavedStage = 1;
+          try { localStorage.setItem('snakeHubObbySavedStage_v1', '1'); } catch (e) {}
+          buildObbyStage(1);
+        } else if (miniGameMode === 'survival') {
+          survivalSavedRun = null;
+          try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
+          resetSurvival();
+        } else {
+          tycoonCubes = [];
+          updateMiniGameHUD();
+        }
       });
     }
 
@@ -13597,8 +13654,12 @@
         if (miniGameMode === 'obby') {
           if (obby.onGround) { obby.vy = -8.4; obby.onGround = false; if (typeof playSFX === 'function') playSFX('eat'); }
         } else if (miniGameMode === 'survival') {
-          if (survival.state !== 'playing') {
+          if (survival.state === 'over') {
+            survivalSavedRun = null;
+            try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
             resetSurvival();
+            survival.state = 'playing';
+          } else if (survival.state === 'ready') {
             survival.state = 'playing';
           } else if (survival.onGround) {
             survival.vy = -8.6;
@@ -13618,7 +13679,11 @@
         e.preventDefault();
         miniKeys.jump = true;
         if (miniGameMode === 'survival' && survival.state !== 'playing') {
-          resetSurvival();
+          if (survival.state === 'over') {
+            survivalSavedRun = null;
+            try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
+            resetSurvival();
+          }
           survival.state = 'playing';
         }
       }
