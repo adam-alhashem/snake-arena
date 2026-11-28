@@ -15348,65 +15348,253 @@
       }
     }
 
+    function make3DCanvasTex(drawFn) {
+      const c = document.createElement('canvas');
+      c.width = 64; c.height = 64;
+      const g2 = c.getContext('2d');
+      drawFn(g2, 64, 64);
+      const tex = new THREE.CanvasTexture(c);
+      tex.magFilter = THREE.NearestFilter;
+      tex.needsUpdate = true;
+      return tex;
+    }
+
     function build3DCharacterGroup(cfg) {
       const g = new THREE.Group();
-      const shirtObj = AVATAR_SHIRTS.find(x => x.id === (cfg && cfg.shirt)) || AVATAR_SHIRTS[0];
-      const pantsObj = AVATAR_PANTS.find(x => x.id === (cfg && cfg.pants)) || AVATAR_PANTS[0];
-      const skinCol = (cfg && cfg.skin) ? cfg.skin : '#facc15';
+      const useCfg = cfg || avatarConfig || { skin: '#facc15', shirt: 'gamer_hoodie', pants: 'blue_jeans', hat: 'crown', face: 'happy' };
+      const shirtObj = AVATAR_SHIRTS.find(x => x.id === useCfg.shirt) || AVATAR_SHIRTS[0];
+      const pantsObj = AVATAR_PANTS.find(x => x.id === useCfg.pants) || AVATAR_PANTS[0];
+      const skinCol = useCfg.skin || '#facc15';
+      const shirtId = useCfg.shirt || 'classic_green';
+      const pantsId = useCfg.pants || 'blue_jeans';
+      const faceId = useCfg.face || 'happy';
+
+      // 1. Detailed 3D Shirt Texture (1:1 match with 2D Avatar Wardrobe!)
+      const shirtTex = make3DCanvasTex((c, w, h) => {
+        c.fillStyle = shirtObj.col;
+        c.fillRect(0, 0, w, h);
+        if (shirtId === 'classic_green') {
+          c.fillStyle = '#ffffff'; c.fillRect(18, 0, 28, 10);
+          c.fillStyle = '#bbf7d0'; c.fillRect(14, 24, 36, 12);
+        } else if (shirtId === 'gamer_hoodie') {
+          c.fillStyle = '#312e81'; c.fillRect(12, 40, 40, 18);
+          c.fillStyle = '#38bdf8';
+          c.beginPath(); c.moveTo(36, 6); c.lineTo(20, 30); c.lineTo(32, 30); c.lineTo(26, 48); c.lineTo(44, 24); c.lineTo(33, 24); c.closePath(); c.fill();
+        } else if (shirtId === 'soccer_jersey') {
+          c.fillStyle = '#ffffff';
+          c.fillRect(8, 0, 10, h); c.fillRect(27, 0, 10, h); c.fillRect(46, 0, 10, h);
+        } else if (shirtId === 'ninja_suit') {
+          c.fillStyle = '#ef4444'; c.fillRect(0, 46, w, 12);
+          c.beginPath(); c.moveTo(8, 0); c.lineTo(40, 48); c.lineTo(50, 48); c.lineTo(18, 0); c.closePath(); c.fill();
+        } else if (shirtId === 'gold_armor') {
+          c.fillStyle = '#fef08a'; c.fillRect(8, 8, 48, 22);
+          c.fillStyle = '#b45309'; c.fillRect(28, 6, 8, 52);
+        } else if (shirtId === 'galaxy_tee') {
+          c.fillStyle = '#e879f9'; c.fillRect(12, 10, 8, 8); c.fillRect(42, 22, 8, 8); c.fillRect(24, 42, 7, 7);
+          c.fillStyle = '#38bdf8'; c.fillRect(36, 8, 6, 6); c.fillRect(10, 38, 6, 6);
+        } else if (shirtId === 'tiger_stripes') {
+          c.fillStyle = '#1f2937'; c.fillRect(0, 10, 28, 9); c.fillRect(36, 24, 28, 9); c.fillRect(4, 42, 34, 9);
+        } else if (shirtId === 'royal_tux') {
+          c.fillStyle = '#ffffff';
+          c.beginPath(); c.moveTo(16, 0); c.lineTo(48, 0); c.lineTo(32, 48); c.closePath(); c.fill();
+          c.fillStyle = '#ef4444'; c.fillRect(22, 6, 20, 10);
+        } else if (shirtId === 'astronaut') {
+          c.fillStyle = '#334155'; c.fillRect(14, 14, 36, 26);
+          c.fillStyle = '#ef4444'; c.fillRect(18, 19, 10, 10);
+          c.fillStyle = '#38bdf8'; c.fillRect(34, 19, 12, 10);
+        } else if (shirtId === 'flame_jacket') {
+          c.fillStyle = '#f97316'; c.fillRect(0, 42, w, 22);
+          c.fillStyle = '#facc15';
+          c.beginPath();
+          c.moveTo(4, 64); c.lineTo(16, 34); c.lineTo(28, 64);
+          c.moveTo(32, 64); c.lineTo(46, 30); c.lineTo(60, 64);
+          c.fill();
+        } else if (shirtId === 'rainbow_tee') {
+          const rb = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#a855f7'];
+          rb.forEach((col, i) => { c.fillStyle = col; c.fillRect(0, i * 11, w, 11); });
+        } else if (shirtId === 'pirate_coat') {
+          c.fillStyle = '#1e293b'; c.fillRect(0, 46, w, 12);
+          c.fillStyle = '#facc15'; c.fillRect(24, 46, 16, 12);
+          c.fillRect(16, 14, 7, 7); c.fillRect(41, 14, 7, 7);
+          c.fillRect(16, 30, 7, 7); c.fillRect(41, 30, 7, 7);
+        }
+      });
+
+      // 2. Detailed 3D Pants Texture (1:1 match with 2D Avatar Wardrobe!)
+      const pantsTex = make3DCanvasTex((c, w, h) => {
+        c.fillStyle = pantsObj.col;
+        c.fillRect(0, 0, w, h);
+        if (pantsId === 'blue_jeans') {
+          c.fillStyle = '#78350f'; c.fillRect(0, 0, w, 10);
+          c.fillStyle = '#facc15'; c.fillRect(24, 0, 16, 10);
+          c.fillStyle = '#7c2d12'; c.fillRect(0, 50, w, 14);
+        } else if (pantsId === 'track_pants') {
+          c.fillStyle = '#ffffff'; c.fillRect(6, 0, 10, 50); c.fillRect(48, 0, 10, 50);
+          c.fillStyle = '#ef4444'; c.fillRect(0, 50, w, 14);
+        } else if (pantsId === 'camo_cargo') {
+          c.fillStyle = '#84cc16'; c.fillRect(8, 12, 20, 14); c.fillRect(36, 30, 20, 14);
+          c.fillStyle = '#365314'; c.fillRect(30, 6, 18, 12); c.fillRect(10, 38, 18, 12);
+        } else if (pantsId === 'gold_greaves') {
+          c.fillStyle = '#fef08a'; c.fillRect(12, 18, 40, 16);
+          c.fillStyle = '#92400e'; c.fillRect(0, 50, w, 14);
+        } else if (pantsId === 'ninja_pants') {
+          c.fillStyle = '#dc2626'; c.fillRect(0, 26, w, 9); c.fillRect(0, 42, w, 9);
+        } else if (pantsId === 'neon_joggers') {
+          c.fillStyle = '#22d3ee'; c.fillRect(0, 46, w, 12);
+        } else if (pantsId === 'space_boots') {
+          c.fillStyle = '#94a3b8'; c.fillRect(8, 20, 48, 12);
+          c.fillStyle = '#f97316'; c.fillRect(0, 48, w, 16);
+        } else if (pantsId === 'checker_pants') {
+          c.fillStyle = '#f8fafc';
+          for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) if ((r + k) % 2 === 0) c.fillRect(k * 16, r * 16, 16, 16);
+        } else if (pantsId === 'flame_pants') {
+          c.fillStyle = '#f97316'; c.fillRect(0, 44, w, 20);
+          c.fillStyle = '#facc15'; c.fillRect(10, 52, 44, 12);
+        }
+      });
+
+      // 3. Detailed 3D Arm Texture (Sleeves matching Shirt + Skin hands!)
+      const longSleeve = ['gamer_hoodie', 'ninja_suit', 'gold_armor', 'royal_tux', 'astronaut', 'flame_jacket', 'pirate_coat'].includes(shirtId);
+      const armTex = make3DCanvasTex((c, w, h) => {
+        c.fillStyle = skinCol;
+        c.fillRect(0, 0, w, h);
+        c.fillStyle = shirtObj.col;
+        c.fillRect(0, 0, w, longSleeve ? 50 : 26);
+      });
+
+      // 4. Detailed 3D Face Texture (1:1 match with all 6 2D Faces!)
+      const faceTex = make3DCanvasTex((c, w, h) => {
+        c.fillStyle = skinCol;
+        c.fillRect(0, 0, w, h);
+        c.fillStyle = '#0f172a';
+        if (faceId === 'shades') {
+          c.fillRect(6, 18, 22, 16); c.fillRect(36, 18, 22, 16); c.fillRect(28, 22, 8, 6);
+          c.fillRect(20, 44, 24, 6);
+        } else if (faceId === 'wink') {
+          c.fillRect(14, 18, 9, 13); c.fillRect(39, 24, 14, 6);
+          c.fillRect(18, 44, 28, 6);
+        } else if (faceId === 'hero') {
+          c.fillStyle = '#ef4444'; c.fillRect(0, 14, w, 18);
+          c.fillStyle = '#ffffff'; c.fillRect(12, 19, 12, 8); c.fillRect(40, 19, 12, 8);
+          c.fillStyle = '#0f172a'; c.fillRect(18, 44, 28, 6);
+        } else if (faceId === 'robot') {
+          c.fillStyle = '#0f172a'; c.fillRect(4, 15, 56, 19);
+          c.fillStyle = '#22d3ee'; c.fillRect(10, 21, 44, 8);
+          c.fillStyle = '#0f172a'; c.fillRect(18, 44, 28, 6);
+        } else if (faceId === 'star') {
+          c.fillStyle = '#eab308'; c.fillRect(12, 17, 12, 12); c.fillRect(40, 17, 12, 12);
+          c.fillStyle = '#0f172a'; c.fillRect(18, 44, 28, 6);
+        } else {
+          c.fillRect(15, 18, 9, 13); c.fillRect(40, 18, 9, 13);
+          c.fillRect(18, 44, 28, 6);
+        }
+      });
 
       const matSkin = new THREE.MeshStandardMaterial({ color: skinCol, roughness: 0.55 });
-      const matShirt = new THREE.MeshStandardMaterial({ color: shirtObj.col, roughness: 0.6 });
-      const matPants = new THREE.MeshStandardMaterial({ color: pantsObj.col, roughness: 0.7 });
+      const matFace = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.5 });
+      const matShirtTex = new THREE.MeshStandardMaterial({ map: shirtTex, roughness: 0.55 });
+      const matShirtSolid = new THREE.MeshStandardMaterial({ color: shirtObj.col, roughness: 0.6 });
+      const matPantsTex = new THREE.MeshStandardMaterial({ map: pantsTex, roughness: 0.65 });
+      const matArmTex = new THREE.MeshStandardMaterial({ map: armTex, roughness: 0.55 });
       const matDark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.5 });
 
       // Legs
-      const legGeo = new THREE.BoxGeometry(0.42, 0.9, 0.42);
-      const lLeg = new THREE.Mesh(legGeo, matPants); lLeg.position.set(-0.24, 0.45, 0); lLeg.castShadow = true;
-      const rLeg = new THREE.Mesh(legGeo, matPants); rLeg.position.set(0.24, 0.45, 0); rLeg.castShadow = true;
-      // Torso
-      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.0, 0.52), matShirt);
-      torso.position.set(0, 1.4, 0); torso.castShadow = true;
-      // Arms
-      const armGeo = new THREE.BoxGeometry(0.34, 0.92, 0.36);
-      const lArm = new THREE.Mesh(armGeo, matSkin); lArm.position.set(-0.68, 1.4, 0); lArm.castShadow = true;
-      const rArm = new THREE.Mesh(armGeo, matSkin); rArm.position.set(0.68, 1.4, 0); rArm.castShadow = true;
-      // Head
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.76, 0.76), matSkin);
-      head.position.set(0, 2.32, 0); head.castShadow = true;
-      // Eyes on front (-Z is forward!)
-      const eyeGeo = new THREE.BoxGeometry(0.12, 0.14, 0.06);
-      const lEye = new THREE.Mesh(eyeGeo, matDark); lEye.position.set(-0.16, 2.38, -0.38);
-      const rEye = new THREE.Mesh(eyeGeo, matDark); rEye.position.set(0.16, 2.38, -0.38);
-      const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.07, 0.06), matDark); mouth.position.set(0, 2.16, -0.38);
+      const legGeo = new THREE.BoxGeometry(0.42, 0.92, 0.42);
+      const lLeg = new THREE.Mesh(legGeo, matPantsTex); lLeg.position.set(-0.24, 0.46, 0); lLeg.castShadow = true;
+      const rLeg = new THREE.Mesh(legGeo, matPantsTex); rLeg.position.set(0.24, 0.46, 0); rLeg.castShadow = true;
+      // Torso (front & back have full detailed shirt texture!)
+      const torsoMats = [matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtTex, matShirtTex];
+      const torso = new THREE.Mesh(new THREE.BoxGeometry(0.96, 1.02, 0.52), torsoMats);
+      torso.position.set(0, 1.43, 0); torso.castShadow = true;
+      // Arms (with sleeves matching shirt!)
+      const armGeo = new THREE.BoxGeometry(0.34, 0.94, 0.36);
+      const lArm = new THREE.Mesh(armGeo, matArmTex); lArm.position.set(-0.68, 1.43, 0); lArm.castShadow = true;
+      const rArm = new THREE.Mesh(armGeo, matArmTex); rArm.position.set(0.68, 1.43, 0); rArm.castShadow = true;
+      // Head (face texture on -Z front face, skin on other 5 faces!)
+      const headMats = [matSkin, matSkin, matSkin, matSkin, matSkin, matFace];
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.78, 0.78), headMats);
+      head.position.set(0, 2.34, 0); head.castShadow = true;
 
-      g.add(lLeg, rLeg, torso, lArm, rArm, head, lEye, rEye, mouth);
+      g.add(lLeg, rLeg, torso, lArm, rArm, head);
 
-      // 3D Hats!
-      const hat = cfg && cfg.hat;
+      // Gold Armor shoulder pads in 3D!
+      if (shirtId === 'gold_armor') {
+        const padMat = new THREE.MeshStandardMaterial({ color: '#fef08a', metalness: 0.6, roughness: 0.25 });
+        const lPad = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.2, 0.46), padMat); lPad.position.set(-0.68, 1.94, 0);
+        const rPad = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.2, 0.46), padMat); rPad.position.set(0.68, 1.94, 0);
+        g.add(lPad, rPad);
+      }
+
+      // 5. ALL 14 3D Hats & Headgear (1:1 match with 2D Wardrobe!)
+      const hat = useCfg.hat;
       if (hat === 'crown') {
-        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.38, 0.32, 6), new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.5, roughness: 0.25 }));
-        crown.position.set(0, 2.86, 0); g.add(crown);
-      } else if (hat === 'tophat') {
-        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 16), matDark); brim.position.set(0, 2.74, 0);
-        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.58, 16), matDark); top.position.set(0, 3.05, 0);
-        g.add(brim, top);
-      } else if (hat === 'wizard') {
-        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 0.08, 16), new THREE.MeshStandardMaterial({ color: '#6d28d9' })); brim.position.set(0, 2.74, 0);
-        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.95, 16), new THREE.MeshStandardMaterial({ color: '#6d28d9' })); cone.position.set(0, 3.22, 0);
-        g.add(brim, cone);
+        const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.4, 0.34, 6), new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.55, roughness: 0.22 }));
+        crown.position.set(0, 2.9, 0);
+        const gem = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, 0.14), new THREE.MeshStandardMaterial({ color: '#ef4444' }));
+        gem.position.set(0, 2.86, -0.38);
+        g.add(crown, gem);
       } else if (hat === 'cap' || hat === 'red_cap') {
-        const capCol = hat === 'red_cap' ? '#dc2626' : '#0284c7';
-        const capMat = new THREE.MeshStandardMaterial({ color: capCol });
-        const dome = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.26, 0.8), capMat); dome.position.set(0, 2.8, 0);
-        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.45), capMat); visor.position.set(0, 2.7, -0.5);
+        const capMat = new THREE.MeshStandardMaterial({ color: hat === 'red_cap' ? '#dc2626' : '#0284c7' });
+        const dome = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.28, 0.82), capMat); dome.position.set(0, 2.84, 0);
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.09, 0.48), capMat); visor.position.set(0, 2.74, hat === 'red_cap' ? 0.5 : -0.5);
         g.add(dome, visor);
+      } else if (hat === 'tophat') {
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.08, 16), matDark); brim.position.set(0, 2.76, 0);
+        const top = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.62, 16), matDark); top.position.set(0, 3.08, 0);
+        const rib = new THREE.Mesh(new THREE.CylinderGeometry(0.39, 0.39, 0.12, 16), new THREE.MeshStandardMaterial({ color: '#ef4444' })); rib.position.set(0, 2.86, 0);
+        g.add(brim, top, rib);
+      } else if (hat === 'wizard') {
+        const wMat = new THREE.MeshStandardMaterial({ color: '#6d28d9' });
+        const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.64, 0.08, 16), wMat); brim.position.set(0, 2.76, 0);
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(0.44, 0.98, 16), wMat); cone.position.set(0, 3.24, 0);
+        const star = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.16), new THREE.MeshBasicMaterial({ color: '#facc15' })); star.position.set(0, 3.16, -0.32);
+        g.add(brim, cone, star);
+      } else if (hat === 'viking') {
+        const iron = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.5, roughness: 0.35 });
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), iron); dome.position.set(0, 2.66, 0);
+        const hornMat = new THREE.MeshStandardMaterial({ color: '#f8fafc' });
+        const lH = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.52, 10), hornMat); lH.position.set(-0.52, 2.95, 0); lH.rotation.z = 0.65;
+        const rH = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.52, 10), hornMat); rH.position.set(0.52, 2.95, 0); rH.rotation.z = -0.65;
+        g.add(dome, lH, rH);
+      } else if (hat === 'ninja_band') {
+        const band = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.2, 0.84), new THREE.MeshStandardMaterial({ color: '#dc2626' })); band.position.set(0, 2.58, 0);
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.16, 0.06), new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.6 })); plate.position.set(0, 2.58, -0.43);
+        const tail1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.36, 0.06), new THREE.MeshStandardMaterial({ color: '#dc2626' })); tail1.position.set(-0.1, 2.48, 0.48); tail1.rotation.x = 0.35;
+        const tail2 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.32, 0.06), new THREE.MeshStandardMaterial({ color: '#dc2626' })); tail2.position.set(0.1, 2.5, 0.48); tail2.rotation.x = 0.25;
+        g.add(band, plate, tail1, tail2);
+      } else if (hat === 'pirate_hat') {
+        const pMat = new THREE.MeshStandardMaterial({ color: '#1e293b' });
+        const brim = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.24, 0.9), pMat); brim.position.set(0, 2.86, 0);
+        const top = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.34, 0.72), pMat); top.position.set(0, 3.04, 0);
+        const badge = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.16, 0.06), new THREE.MeshStandardMaterial({ color: '#facc15' })); badge.position.set(0, 2.94, -0.46);
+        g.add(brim, top, badge);
+      } else if (hat === 'astronaut_helmet') {
+        const glass = new THREE.Mesh(new THREE.SphereGeometry(0.64, 20, 16), new THREE.MeshStandardMaterial({ color: '#bae6fd', transparent: true, opacity: 0.38, roughness: 0.1 }));
+        glass.position.set(0, 2.38, 0);
+        g.add(glass);
+      } else if (hat === 'headphones') {
+        const arch = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.06, 10, 24, Math.PI), new THREE.MeshStandardMaterial({ color: '#06b6d4' }));
+        arch.position.set(0, 2.38, 0);
+        const lCup = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.32), matDark); lCup.position.set(-0.46, 2.36, 0);
+        const rCup = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.34, 0.32), matDark); rCup.position.set(0.46, 2.36, 0);
+        g.add(arch, lCup, rCup);
+      } else if (hat === 'cat_ears') {
+        const earDark = new THREE.MeshStandardMaterial({ color: '#1e293b' });
+        const earPink = new THREE.MeshStandardMaterial({ color: '#f472b6' });
+        const lE = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.36, 4), earDark); lE.position.set(-0.26, 2.88, 0);
+        const rE = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.36, 4), earDark); rE.position.set(0.26, 2.88, 0);
+        const lIn = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 4), earPink); lIn.position.set(-0.26, 2.85, -0.07);
+        const rIn = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.22, 4), earPink); rIn.position.set(0.26, 2.85, -0.07);
+        g.add(lE, rE, lIn, rIn);
+      } else if (hat === 'beanie') {
+        const bDome = new THREE.Mesh(new THREE.SphereGeometry(0.44, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#10b981' })); bDome.position.set(0, 2.68, 0);
+        const cuff = new THREE.Mesh(new THREE.BoxGeometry(0.84, 0.16, 0.84), new THREE.MeshStandardMaterial({ color: '#065f46' })); cuff.position.set(0, 2.7, 0);
+        const pom = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 10), new THREE.MeshStandardMaterial({ color: '#fef08a' })); pom.position.set(0, 3.16, 0);
+        g.add(bDome, cuff, pom);
       } else if (hat === 'halo') {
-        const halo = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 10, 24), new THREE.MeshBasicMaterial({ color: '#fde047' }));
-        halo.rotation.x = Math.PI / 2; halo.position.set(0, 3.0, 0); g.add(halo);
-      } else if (hat && hat !== 'none') {
-        const hatObj = AVATAR_HATS.find(x => x.id === hat);
-        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.82, 0.24, 0.82), new THREE.MeshStandardMaterial({ color: (hatObj && hatObj.col) || '#10b981' }));
-        cap.position.set(0, 2.82, 0); g.add(cap);
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.06, 10, 24), new THREE.MeshBasicMaterial({ color: '#fde047' }));
+        halo.rotation.x = Math.PI / 2; halo.position.set(0, 3.04, 0);
+        g.add(halo);
       }
 
       return { group: g, lLeg, rLeg, lArm, rArm };
