@@ -1154,60 +1154,42 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- MINI GAMES HUB MODAL (3 ROBLOX-STYLE GAMES: OBBY, TYCOON, SURVIVAL)       -->
+  <!-- FULL-PAGE GAME SCREEN (MEGA OBBY, MONEY TYCOON, DISASTER SURVIVAL)        -->
   <!-- ========================================================================= -->
-  <div id="miniGameModal" class="fixed inset-0 z-[72] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
-    <div class="w-full max-w-2xl bg-white rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden flex flex-col">
-      <!-- Header -->
-      <div class="px-5 py-3.5 bg-gradient-to-r from-indigo-950 via-slate-900 to-violet-950 text-white flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <svg viewBox="0 0 24 24" class="w-6 h-6 shrink-0" fill="none">
-            <rect x="2" y="6" width="20" height="12" rx="6" fill="#818cf8" stroke="#e0e7ff" stroke-width="1.4"/>
-            <path d="M7.5 10V14M5.5 12H9.5" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="15.5" cy="11" r="1.2" fill="#facc15"/>
-            <circle cx="18" cy="13" r="1.2" fill="#34d399"/>
-          </svg>
-          <div class="flex flex-col leading-tight">
-            <h2 class="text-base sm:text-lg font-black tracking-tight">Game Hub</h2>
-            <span class="text-[11px] font-semibold text-indigo-200">3 playable games inside Snake Arena — win real Money!</span>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black">$<span id="miniGameMoney">0</span></span>
-          <button id="btnCloseMiniGame" type="button" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-black text-xs flex items-center justify-center cursor-pointer transition-all">← Games</button>
+  <div id="miniGameModal" class="fixed inset-0 z-[72] bg-slate-950 flex flex-col w-screen h-screen overflow-hidden hidden">
+    <!-- Compact Full-Width Top HUD Bar -->
+    <div class="w-full px-3 sm:px-5 py-2.5 bg-slate-900 border-b border-slate-800 text-white flex flex-wrap items-center justify-between gap-2 shrink-0 z-10">
+      <div class="flex items-center gap-2">
+        <button id="btnCloseMiniGame" type="button" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-black text-xs flex items-center justify-center active:scale-95 transition-all cursor-pointer">← Games</button>
+        <div class="flex items-center gap-1">
+          <button id="tabMiniObby" type="button" class="px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all">Mega Obby</button>
+          <button id="tabMiniTycoon" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-extrabold cursor-pointer transition-all">Money Tycoon</button>
+          <button id="tabMiniSurvival" type="button" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-extrabold cursor-pointer transition-all">Disaster Survival</button>
         </div>
       </div>
 
-      <!-- 3 Game Selector Tabs + Live Stats -->
-      <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5">
-          <button id="tabMiniObby" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all">1. Mega Obby</button>
-          <button id="tabMiniTycoon" type="button" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold cursor-pointer transition-all">2. Money Tycoon</button>
-          <button id="tabMiniSurvival" type="button" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold cursor-pointer transition-all">3. Disaster Survival</button>
-        </div>
-        <div class="flex items-center gap-1.5 text-xs font-extrabold">
-          <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-600">1</span></span>
-          <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800">Best: <span id="miniGameBest" class="font-black text-amber-600">1</span></span>
-          <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700">+$<span id="miniGameEarned" class="font-black">0</span></span>
-        </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 text-xs font-extrabold">
+        <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-400">1</span></span>
+        <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">Best: <span id="miniGameBest" class="font-black text-amber-400">1</span></span>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300">+$<span id="miniGameEarned" class="font-black">0</span></span>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black">$<span id="miniGameMoney">0</span></span>
+        <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Restart</button>
       </div>
+    </div>
 
-      <!-- Canvas Stage -->
-      <div class="p-3 sm:p-4 bg-slate-100 flex flex-col items-center gap-2.5">
-        <canvas id="miniGameCanvas" width="580" height="340" class="w-full max-w-[580px] rounded-2xl border-2 border-slate-800 shadow-lg bg-slate-900 cursor-pointer touch-none"></canvas>
+    <!-- Full-Viewport Game Canvas -->
+    <div class="relative flex-1 w-full min-h-0 bg-slate-950 overflow-hidden">
+      <canvas id="miniGameCanvas" width="580" height="340" class="w-full h-full block cursor-pointer touch-none"></canvas>
 
-        <!-- Tycoon Upgrade Pad Bar (only shown in Money Tycoon) -->
-        <div id="tycoonControlsBar" class="hidden w-full max-w-[580px] grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button id="btnTycoonCollect" type="button" class="px-2.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Collect ($0)</button>
-          <button id="btnTycoonDropper" type="button" class="px-2.5 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Dropper ($50)</button>
-          <button id="btnTycoonSpeed" type="button" class="px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Speed ($80)</button>
-          <button id="btnTycoonValue" type="button" class="px-2.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Value x2 ($150)</button>
+      <!-- Floating Bottom Bar: Tycoon Upgrade Pads + Controls Hint -->
+      <div class="pointer-events-none absolute bottom-3 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
+        <div id="tycoonControlsBar" class="pointer-events-auto hidden w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/85 backdrop-blur-sm p-2 rounded-2xl border border-slate-700 shadow-xl">
+          <button id="btnTycoonCollect" type="button" class="px-2.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Collect ($0)</button>
+          <button id="btnTycoonDropper" type="button" class="px-2.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Dropper ($50)</button>
+          <button id="btnTycoonSpeed" type="button" class="px-2.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Speed ($80)</button>
+          <button id="btnTycoonValue" type="button" class="px-2.5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Value x2 ($150)</button>
         </div>
-
-        <div class="w-full max-w-[580px] flex items-center justify-between gap-2">
-          <span id="miniGameHint" class="text-[11px] font-bold text-slate-600">Move with A / D or Arrow Keys, jump with Space / W / Up Arrow (or tap canvas)!</span>
-          <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black active:scale-95 transition-all cursor-pointer shrink-0">Restart</button>
-        </div>
+        <span id="miniGameHint" class="px-3 py-1 rounded-full bg-slate-900/75 backdrop-blur-xs border border-white/10 text-[11px] font-bold text-slate-200 text-center">Move with A / D or Arrow Keys, jump with Space / W / Up!</span>
       </div>
     </div>
   </div>
@@ -12396,8 +12378,8 @@
         if (hEl) hEl.textContent = 'Move with A/D or Arrows, Space/Up to jump! Dodge meteors & lasers (+$10/sec, +$25/coin).';
       }
 
-      const activeCls = 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all';
-      const idleCls = 'px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold cursor-pointer transition-all';
+      const activeCls = 'px-2.5 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all';
+      const idleCls = 'px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-extrabold cursor-pointer transition-all';
       if (tabMiniObby) tabMiniObby.className = miniGameMode === 'obby' ? activeCls : idleCls;
       if (tabMiniTycoon) tabMiniTycoon.className = miniGameMode === 'tycoon' ? activeCls : idleCls;
       if (tabMiniSurvival) tabMiniSurvival.className = miniGameMode === 'survival' ? activeCls : idleCls;
@@ -12966,11 +12948,22 @@
         miniGameRafId = null;
         return;
       }
-      const W = miniGameCanvas.width;
-      const H = miniGameCanvas.height;
+      const rect = miniGameCanvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const targetW = Math.max(320, Math.round(rect.width * dpr));
+      const targetH = Math.max(200, Math.round(rect.height * dpr));
+      if (miniGameCanvas.width !== targetW || miniGameCanvas.height !== targetH) {
+        miniGameCanvas.width = targetW;
+        miniGameCanvas.height = targetH;
+      }
+      const W = 580;
+      const H = 340;
+      miniCtx.save();
+      miniCtx.setTransform(targetW / W, 0, 0, targetH / H, 0, 0);
       if (miniGameMode === 'obby') stepAndDrawObby(W, H);
       else if (miniGameMode === 'tycoon') stepAndDrawTycoon(W, H);
       else stepAndDrawSurvival(W, H);
+      miniCtx.restore();
       miniGameRafId = requestAnimationFrame(miniGameLoop);
     }
 
@@ -13018,11 +13011,7 @@
       });
     }
     if (btnCloseMiniGame) btnCloseMiniGame.addEventListener('click', closeMiniGameModal);
-    if (miniGameModal) {
-      miniGameModal.addEventListener('click', (e) => {
-        if (e.target === miniGameModal) closeMiniGameModal();
-      });
-    }
+
     if (tabMiniObby) tabMiniObby.addEventListener('click', () => { miniGameMode = 'obby'; buildObbyStage(obby.stage || 1); updateMiniGameHUD(); });
     if (tabMiniTycoon) tabMiniTycoon.addEventListener('click', () => { miniGameMode = 'tycoon'; updateMiniGameHUD(); });
     if (tabMiniSurvival) tabMiniSurvival.addEventListener('click', () => { miniGameMode = 'survival'; resetSurvival(); updateMiniGameHUD(); });
