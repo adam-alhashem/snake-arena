@@ -534,6 +534,10 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
+        <button id="btnHubFriends" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
+          <span>Friends</span>
+          <span id="hubFriendsCountBadge" class="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black leading-none">0</span>
+        </button>
         <button id="btnHubEditProfile" type="button" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-extrabold active:scale-95 transition-all cursor-pointer">
           <span id="platformHomeProfileName">Player</span>
         </button>
@@ -544,7 +548,18 @@
     </div>
 
     <!-- Main Discover Games Grid -->
-    <div class="w-full max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-10 flex flex-col gap-6 flex-1">
+    <div class="w-full max-w-6xl mx-auto px-4 sm:px-8 py-5 sm:py-8 flex flex-col gap-6 flex-1">
+      <!-- Roblox-style Friends Row -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-3.5 shadow-2xs flex flex-col gap-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-black uppercase tracking-wider text-slate-500">Friends Playing With You</span>
+          <button id="btnHubAddFriendQuick" type="button" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black active:scale-95 transition-all cursor-pointer">+ Add Friends</button>
+        </div>
+        <div id="hubFriendsStrip" class="flex items-center gap-2.5 overflow-x-auto pb-0.5">
+          <!-- Populated by renderFriendsUI() -->
+        </div>
+      </div>
+
       <div class="flex flex-col gap-1">
         <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Discover Games</h1>
         <p class="text-xs sm:text-sm font-semibold text-slate-500">Pick any game to play — each game has its own separate progress and currency.</p>
@@ -704,6 +719,41 @@
         <div class="sm:col-span-3 flex flex-col gap-3 min-h-[260px]">
           <div id="avatarCategoryTabs" class="flex flex-wrap gap-1.5"></div>
           <div id="avatarItemsGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2 overflow-y-auto max-h-[270px] pr-1"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- FRIENDS MODAL (ADD PLAYERS TO PLAY WITH YOU LIKE IN ROBLOX)               -->
+  <!-- ========================================================================= -->
+  <div id="friendsModal" class="fixed inset-0 z-[76] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="w-full max-w-lg max-h-[90vh] bg-white rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden flex flex-col">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between gap-3">
+        <div class="flex flex-col leading-tight">
+          <h2 class="text-base sm:text-lg font-black tracking-tight">Add Friends</h2>
+          <span class="text-[11px] font-semibold text-slate-300">Friends you add join and play with you in every game</span>
+        </div>
+        <button id="btnCloseFriendsModal" type="button" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white font-black text-base flex items-center justify-center cursor-pointer transition-all">×</button>
+      </div>
+
+      <div class="p-4 sm:p-5 overflow-y-auto flex flex-col gap-4">
+        <!-- Add Custom Friend by Name -->
+        <div class="flex items-center gap-2">
+          <input id="friendNameInput" type="text" maxlength="18" placeholder="Type a player name to add..." class="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white" />
+          <button id="btnAddFriendSubmit" type="button" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black shadow-xs active:scale-95 transition-all cursor-pointer shrink-0">+ Add</button>
+        </div>
+
+        <!-- Your Added Friends -->
+        <div class="flex flex-col gap-2">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">Your Friends (<span id="friendsModalCount">0</span>)</span>
+          <div id="friendsListContainer" class="flex flex-col gap-1.5"></div>
+        </div>
+
+        <!-- Suggested Players to Add -->
+        <div class="flex flex-col gap-2 pt-2 border-t border-slate-100">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-500">People You Can Add</span>
+          <div id="suggestedFriendsContainer" class="grid grid-cols-2 gap-2"></div>
         </div>
       </div>
     </div>
@@ -7636,6 +7686,7 @@
       if (sObby && typeof obbyBestStage !== 'undefined') sObby.textContent = `Stage ${obbyBestStage}`;
       if (sTycoon && typeof tycoonState !== 'undefined') sTycoon.textContent = `$${(tycoonState.totalCollected || 0).toLocaleString()} Earned`;
       if (sSurv && typeof survivalBestSec !== 'undefined') sSurv.textContent = `Best: ${survivalBestSec}s`;
+      if (typeof renderFriendsUI === 'function') renderFriendsUI();
     }
 
     function showPlatformHomePage() {
@@ -12820,15 +12871,18 @@
       }
 
       if (nameTag) {
+        const isFriendTag = typeof nameTag === 'object';
+        const txt = isFriendTag ? nameTag.text : nameTag;
+        const isFr = isFriendTag && nameTag.friend;
         targetCtx.font = '800 8px system-ui, sans-serif';
         targetCtx.textAlign = 'center';
-        const tw = targetCtx.measureText(nameTag).width + 8;
-        targetCtx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+        const tw = targetCtx.measureText(txt).width + 8;
+        targetCtx.fillStyle = isFr ? 'rgba(5, 150, 105, 0.9)' : 'rgba(15, 23, 42, 0.72)';
         targetCtx.beginPath();
         targetCtx.roundRect(-tw / 2, -52, tw, 11, 4);
         targetCtx.fill();
         targetCtx.fillStyle = '#ffffff';
-        targetCtx.fillText(nameTag, 0, -44);
+        targetCtx.fillText(txt, 0, -44);
       }
       targetCtx.restore();
     }
@@ -12838,34 +12892,76 @@
       { name: 'MayaPlayz', cfg: { skin: '#d6a272', shirt: 'galaxy_tee',    pants: 'neon_joggers',  hat: 'cat_ears',   face: 'wink' } },
       { name: 'LeoKing',   cfg: { skin: '#facc15', shirt: 'gold_armor',    pants: 'gold_greaves',  hat: 'crown',      face: 'hero' } },
       { name: 'ZaraSky',   cfg: { skin: '#bae6fd', shirt: 'astronaut',     pants: 'space_boots',   hat: 'headphones', face: 'star' } },
-      { name: 'OmarX',     cfg: { skin: '#8d5524', shirt: 'ninja_suit',    pants: 'ninja_pants',   hat: 'ninja_band', face: 'robot' } }
+      { name: 'OmarX',     cfg: { skin: '#8d5524', shirt: 'ninja_suit',    pants: 'ninja_pants',   hat: 'ninja_band', face: 'robot' } },
+      { name: 'NoraStar',  cfg: { skin: '#fed7aa', shirt: 'rainbow_tee',   pants: 'checker_pants', hat: 'beanie',     face: 'happy' } },
+      { name: 'SamCraft',  cfg: { skin: '#d6a272', shirt: 'flame_jacket',  pants: 'flame_pants',   hat: 'viking',     face: 'shades' } },
+      { name: 'LinaFox',   cfg: { skin: '#a7f3d0', shirt: 'pirate_coat',   pants: 'blue_jeans',    hat: 'wizard',     face: 'star' } }
     ];
+
+    let friendsList = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeFriendsList_v1') || 'null');
+        if (Array.isArray(s)) return s;
+      } catch (e) {}
+      return [];
+    })();
+    function saveFriendsList() {
+      try { localStorage.setItem('snakeFriendsList_v1', JSON.stringify(friendsList)); } catch (e) {}
+    }
+
+    function generateAvatarForFriendName(name) {
+      const preset = HUB_OTHER_PLAYERS.find(p => p.name.toLowerCase() === name.toLowerCase());
+      if (preset) return Object.assign({}, preset.cfg);
+      let h = 0;
+      for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+      return {
+        skin: AVATAR_SKINS[h % AVATAR_SKINS.length].id,
+        shirt: AVATAR_SHIRTS[(h >> 2) % AVATAR_SHIRTS.length].id,
+        pants: AVATAR_PANTS[(h >> 4) % AVATAR_PANTS.length].id,
+        hat: AVATAR_HATS[1 + ((h >> 6) % (AVATAR_HATS.length - 1))].id,
+        face: AVATAR_FACES[(h >> 8) % AVATAR_FACES.length].id
+      };
+    }
+
+    function getActiveRosterForHubGame(maxCount) {
+      const partyFriends = friendsList.filter(f => f.inParty !== false).map(f => ({
+        name: f.name, cfg: f.cfg || generateAvatarForFriendName(f.name), isFriend: true
+      }));
+      const roster = [...partyFriends];
+      for (const p of HUB_OTHER_PLAYERS) {
+        if (roster.length >= maxCount) break;
+        if (!roster.some(r => r.name.toLowerCase() === p.name.toLowerCase())) {
+          roster.push({ name: p.name, cfg: p.cfg, isFriend: false });
+        }
+      }
+      return roster.slice(0, Math.max(maxCount, partyFriends.length));
+    }
 
     let obbyBots = [];
     let tycoonBots = [];
     let survivalBots = [];
 
     function initHubBotsForObby() {
-      obbyBots = HUB_OTHER_PLAYERS.slice(0, 4).map((p, i) => ({
-        name: p.name, cfg: p.cfg,
-        x: 34 + i * 16, y: 240, vx: 0, vy: 0, onGround: false,
-        platIdx: 0, speed: 2.1 + (i % 3) * 0.45, jumpCd: 10 + i * 12
+      obbyBots = getActiveRosterForHubGame(4).map((p, i) => ({
+        name: p.name, cfg: p.cfg, isFriend: !!p.isFriend,
+        x: 34 + (i % 5) * 14, y: 240, vx: 0, vy: 0, onGround: false,
+        platIdx: 0, speed: 2.1 + (i % 3) * 0.45, jumpCd: 10 + i * 10
       }));
     }
 
     function initHubBotsForTycoon() {
-      tycoonBots = HUB_OTHER_PLAYERS.slice(0, 3).map((p, i) => ({
-        name: p.name, cfg: p.cfg,
-        x: 160 + i * 125, y: 308, vy: 0, dir: i % 2 === 0 ? 1 : -1,
-        speed: 0.7 + i * 0.22, hopTimer: 40 + i * 35
+      tycoonBots = getActiveRosterForHubGame(3).map((p, i) => ({
+        name: p.name, cfg: p.cfg, isFriend: !!p.isFriend,
+        x: 150 + (i % 4) * 105, y: 308, vy: 0, dir: i % 2 === 0 ? 1 : -1,
+        speed: 0.7 + (i % 3) * 0.22, hopTimer: 40 + i * 30
       }));
     }
 
     function initHubBotsForSurvival() {
-      survivalBots = HUB_OTHER_PLAYERS.slice(0, 4).map((p, i) => ({
-        name: p.name, cfg: p.cfg,
-        x: 100 + i * 120, y: 304, vy: 0, onGround: true,
-        alive: true, respawnTimer: 0, targetX: 140 + i * 100, speed: 3.1 + (i % 2) * 0.6
+      survivalBots = getActiveRosterForHubGame(4).map((p, i) => ({
+        name: p.name, cfg: p.cfg, isFriend: !!p.isFriend,
+        x: 90 + (i % 5) * 95, y: 304, vy: 0, onGround: true,
+        alive: true, respawnTimer: 0, targetX: 140 + (i % 4) * 100, speed: 3.1 + (i % 2) * 0.6
       }));
     }
 
@@ -13075,7 +13171,7 @@
         if (bot.y > H + 26 || Math.hypot(obby.finishX - bot.x, obby.finishY - (bot.y - 16)) < 24) {
           bot.x = 34 + Math.random() * 28; bot.y = 240; bot.vx = 0; bot.vy = 0; bot.platIdx = 0;
         }
-        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
       // Draw your custom avatar
@@ -13232,7 +13328,7 @@
         bot.vy += 0.35;
         bot.y = Math.min(308, bot.y + bot.vy);
         if (bot.y >= 308) bot.vy = 0;
-        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+        drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
       // Draw your custom avatar standing beside your factory
@@ -13469,7 +13565,7 @@
             }
           }
         }
-        if (bot.alive) drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, bot.name);
+        if (bot.alive) drawCustomAvatarOn(miniCtx, bot.x, bot.y, 0.95, bot.cfg, { text: bot.name, friend: bot.isFriend });
       });
 
       drawBlockyAvatar(survival.x, survival.y);
@@ -13721,6 +13817,183 @@
         if (typeof playSFX === 'function') playSFX('powerup');
       });
     }
+
+    // --- ROBLOX-STYLE FRIENDS SYSTEM CONTROLLER ---
+    const friendsModal = document.getElementById('friendsModal');
+    const btnHubFriends = document.getElementById('btnHubFriends');
+    const btnHubAddFriendQuick = document.getElementById('btnHubAddFriendQuick');
+    const btnCloseFriendsModal = document.getElementById('btnCloseFriendsModal');
+    const friendNameInput = document.getElementById('friendNameInput');
+    const btnAddFriendSubmit = document.getElementById('btnAddFriendSubmit');
+
+    function addFriendByName(rawName) {
+      const clean = (rawName || '').trim().slice(0, 18);
+      if (!clean) return;
+      if (friendsList.some(f => f.name.toLowerCase() === clean.toLowerCase())) return;
+      friendsList.push({
+        name: clean,
+        cfg: generateAvatarForFriendName(clean),
+        inParty: true
+      });
+      saveFriendsList();
+      renderFriendsUI();
+      if (typeof playSFX === 'function') playSFX('powerup');
+    }
+
+    function renderFriendsUI() {
+      const badge = document.getElementById('hubFriendsCountBadge');
+      const modalCount = document.getElementById('friendsModalCount');
+      const strip = document.getElementById('hubFriendsStrip');
+      const listEl = document.getElementById('friendsListContainer');
+      const sugEl = document.getElementById('suggestedFriendsContainer');
+
+      if (badge) badge.textContent = String(friendsList.length);
+      if (modalCount) modalCount.textContent = String(friendsList.length);
+
+      if (strip) {
+        strip.innerHTML = '';
+        if (friendsList.length === 0) {
+          const empty = document.createElement('span');
+          empty.className = 'text-xs font-semibold text-slate-400 py-1';
+          empty.textContent = 'No friends added yet — click "+ Add Friends" to add players to play with you!';
+          strip.appendChild(empty);
+        } else {
+          friendsList.forEach(fr => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = `px-2.5 py-1.5 rounded-2xl border flex items-center gap-2 shrink-0 transition-all cursor-pointer active:scale-95 ${
+              fr.inParty !== false ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-600'
+            }`;
+            const dot = document.createElement('span');
+            dot.className = `w-2.5 h-2.5 rounded-full ${fr.inParty !== false ? 'bg-emerald-500' : 'bg-slate-400'}`;
+            const nm = document.createElement('span');
+            nm.className = 'text-xs font-black';
+            nm.textContent = fr.name;
+            const st = document.createElement('span');
+            st.className = 'text-[10px] font-bold opacity-75';
+            st.textContent = fr.inParty !== false ? 'Playing' : 'Offline';
+            chip.appendChild(dot);
+            chip.appendChild(nm);
+            chip.appendChild(st);
+            chip.addEventListener('click', openFriendsModal);
+            strip.appendChild(chip);
+          });
+        }
+      }
+
+      if (listEl) {
+        listEl.innerHTML = '';
+        if (friendsList.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'p-3 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs font-bold text-slate-400';
+          empty.textContent = 'Type a name above or add someone below!';
+          listEl.appendChild(empty);
+        } else {
+          friendsList.forEach((fr, idx) => {
+            const row = document.createElement('div');
+            row.className = 'p-2.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2';
+            const left = document.createElement('div');
+            left.className = 'flex items-center gap-2 min-w-0';
+            const dot = document.createElement('span');
+            dot.className = `w-2.5 h-2.5 rounded-full shrink-0 ${fr.inParty !== false ? 'bg-emerald-500' : 'bg-slate-400'}`;
+            const nm = document.createElement('span');
+            nm.className = 'text-xs font-black text-slate-800 truncate';
+            nm.textContent = fr.name;
+            left.appendChild(dot);
+            left.appendChild(nm);
+
+            const btns = document.createElement('div');
+            btns.className = 'flex items-center gap-1.5 shrink-0';
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = fr.inParty !== false
+              ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-black cursor-pointer'
+              : 'px-2.5 py-1 rounded-lg bg-slate-200 text-slate-700 text-[11px] font-extrabold cursor-pointer';
+            toggleBtn.textContent = fr.inParty !== false ? 'In Party' : 'Invite';
+            toggleBtn.addEventListener('click', () => {
+              fr.inParty = fr.inParty === false;
+              saveFriendsList();
+              renderFriendsUI();
+              if (typeof playSFX === 'function') playSFX('eat');
+            });
+            const remBtn = document.createElement('button');
+            remBtn.type = 'button';
+            remBtn.className = 'px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-[11px] font-extrabold cursor-pointer';
+            remBtn.textContent = 'Remove';
+            remBtn.addEventListener('click', () => {
+              friendsList.splice(idx, 1);
+              saveFriendsList();
+              renderFriendsUI();
+            });
+            btns.appendChild(toggleBtn);
+            btns.appendChild(remBtn);
+
+            row.appendChild(left);
+            row.appendChild(btns);
+            listEl.appendChild(row);
+          });
+        }
+      }
+
+      if (sugEl) {
+        sugEl.innerHTML = '';
+        HUB_OTHER_PLAYERS.forEach(p => {
+          const added = friendsList.some(f => f.name.toLowerCase() === p.name.toLowerCase());
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.disabled = added;
+          card.className = `p-2.5 rounded-xl border text-left flex items-center justify-between gap-2 transition-all ${
+            added ? 'bg-emerald-50 border-emerald-200 text-emerald-700 cursor-default' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 cursor-pointer active:scale-95'
+          }`;
+          const nm = document.createElement('span');
+          nm.className = 'text-xs font-black truncate';
+          nm.textContent = p.name;
+          const act = document.createElement('span');
+          act.className = `text-[10px] font-black px-2 py-0.5 rounded-lg ${added ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`;
+          act.textContent = added ? 'Added' : '+ Add';
+          card.appendChild(nm);
+          card.appendChild(act);
+          if (!added) {
+            card.addEventListener('click', () => addFriendByName(p.name));
+          }
+          sugEl.appendChild(card);
+        });
+      }
+    }
+
+    function openFriendsModal() {
+      if (!friendsModal) return;
+      renderFriendsUI();
+      friendsModal.classList.remove('hidden');
+    }
+    function closeFriendsModal() {
+      if (friendsModal) friendsModal.classList.add('hidden');
+    }
+
+    if (btnHubFriends) btnHubFriends.addEventListener('click', openFriendsModal);
+    if (btnHubAddFriendQuick) btnHubAddFriendQuick.addEventListener('click', openFriendsModal);
+    if (btnCloseFriendsModal) btnCloseFriendsModal.addEventListener('click', closeFriendsModal);
+    if (friendsModal) {
+      friendsModal.addEventListener('click', (e) => {
+        if (e.target === friendsModal) closeFriendsModal();
+      });
+    }
+    if (btnAddFriendSubmit) {
+      btnAddFriendSubmit.addEventListener('click', () => {
+        if (!friendNameInput) return;
+        addFriendByName(friendNameInput.value);
+        friendNameInput.value = '';
+      });
+    }
+    if (friendNameInput) {
+      friendNameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          addFriendByName(friendNameInput.value);
+          friendNameInput.value = '';
+        }
+      });
+    }
+    renderFriendsUI();
     if (btnCloseMiniGame) btnCloseMiniGame.addEventListener('click', closeMiniGameModal);
 
     if (tabMiniObby) tabMiniObby.addEventListener('click', () => { miniGameMode = 'obby'; buildObbyStage(obby.stage || 1); updateMiniGameHUD(); });
