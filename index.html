@@ -1335,10 +1335,16 @@
       <!-- Floating Bottom Overlay: Roblox Analog Thumbstick + Jump / Tycoon Pads -->
       <div class="pointer-events-none absolute bottom-3 inset-x-2 sm:bottom-5 sm:inset-x-6 flex flex-col items-center gap-2 z-20">
         <div id="hubTouchControls" class="pointer-events-none hidden w-full flex items-end justify-between px-2 sm:px-6 pb-1">
-          <!-- Roblox-Style Analog Thumbstick (Bottom-Left) -->
-          <div id="robloxJoystickBase" class="pointer-events-auto relative w-28 h-28 rounded-full bg-slate-900/40 backdrop-blur-xs border-2 border-white/35 shadow-xl flex items-center justify-center select-none touch-none cursor-pointer">
-            <div class="w-16 h-16 rounded-full border border-white/15 pointer-events-none"></div>
-            <div id="robloxJoystickKnob" class="absolute w-12 h-12 rounded-full bg-white/85 border-2 border-slate-300 shadow-lg pointer-events-none transition-transform duration-75" style="transform: translate(0px, 0px);"></div>
+          <!-- Bottom-Left Movement Controls: 3D Analog Thumbstick in 3D, Left/Right Arrows in 2D -->
+          <div class="flex items-end">
+            <div id="robloxJoystickBase" class="hidden pointer-events-auto relative w-28 h-28 rounded-full bg-slate-900/40 backdrop-blur-xs border-2 border-white/35 shadow-xl flex items-center justify-center select-none touch-none cursor-pointer">
+              <div class="w-16 h-16 rounded-full border border-white/15 pointer-events-none"></div>
+              <div id="robloxJoystickKnob" class="absolute w-12 h-12 rounded-full bg-white/85 border-2 border-slate-300 shadow-lg pointer-events-none transition-transform duration-75" style="transform: translate(0px, 0px);"></div>
+            </div>
+            <div id="hub2DArrowsGroup" class="pointer-events-auto flex items-center gap-3">
+              <button id="btnHubMoveLeft" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/75 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/30 text-xl font-black shadow-xl select-none touch-none cursor-pointer">←</button>
+              <button id="btnHubMoveRight" type="button" class="w-14 h-14 rounded-2xl bg-slate-900/75 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/30 text-xl font-black shadow-xl select-none touch-none cursor-pointer">→</button>
+            </div>
           </div>
 
           <!-- Roblox-Style Round Jump Button (Bottom-Right) -->
@@ -15384,8 +15390,8 @@
 
     function syncObby3DVisibility() {
       const use3D = isReal3DObbyActive();
-      const upBtn = document.getElementById('btnHubMoveUp');
-      const downBtn = document.getElementById('btnHubMoveDown');
+      const joyEl = document.getElementById('robloxJoystickBase');
+      const arrowsEl = document.getElementById('hub2DArrowsGroup');
       if (obby3DContainer) {
         if (use3D) obby3DContainer.classList.remove('hidden');
         else obby3DContainer.classList.add('hidden');
@@ -15394,8 +15400,8 @@
         if (use3D) miniGameCanvas.classList.add('hidden');
         else miniGameCanvas.classList.remove('hidden');
       }
-      if (upBtn) { if (use3D) upBtn.classList.remove('hidden'); else upBtn.classList.add('hidden'); }
-      if (downBtn) { if (use3D) downBtn.classList.remove('hidden'); else downBtn.classList.add('hidden'); }
+      if (joyEl) { if (use3D) joyEl.classList.remove('hidden'); else joyEl.classList.add('hidden'); }
+      if (arrowsEl) { if (use3D) arrowsEl.classList.add('hidden'); else arrowsEl.classList.remove('hidden'); }
       if (use3D) {
         initReal3DObby();
         rebuild3DAvatarMesh();
