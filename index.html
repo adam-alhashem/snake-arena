@@ -718,6 +718,37 @@
             <button id="btnHubPlaySurvival" type="button" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">Play</button>
           </div>
         </div>
+
+        <!-- Game Card 5: Turbo Racing (Car Game) -->
+        <div class="bg-white rounded-3xl border-2 border-slate-200 hover:border-orange-400 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col">
+          <div class="h-40 bg-gradient-to-br from-slate-900 via-orange-950 to-slate-950 flex items-center justify-center relative p-4">
+            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-orange-500/30 border border-orange-300/40 text-orange-200 text-[10px] font-black uppercase tracking-wide">Racing</span>
+            <svg viewBox="0 0 120 84" class="w-28 h-20 drop-shadow-lg">
+              <!-- Highway Perspective -->
+              <polygon points="36,10 84,10 112,80 8,80" fill="#334155"/>
+              <line x1="60" y1="12" x2="60" y2="78" stroke="#facc15" stroke-width="2.5" stroke-dasharray="7 6"/>
+              <!-- Sleek Red Sports Car -->
+              <rect x="46" y="34" width="28" height="38" rx="7" fill="#ef4444" stroke="#fca5a5" stroke-width="1.5"/>
+              <rect x="50" y="42" width="20" height="12" rx="3" fill="#bae6fd"/>
+              <rect x="48" y="66" width="24" height="4" rx="1.5" fill="#991b1b"/>
+              <rect x="49" y="32" width="6" height="4" rx="1" fill="#fef08a"/>
+              <rect x="65" y="32" width="6" height="4" rx="1" fill="#fef08a"/>
+              <!-- Nitro Flames -->
+              <polygon points="52,72 55,82 58,72" fill="#38bdf8"/>
+              <polygon points="62,72 65,82 68,72" fill="#38bdf8"/>
+            </svg>
+          </div>
+          <div class="p-4 flex flex-col gap-3 flex-1">
+            <div class="flex flex-col gap-1 flex-1">
+              <div class="flex items-center justify-between gap-2">
+                <h2 class="text-base font-black text-slate-900">Turbo Racing</h2>
+                <span id="hubStatCar" class="text-[11px] font-extrabold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-lg">Best: 0m</span>
+              </div>
+              <p class="text-xs font-medium text-slate-500">Speed down a 4-lane highway, dodge traffic, grab gold coins, and fire Nitro Boost.</p>
+            </div>
+            <button id="btnHubPlayCar" type="button" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">Play</button>
+          </div>
+        </div>
       </div>
       <div class="h-16 shrink-0"></div>
     </div>
@@ -7769,6 +7800,8 @@
       if (sObby && typeof obbyBestStage !== 'undefined') sObby.textContent = `Stage ${obbyBestStage}`;
       if (sTycoon && typeof tycoonState !== 'undefined') sTycoon.textContent = `$${(tycoonState.totalCollected || 0).toLocaleString()} Earned`;
       if (sSurv && typeof survivalBestSec !== 'undefined') sSurv.textContent = `Best: ${survivalBestSec}s`;
+      const sCar = document.getElementById('hubStatCar');
+      if (sCar && typeof carBestDist !== 'undefined') sCar.textContent = `Best: ${carBestDist}m`;
       if (typeof renderFriendsUI === 'function') renderFriendsUI();
       if (typeof updateOnlineRoomUI === 'function') updateOnlineRoomUI();
       if (!hasRealProfile() && typeof mpDisconnectRoom === 'function' && mpConnected) mpDisconnectRoom();
@@ -12544,6 +12577,28 @@
     let obbyCoins = parseInt(localStorage.getItem('snakeHubObbyCoins_v1') || '0', 10) || 0;
     let survivalBestSec = parseInt(localStorage.getItem('snakeHubSurvivalBest_v1') || '0', 10) || 0;
     let survivalGems = parseInt(localStorage.getItem('snakeHubSurvivalGems_v1') || '0', 10) || 0;
+    let carBestDist = parseInt(localStorage.getItem('snakeHubCarBest_v1') || '0', 10) || 0;
+    let carCoins = parseInt(localStorage.getItem('snakeHubCarCoins_v1') || '0', 10) || 0;
+    let carSavedRun = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeHubCarSaved_v1') || 'null');
+        if (s && typeof s === 'object' && s.dist > 0 && s.lives > 0) return s;
+      } catch (e) {}
+      return null;
+    })();
+    let carGame = {
+      state: 'ready', x: 290, y: 268, speed: 4.5, nitro: 100, dist: 0,
+      lives: 3, invuln: 0, frame: 0, roadScroll: 0, traffic: [], pickups: []
+    };
+    function resetCarGame() {
+      carGame = {
+        state: 'ready', x: 290, y: 268, speed: 4.5, nitro: 100, dist: 0,
+        lives: 3, invuln: 0, frame: 0, roadScroll: 0, traffic: [], pickups: []
+      };
+      miniParticles = [];
+      miniPopups = [];
+      updateMiniGameHUD();
+    }
     let survivalSavedRun = (() => {
       try {
         const s = JSON.parse(localStorage.getItem('snakeHubSurvivalSaved_v1') || 'null');
@@ -12693,6 +12748,13 @@
         if (sEl) sEl.textContent = `Lv.${tycoonState.droppers + tycoonState.speedLv + tycoonState.valueLv - 2}`;
         if (bEl) bEl.textContent = `$${tycoonState.totalCollected.toLocaleString()}`;
         if (hEl) hEl.textContent = 'Collect Cash from your conveyor bank and buy Droppers, Speed & Value upgrades!';
+      } else if (miniGameMode === 'car') {
+        if (cLbl) cLbl.textContent = 'Race Coins';
+        if (mEl) mEl.textContent = carCoins.toLocaleString();
+        if (sLbl) sLbl.textContent = 'Distance';
+        if (sEl) sEl.textContent = `${Math.floor(carGame.dist)}m`;
+        if (bEl) bEl.textContent = `${carBestDist}m`;
+        if (hEl) hEl.textContent = 'Steer with A/D or Arrows, hold Space / Jump for Nitro Boost! Dodge traffic & grab coins.';
       } else {
         if (cLbl) cLbl.textContent = 'Survival Gems';
         if (mEl) mEl.textContent = survivalGems.toLocaleString();
@@ -12706,6 +12768,7 @@
       if (titleEl) {
         titleEl.textContent = miniGameMode === 'obby' ? 'Mega Obby'
           : miniGameMode === 'tycoon' ? 'Money Tycoon'
+          : miniGameMode === 'car' ? 'Turbo Racing'
           : 'Disaster Survival';
       }
       updateTycoonButtonsUI();
@@ -13888,6 +13951,236 @@
       }
     }
 
+    // ---- RENDER & PHYSICS: 4. TURBO RACING (CAR GAME) ----
+    function drawSportsCar(cx, cy, bodyCol, accentCol, isPlayer, isBoostingCar) {
+      miniCtx.save();
+      miniCtx.translate(cx, cy);
+      // 3D ground shadow when 3D Mode is ON
+      if (typeof is3DMode !== 'undefined' && is3DMode) {
+        miniCtx.fillStyle = 'rgba(0,0,0,0.42)';
+        miniCtx.beginPath();
+        miniCtx.roundRect(-14, -22, 34, 52, 9);
+        miniCtx.fill();
+      }
+      // Wheels
+      miniCtx.fillStyle = '#0f172a';
+      miniCtx.fillRect(-18, -17, 4, 11); miniCtx.fillRect(14, -17, 4, 11);
+      miniCtx.fillRect(-18, 8, 4, 11); miniCtx.fillRect(14, 8, 4, 11);
+      // Main sleek chassis
+      miniCtx.fillStyle = bodyCol;
+      miniCtx.strokeStyle = accentCol || '#ffffff';
+      miniCtx.lineWidth = 1.6;
+      miniCtx.beginPath();
+      miniCtx.roundRect(-15, -24, 30, 48, 8);
+      miniCtx.fill();
+      miniCtx.stroke();
+      // Racing stripe
+      miniCtx.fillStyle = accentCol || 'rgba(255,255,255,0.45)';
+      miniCtx.fillRect(-2.5, -23, 5, 46);
+      // Windshield & rear window
+      miniCtx.fillStyle = '#bae6fd';
+      miniCtx.beginPath(); miniCtx.roundRect(-10, -11, 20, 12, 3); miniCtx.fill();
+      miniCtx.fillStyle = '#1e293b';
+      miniCtx.beginPath(); miniCtx.roundRect(-9, 6, 18, 8, 2); miniCtx.fill();
+      // Headlights
+      miniCtx.fillStyle = '#fef08a';
+      miniCtx.fillRect(-11, -24, 6, 3.5); miniCtx.fillRect(5, -24, 6, 3.5);
+      if (isPlayer) {
+        // Rear spoiler
+        miniCtx.fillStyle = '#991b1b';
+        miniCtx.fillRect(-14, 18, 28, 4);
+        // Nitro flames when boosting!
+        if (isBoostingCar) {
+          const fl = 10 + Math.random() * 10;
+          miniCtx.fillStyle = '#38bdf8';
+          miniCtx.beginPath();
+          miniCtx.moveTo(-8, 24); miniCtx.lineTo(-5, 24 + fl); miniCtx.lineTo(-2, 24);
+          miniCtx.moveTo(2, 24); miniCtx.lineTo(5, 24 + fl); miniCtx.lineTo(8, 24);
+          miniCtx.fill();
+        }
+      }
+      miniCtx.restore();
+    }
+
+    function stepAndDrawCar(W, H) {
+      const roadLeft = 110;
+      const roadW = 360;
+      const roadRight = roadLeft + roadW;
+      const laneW = roadW / 4;
+
+      // Grass shoulders
+      miniCtx.fillStyle = '#15803d';
+      miniCtx.fillRect(0, 0, W, H);
+      // Asphalt road
+      miniCtx.fillStyle = '#1e293b';
+      miniCtx.fillRect(roadLeft, 0, roadW, H);
+      // Red & white racing curbs
+      const curbOffset = Math.floor(carGame.roadScroll) % 32;
+      for (let y = -32 + curbOffset; y < H + 32; y += 32) {
+        const isRed = Math.floor((y - curbOffset) / 32) % 2 === 0;
+        miniCtx.fillStyle = isRed ? '#ef4444' : '#f8fafc';
+        miniCtx.fillRect(roadLeft - 8, y, 8, 32);
+        miniCtx.fillRect(roadRight, y, 8, 32);
+        // Roadside trees flying by
+        miniCtx.fillStyle = '#166534';
+        miniCtx.beginPath(); miniCtx.arc(roadLeft - 42, y + 16, 13, 0, Math.PI * 2); miniCtx.fill();
+        miniCtx.beginPath(); miniCtx.arc(roadRight + 42, y + 16, 13, 0, Math.PI * 2); miniCtx.fill();
+      }
+      // Dashed lane dividers
+      miniCtx.strokeStyle = 'rgba(250, 204, 21, 0.72)';
+      miniCtx.lineWidth = 3;
+      miniCtx.setLineDash([18, 18]);
+      miniCtx.lineDashOffset = -carGame.roadScroll;
+      for (let ln = 1; ln <= 3; ln++) {
+        const lx = roadLeft + ln * laneW;
+        miniCtx.beginPath(); miniCtx.moveTo(lx, 0); miniCtx.lineTo(lx, H); miniCtx.stroke();
+      }
+      miniCtx.setLineDash([]);
+
+      const boosting = carGame.state === 'playing' && (miniKeys.jump || miniKeys.up) && carGame.nitro > 2;
+      if (carGame.state === 'playing') {
+        carGame.frame++;
+        if (carGame.invuln > 0) carGame.invuln--;
+        const baseSpeed = 4.6 + Math.min(5.2, carGame.dist * 0.005);
+        carGame.speed = boosting ? baseSpeed * 1.6 : baseSpeed;
+        if (boosting) carGame.nitro = Math.max(0, carGame.nitro - 0.75);
+        else carGame.nitro = Math.min(100, carGame.nitro + 0.18);
+
+        carGame.roadScroll += carGame.speed * 1.8;
+        carGame.dist += carGame.speed * 0.14;
+        if (Math.floor(carGame.dist) > carBestDist) carBestDist = Math.floor(carGame.dist);
+        if (carGame.frame % 12 === 0) updateMiniGameHUD();
+
+        // Steer player car
+        if (Math.abs(miniKeys.joyX || 0) > 0.12) carGame.x += miniKeys.joyX * 6.0;
+        if (miniKeys.left) carGame.x -= 5.6;
+        if (miniKeys.right) carGame.x += 5.6;
+        carGame.x = Math.max(roadLeft + 22, Math.min(roadRight - 22, carGame.x));
+
+        // Spawn traffic cars
+        const spawnEvery = Math.max(22, 52 - Math.floor(carGame.dist / 60));
+        if (carGame.frame % spawnEvery === 1) {
+          const lane = Math.floor(Math.random() * 4);
+          const lx = roadLeft + lane * laneW + laneW / 2;
+          const tooClose = carGame.traffic.some(t => Math.abs(t.x - lx) < 25 && t.y < 85);
+          if (!tooClose) {
+            const cols = [['#3b82f6', '#bfdbfe'], ['#eab308', '#fef08a'], ['#a855f7', '#e9d5ff'], ['#f8fafc', '#cbd5e1'], ['#10b981', '#a7f3d0']];
+            const pick = cols[Math.floor(Math.random() * cols.length)];
+            carGame.traffic.push({ x: lx, y: -40, vy: 2.0 + Math.random() * 1.6, col: pick[0], acc: pick[1] });
+          }
+        }
+        // Spawn gold coins & nitro orbs
+        if (carGame.frame % 68 === 25) {
+          const lane = Math.floor(Math.random() * 4);
+          const isNitro = Math.random() < 0.28;
+          carGame.pickups.push({ x: roadLeft + lane * laneW + laneW / 2, y: -20, type: isNitro ? 'nitro' : 'coin' });
+        }
+
+        // Update traffic & collision
+        for (let i = carGame.traffic.length - 1; i >= 0; i--) {
+          const t = carGame.traffic[i];
+          t.y += carGame.speed - t.vy * 0.35;
+          if (carGame.invuln <= 0 && Math.abs(t.x - carGame.x) < 26 && Math.abs(t.y - carGame.y) < 42) {
+            carGame.traffic.splice(i, 1);
+            carGame.lives--;
+            carGame.invuln = 75;
+            spawnMiniBurst(carGame.x, carGame.y - 10, '#f97316', 18);
+            pushMiniPopup(carGame.x, carGame.y - 30, 'CRASH!', '#f87171');
+            if (typeof playSFX === 'function') playSFX('gameover');
+            if (carGame.lives <= 0) carGame.state = 'over';
+            continue;
+          }
+          if (t.y > H + 50) carGame.traffic.splice(i, 1);
+        }
+
+        // Update pickups
+        for (let i = carGame.pickups.length - 1; i >= 0; i--) {
+          const pk = carGame.pickups[i];
+          pk.y += carGame.speed * 1.15;
+          if (Math.hypot(pk.x - carGame.x, pk.y - carGame.y) < 26) {
+            carGame.pickups.splice(i, 1);
+            if (pk.type === 'nitro') {
+              carGame.nitro = Math.min(100, carGame.nitro + 40);
+              spawnMiniBurst(pk.x, pk.y, '#38bdf8', 10);
+              pushMiniPopup(pk.x, pk.y - 12, '+NITRO!', '#38bdf8');
+              if (typeof playSFX === 'function') playSFX('powerup');
+            } else {
+              carCoins += 15;
+              spawnMiniBurst(pk.x, pk.y, '#facc15', 10);
+              pushMiniPopup(pk.x, pk.y - 12, '+15 Coins', '#facc15');
+              updateMiniGameHUD();
+              if (typeof playSFX === 'function') playSFX('eat');
+            }
+            continue;
+          }
+          if (pk.y > H + 30) carGame.pickups.splice(i, 1);
+        }
+      }
+
+      // Draw pickups
+      carGame.pickups.forEach(pk => {
+        miniCtx.save();
+        miniCtx.translate(pk.x, pk.y);
+        if (pk.type === 'nitro') {
+          miniCtx.shadowColor = '#38bdf8'; miniCtx.shadowBlur = 12;
+          miniCtx.fillStyle = '#38bdf8';
+          miniCtx.beginPath(); miniCtx.arc(0, 0, 9, 0, Math.PI * 2); miniCtx.fill();
+          miniCtx.fillStyle = '#ffffff'; miniCtx.font = '900 10px system-ui'; miniCtx.textAlign = 'center'; miniCtx.textBaseline = 'middle';
+          miniCtx.fillText('N', 0, 1);
+        } else {
+          miniCtx.shadowColor = '#facc15'; miniCtx.shadowBlur = 10;
+          miniCtx.fillStyle = '#facc15';
+          miniCtx.beginPath(); miniCtx.arc(0, 0, 8.5, 0, Math.PI * 2); miniCtx.fill();
+        }
+        miniCtx.restore();
+      });
+
+      // Draw traffic cars
+      carGame.traffic.forEach(t => drawSportsCar(t.x, t.y, t.col, t.acc, false, false));
+
+      // Draw remote online players' cars if in same room!
+      if (mpConnected) {
+        Object.values(mpRemotePlayers).forEach(p => {
+          if (p.game !== 'car') return;
+          p.drawX = p.drawX + ((p.x || 290) - p.drawX) * 0.4;
+          drawSportsCar(p.drawX, 240, '#0ea5e9', '#e0f2fe', true, false);
+        });
+      }
+
+      // Draw player sports car (blinks briefly while invulnerable)
+      if (carGame.invuln % 8 < 5) {
+        drawSportsCar(carGame.x, carGame.y, '#ef4444', '#fef08a', true, boosting);
+      }
+
+      // Draw lives + Nitro gauge + Speedometer (top-left)
+      for (let i = 0; i < 3; i++) {
+        miniCtx.fillStyle = i < carGame.lives ? '#ef4444' : 'rgba(255,255,255,0.25)';
+        miniCtx.beginPath(); miniCtx.arc(22 + i * 18, 62, 6, 0, Math.PI * 2); miniCtx.fill();
+      }
+      miniCtx.fillStyle = 'rgba(15,23,42,0.75)';
+      miniCtx.beginPath(); miniCtx.roundRect(14, 76, 82, 12, 6); miniCtx.fill();
+      miniCtx.fillStyle = boosting ? '#38bdf8' : '#0ea5e9';
+      miniCtx.beginPath(); miniCtx.roundRect(16, 78, Math.max(0, 78 * (carGame.nitro / 100)), 8, 4); miniCtx.fill();
+      miniCtx.fillStyle = '#ffffff';
+      miniCtx.font = '900 11px system-ui, sans-serif';
+      miniCtx.textAlign = 'left';
+      miniCtx.fillText(`${Math.round(carGame.speed * 26)} KM/H`, 16, 104);
+
+      drawMiniEffects();
+
+      if (carGame.state === 'ready' || carGame.state === 'over') {
+        miniCtx.fillStyle = 'rgba(15, 23, 42, 0.62)';
+        miniCtx.fillRect(0, 0, W, H);
+        miniCtx.fillStyle = '#ffffff';
+        miniCtx.textAlign = 'center';
+        miniCtx.font = '900 24px system-ui, sans-serif';
+        miniCtx.fillText(carGame.state === 'ready' ? 'TURBO RACING' : `RACE OVER • ${Math.floor(carGame.dist)}m`, W / 2, H / 2 - 12);
+        miniCtx.fillStyle = '#fed7aa';
+        miniCtx.font = '700 13px system-ui, sans-serif';
+        miniCtx.fillText('Click, tap, or press Space to hit the highway!', W / 2, H / 2 + 16);
+      }
+    }
+
     function miniGameLoop() {
       if (!miniGameModal || miniGameModal.classList.contains('hidden') || !miniCtx) {
         miniGameRafId = null;
@@ -13913,6 +14206,7 @@
       }
       if (miniGameMode === 'obby') stepAndDrawObby(W, H);
       else if (miniGameMode === 'tycoon') stepAndDrawTycoon(W, H);
+      else if (miniGameMode === 'car') stepAndDrawCar(W, H);
       else stepAndDrawSurvival(W, H);
       miniCtx.restore();
       miniGameRafId = requestAnimationFrame(miniGameLoop);
@@ -13942,6 +14236,15 @@
         return { droppers: 1, speedLv: 1, valueLv: 1, bank: 0, cash: 0, totalCollected: 0 };
       })();
       tycoonCubes = [];
+      carBestDist = parseInt(localStorage.getItem('snakeHubCarBest_v1') || '0', 10) || 0;
+      carCoins = parseInt(localStorage.getItem('snakeHubCarCoins_v1') || '0', 10) || 0;
+      carSavedRun = (() => {
+        try {
+          const s = JSON.parse(localStorage.getItem('snakeHubCarSaved_v1') || 'null');
+          if (s && typeof s === 'object' && s.dist > 0 && s.lives > 0) return s;
+        } catch (e) {}
+        return null;
+      })();
     }
 
     function openMiniGameModal(initialMode) {
@@ -13954,6 +14257,11 @@
       miniGameSessionEarned = 0;
       buildObbyStage(obbySavedStage || 1);
       initHubBotsForTycoon();
+      resetCarGame();
+      if (carSavedRun && carSavedRun.dist > 0 && carSavedRun.lives > 0) {
+        carGame.dist = carSavedRun.dist;
+        carGame.lives = carSavedRun.lives;
+      }
       resetSurvival();
       if (survivalSavedRun && survivalSavedRun.seconds > 0 && survivalSavedRun.lives > 0) {
         survival.seconds = survivalSavedRun.seconds;
@@ -13991,6 +14299,8 @@
     if (btnHubPlayObby) btnHubPlayObby.addEventListener('click', () => openMiniGameModal('obby'));
     if (btnHubPlayTycoon) btnHubPlayTycoon.addEventListener('click', () => openMiniGameModal('tycoon'));
     if (btnHubPlaySurvival) btnHubPlaySurvival.addEventListener('click', () => openMiniGameModal('survival'));
+    const btnHubPlayCar = document.getElementById('btnHubPlayCar');
+    if (btnHubPlayCar) btnHubPlayCar.addEventListener('click', () => openMiniGameModal('car'));
     if (btnHubEditProfile) btnHubEditProfile.addEventListener('click', showProfileSetupPage);
     if (btnHubSignOut) {
       btnHubSignOut.addEventListener('click', () => {
@@ -14187,6 +14497,9 @@
       }
       if (pr.game === 'survival') {
         return { label: 'Playing Disaster Survival', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+      }
+      if (pr.game === 'car') {
+        return { label: 'Playing Turbo Racing', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
       }
       return { label: 'In Lobby', dotCls: 'bg-sky-500', chipCls: 'bg-sky-50 border-sky-300 text-sky-900' };
     }
@@ -14517,6 +14830,14 @@
         } else if (miniGameMode === 'tycoon') {
           saveTycoonState();
           pushMiniPopup(290, 120, 'TYCOON SAVED!', '#38bdf8');
+        } else if (miniGameMode === 'car') {
+          carSavedRun = { dist: Math.floor(carGame.dist), lives: Math.max(1, carGame.lives) };
+          try {
+            localStorage.setItem('snakeHubCarSaved_v1', JSON.stringify(carSavedRun));
+            localStorage.setItem('snakeHubCarCoins_v1', String(carCoins));
+            localStorage.setItem('snakeHubCarBest_v1', String(carBestDist));
+          } catch (e) {}
+          pushMiniPopup(carGame.x, carGame.y - 36, `SAVED (${Math.floor(carGame.dist)}m)!`, '#38bdf8');
         } else {
           survivalSavedRun = { seconds: survival.seconds, lives: Math.max(1, survival.lives) };
           try {
@@ -14547,6 +14868,10 @@
           survivalSavedRun = null;
           try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
           resetSurvival();
+        } else if (miniGameMode === 'car') {
+          carSavedRun = null;
+          try { localStorage.removeItem('snakeHubCarSaved_v1'); } catch (e) {}
+          resetCarGame();
         } else {
           tycoonCubes = [];
           updateMiniGameHUD();
@@ -14618,6 +14943,15 @@
             survival.onGround = false;
             if (typeof playSFX === 'function') playSFX('eat');
           }
+        } else if (miniGameMode === 'car') {
+          if (carGame.state === 'over') {
+            carSavedRun = null;
+            try { localStorage.removeItem('snakeHubCarSaved_v1'); } catch (e) {}
+            resetCarGame();
+            carGame.state = 'playing';
+          } else if (carGame.state === 'ready') {
+            carGame.state = 'playing';
+          }
         }
       });
     }
@@ -14639,6 +14973,14 @@
             resetSurvival();
           }
           survival.state = 'playing';
+        }
+        if (miniGameMode === 'car' && carGame.state !== 'playing') {
+          if (carGame.state === 'over') {
+            carSavedRun = null;
+            try { localStorage.removeItem('snakeHubCarSaved_v1'); } catch (e) {}
+            resetCarGame();
+          }
+          carGame.state = 'playing';
         }
       }
     });
@@ -14986,6 +15328,7 @@
       if (miniGameModal && !miniGameModal.classList.contains('hidden')) {
         if (miniGameMode === 'obby') return { game: 'obby', x: obby.x, y: obby.y };
         if (miniGameMode === 'tycoon') return { game: 'tycoon', x: 70, y: 308 };
+        if (miniGameMode === 'car') return { game: 'car', x: carGame.x, y: carGame.y };
         return { game: 'survival', x: survival.x, y: survival.y };
       }
       if (isRunning) return { game: 'snake', x: snake[0] ? snake[0].x : 0, y: snake[0] ? snake[0].y : 0 };
