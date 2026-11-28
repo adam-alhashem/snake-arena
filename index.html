@@ -12997,11 +12997,11 @@
       let h = 0;
       for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
       return {
-        skin: AVATAR_SKINS[h % AVATAR_SKINS.length].id,
-        shirt: AVATAR_SHIRTS[(h >> 2) % AVATAR_SHIRTS.length].id,
-        pants: AVATAR_PANTS[(h >> 4) % AVATAR_PANTS.length].id,
-        hat: AVATAR_HATS[1 + ((h >> 6) % (AVATAR_HATS.length - 1))].id,
-        face: AVATAR_FACES[(h >> 8) % AVATAR_FACES.length].id
+        skin: AVATAR_SKINS[(h >>> 0) % AVATAR_SKINS.length].id,
+        shirt: AVATAR_SHIRTS[(h >>> 2) % AVATAR_SHIRTS.length].id,
+        pants: AVATAR_PANTS[(h >>> 4) % AVATAR_PANTS.length].id,
+        hat: AVATAR_HATS[1 + ((h >>> 6) % (AVATAR_HATS.length - 1))].id,
+        face: AVATAR_FACES[(h >>> 8) % AVATAR_FACES.length].id
       };
     }
 
@@ -13988,16 +13988,18 @@
     const btnAddFriendSubmit = document.getElementById('btnAddFriendSubmit');
 
     function addFriendByName(rawName) {
-      const clean = (rawName || '').trim().slice(0, 18);
+      const clean = (rawName || '').trim().slice(0, 24);
       if (!clean) return;
       if (friendsList.some(f => f.name.toLowerCase() === clean.toLowerCase())) return;
+      const reg = registeredPlayers.find(p => p.name.toLowerCase() === clean.toLowerCase());
       friendsList.push({
-        name: clean,
-        cfg: generateAvatarForFriendName(clean),
+        name: reg ? reg.name : clean,
+        cfg: (reg && reg.cfg) ? Object.assign({}, reg.cfg) : generateAvatarForFriendName(clean),
         inParty: true
       });
       saveFriendsList();
       renderFriendsUI();
+      if (typeof renderFriendSearchResults === 'function') renderFriendSearchResults();
       if (typeof playSFX === 'function') playSFX('powerup');
     }
 
