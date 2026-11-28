@@ -16438,8 +16438,9 @@
       inited: false, scene: null, camera: null, renderer: null,
       hemiLight: null, sunLight: null,
       playerCar: null, wheels: [], brakeLightMat: null, steeringWheel: null,
-      traffic: [], coins: [], smoke: [],
+      traffic: [], coins: [], smoke: [], skidMarks: [],
       px: 0, pz: 110, heading: 0, kmh: 0, steerAng: 0, driftSlip: 0,
+      camX: 0, camY: 3.2, camZ: 118, camYaw: 0, pitchAng: 0,
       rpm: 900, gear: 0, dist: 0, frame: 0,
       carIdx: 0, skyIdx: 0, camMode: 0,
       skillScore: 0, skillMult: 1, skillLabel: '', skillTimer: 0,
@@ -16514,34 +16515,71 @@
 
     function build3DSupercarMesh(bodyCol, stripeCol, isPlayer) {
       const grp = new THREE.Group();
-      const paint = new THREE.MeshStandardMaterial({ color: bodyCol, metalness: 0.72, roughness: 0.18 });
-      const dark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.45 });
-      const glass = new THREE.MeshStandardMaterial({ color: '#1e293b', metalness: 0.9, roughness: 0.08, transparent: true, opacity: 0.78 });
-      const wheelMat = new THREE.MeshStandardMaterial({ color: '#111827', roughness: 0.8 });
-      const rimMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.85, roughness: 0.18 });
+      const paint = (typeof THREE.MeshPhysicalMaterial === 'function')
+        ? new THREE.MeshPhysicalMaterial({ color: bodyCol, metalness: 0.62, roughness: 0.18, clearcoat: 1.0, clearcoatRoughness: 0.08 })
+        : new THREE.MeshStandardMaterial({ color: bodyCol, metalness: 0.72, roughness: 0.18 });
+      const dark = new THREE.MeshStandardMaterial({ color: '#0f172a', roughness: 0.42, metalness: 0.2 });
+      const chrome = new THREE.MeshStandardMaterial({ color: '#f1f5f9', metalness: 0.92, roughness: 0.12 });
+      const glass = new THREE.MeshStandardMaterial({ color: '#0f172a', metalness: 0.92, roughness: 0.06, transparent: true, opacity: 0.82 });
+      const wheelMat = new THREE.MeshStandardMaterial({ color: '#111827', roughness: 0.88 });
+      const rimMat = new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.88, roughness: 0.16 });
+      const caliperMat = new THREE.MeshStandardMaterial({ color: '#ef4444', roughness: 0.35 });
 
-      const lower = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.5, 4.35), paint);
-      lower.position.y = 0.46; lower.castShadow = true; grp.add(lower);
-      const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.1, 0.5), dark);
-      splitter.position.set(0, 0.24, -2.02); grp.add(splitter);
+      // Soft ambient occlusion contact shadow under chassis
+      const aoShadow = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.45, 4.75),
+        new THREE.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.42, depthWrite: false })
+      );
+      aoShadow.rotation.x = -Math.PI / 2;
+      aoShadow.position.y = 0.032;
+      grp.add(aoShadow);
 
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.52, 2.0), glass);
-      cabin.position.set(0, 0.94, 0.15); cabin.castShadow = true; grp.add(cabin);
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.46, 0.08, 1.38), paint);
-      roof.position.set(0, 1.22, 0.2); grp.add(roof);
+      // Sculpted lower chassis + sloped front nose + side skirts + rear diffuser
+      const lower = new THREE.Mesh(new THREE.BoxGeometry(2.06, 0.46, 4.32), paint);
+      lower.position.y = 0.45; lower.castShadow = true; lower.receiveShadow = true; grp.add(lower);
+      const hoodSlope = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.16, 1.55), paint);
+      hoodSlope.position.set(0, 0.67, -1.32); hoodSlope.rotation.x = 0.09; hoodSlope.castShadow = true; grp.add(hoodSlope);
+      const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.94, 0.18, 1.15), paint);
+      rearDeck.position.set(0, 0.72, 1.52); rearDeck.castShadow = true; grp.add(rearDeck);
+      const splitter = new THREE.Mesh(new THREE.BoxGeometry(2.14, 0.09, 0.48), dark);
+      splitter.position.set(0, 0.22, -2.02); grp.add(splitter);
+      const grille = new THREE.Mesh(new THREE.BoxGeometry(1.38, 0.22, 0.08), dark);
+      grille.position.set(0, 0.36, -2.17); grp.add(grille);
+      const diffuser = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.18, 0.22), dark);
+      diffuser.position.set(0, 0.26, 2.14); grp.add(diffuser);
+      // Dual chrome exhaust tips
+      const exL = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.22, 10), chrome);
+      exL.rotation.x = Math.PI / 2; exL.position.set(-0.56, 0.26, 2.22); grp.add(exL);
+      const exR = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.22, 10), chrome);
+      exR.rotation.x = Math.PI / 2; exR.position.set(0.56, 0.26, 2.22); grp.add(exR);
+      // French/Paris Rear License Plate
+      const plate = new THREE.Mesh(new THREE.BoxGeometry(0.54, 0.13, 0.04), new THREE.MeshBasicMaterial({ color: '#f8fafc' }));
+      plate.position.set(0, 0.42, 2.17); grp.add(plate);
+      const plateEU = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.13, 0.045), new THREE.MeshBasicMaterial({ color: '#1d4ed8' }));
+      plateEU.position.set(-0.23, 0.42, 2.172); grp.add(plateEU);
 
-      const mL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.16), paint); mL.position.set(-1.02, 0.82, -0.55); grp.add(mL);
-      const mR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.12, 0.16), paint); mR.position.set(1.02, 0.82, -0.55); grp.add(mR);
+      // Sleek raked greenhouse cabin + sloped windshield + rear fastback glass
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.46, 1.75), glass);
+      cabin.position.set(0, 0.92, 0.18); cabin.castShadow = true; grp.add(cabin);
+      const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.48, 0.48, 0.08), glass);
+      windshield.position.set(0, 0.89, -0.78); windshield.rotation.x = -0.62; grp.add(windshield);
+      const rearGlass = new THREE.Mesh(new THREE.BoxGeometry(1.46, 0.48, 0.08), glass);
+      rearGlass.position.set(0, 0.90, 1.15); rearGlass.rotation.x = 0.65; grp.add(rearGlass);
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(1.44, 0.07, 1.32), paint);
+      roof.position.set(0, 1.17, 0.18); roof.castShadow = true; grp.add(roof);
+
+      const mL = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.11, 0.15), paint); mL.position.set(-1.04, 0.80, -0.52); grp.add(mL);
+      const mR = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.11, 0.15), paint); mR.position.set(1.04, 0.80, -0.52); grp.add(mR);
 
       let steeringWheel = null;
       let brakeLightMat = new THREE.MeshBasicMaterial({ color: '#991b1b' });
       if (isPlayer) {
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.03, 4.36), new THREE.MeshStandardMaterial({ color: stripeCol || '#f8fafc' }));
-        stripe.position.set(0, 0.72, 0); grp.add(stripe);
-        const wing = new THREE.Mesh(new THREE.BoxGeometry(2.18, 0.08, 0.44), dark);
-        wing.position.set(0, 1.12, 1.94); grp.add(wing);
-        const sL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.36, 0.18), dark); sL.position.set(-0.7, 0.9, 1.92); grp.add(sL);
-        const sR = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.36, 0.18), dark); sR.position.set(0.7, 0.9, 1.92); grp.add(sR);
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.025, 4.28), new THREE.MeshStandardMaterial({ color: stripeCol || '#f8fafc', roughness: 0.25 }));
+        stripe.position.set(0, 0.71, 0); grp.add(stripe);
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(2.12, 0.07, 0.40), dark);
+        wing.position.set(0, 1.08, 1.94); wing.castShadow = true; grp.add(wing);
+        const sL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.32, 0.16), dark); sL.position.set(-0.68, 0.90, 1.92); grp.add(sL);
+        const sR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.32, 0.16), dark); sR.position.set(0.68, 0.90, 1.92); grp.add(sR);
         const dash = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.24, 0.45), dark);
         dash.position.set(0, 0.78, -0.52); grp.add(dash);
         steeringWheel = new THREE.Group();
@@ -16551,23 +16589,36 @@
         steeringWheel.position.set(-0.32, 0.86, -0.26);
         grp.add(steeringWheel);
         brakeLightMat = new THREE.MeshBasicMaterial({ color: '#dc2626' });
+
+        // Soft glowing headlight beams illuminating the road ahead
+        const beamMat = new THREE.MeshBasicMaterial({ color: '#fef9c3', transparent: true, opacity: 0.11, depthWrite: false, side: THREE.DoubleSide });
+        [-0.68, 0.68].forEach(bx => {
+          const beam = new THREE.Mesh(new THREE.ConeGeometry(1.8, 14, 12, 1, true), beamMat);
+          beam.rotation.x = Math.PI / 2;
+          beam.position.set(bx, 0.48, -9.2);
+          grp.add(beam);
+        });
       }
 
       const headMat = new THREE.MeshBasicMaterial({ color: '#fef9c3' });
-      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.14, 0.08), headMat); hlL.position.set(-0.68, 0.52, -2.18); grp.add(hlL);
-      const hlR = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.14, 0.08), headMat); hlR.position.set(0.68, 0.52, -2.18); grp.add(hlR);
-      const tailBar = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.15, 0.08), brakeLightMat);
-      tailBar.position.set(0, 0.56, 2.18); grp.add(tailBar);
+      const hlL = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.13, 0.08), headMat); hlL.position.set(-0.68, 0.50, -2.17); grp.add(hlL);
+      const hlR = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.13, 0.08), headMat); hlR.position.set(0.68, 0.50, -2.17); grp.add(hlR);
+      const tailBar = new THREE.Mesh(new THREE.BoxGeometry(1.88, 0.13, 0.08), brakeLightMat);
+      tailBar.position.set(0, 0.58, 2.17); grp.add(tailBar);
 
       const wheels = [];
-      const wPos = [[-1.05, 0.36, -1.36], [1.05, 0.36, -1.36], [-1.05, 0.36, 1.36], [1.05, 0.36, 1.36]];
+      const wPos = [[-1.04, 0.36, -1.36], [1.04, 0.36, -1.36], [-1.04, 0.36, 1.36], [1.04, 0.36, 1.36]];
       wPos.forEach(([wx, wy, wz]) => {
         const wGrp = new THREE.Group();
-        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.3, 14), wheelMat);
-        tire.rotation.z = Math.PI / 2;
-        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.32, 10), rimMat);
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.30, 18), wheelMat);
+        tire.rotation.z = Math.PI / 2; tire.castShadow = true;
+        const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.315, 14), rimMat);
         rim.rotation.z = Math.PI / 2;
-        wGrp.add(tire, rim);
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.33, 8), dark);
+        hub.rotation.z = Math.PI / 2;
+        const cal = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.12), caliperMat);
+        cal.position.set(0, 0.1, 0.08);
+        wGrp.add(tire, rim, hub, cal);
         wGrp.position.set(wx, wy, wz);
         grp.add(wGrp);
         wheels.push(wGrp);
@@ -16609,7 +16660,7 @@
     }
 
     function resetReal3DCar() {
-      c3.px = 0; c3.pz = 110; c3.heading = 0; c3.kmh = 0; c3.steerAng = 0; c3.driftSlip = 0;
+      c3.px = 0; c3.pz = 110; c3.heading = 0; c3.kmh = 0; c3.steerAng = 0; c3.driftSlip = 0; c3.camX = 0; c3.camY = 3.05; c3.camZ = 117.2; c3.pitchAng = 0;
       c3.rpm = 900; c3.gear = 0; c3.dist = 0; c3.skillScore = 0; c3.skillMult = 1; c3.skillTimer = 0;
     }
 
@@ -16621,6 +16672,11 @@
       c3.camera = new THREE.PerspectiveCamera(64, 16 / 9, 0.1, 460);
       c3.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
       c3.renderer.shadowMap.enabled = true;
+      c3.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      if (THREE.ACESFilmicToneMapping !== undefined) {
+        c3.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        c3.renderer.toneMappingExposure = 1.12;
+      }
       c3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       car3DContainer.innerHTML = '';
       car3DContainer.appendChild(c3.renderer.domElement);
@@ -16628,12 +16684,42 @@
       c3.renderer.domElement.style.height = '100%';
       c3.renderer.domElement.style.display = 'block';
 
-      c3.hemiLight = new THREE.HemisphereLight('#ffffff', '#15803d', 0.95);
+      c3.hemiLight = new THREE.HemisphereLight('#ffffff', '#94a3b8', 0.95);
       c3.scene.add(c3.hemiLight);
-      c3.sunLight = new THREE.DirectionalLight('#fffbeb', 1.35);
+      c3.sunLight = new THREE.DirectionalLight('#fffbeb', 1.45);
       c3.sunLight.position.set(45, 75, -50);
       c3.sunLight.castShadow = true;
+      c3.sunLight.shadow.mapSize.width = 2048;
+      c3.sunLight.shadow.mapSize.height = 2048;
+      c3.sunLight.shadow.camera.near = 10;
+      c3.sunLight.shadow.camera.far = 220;
+      c3.sunLight.shadow.camera.left = -65;
+      c3.sunLight.shadow.camera.right = 65;
+      c3.sunLight.shadow.camera.top = 65;
+      c3.sunLight.shadow.camera.bottom = -65;
+      c3.sunLight.shadow.bias = -0.0005;
       c3.scene.add(c3.sunLight);
+      c3.scene.add(c3.sunLight.target);
+
+      // Glowing Sun Disc & Soft Paris Sky Clouds
+      const sunDisc = new THREE.Mesh(
+        new THREE.SphereGeometry(14, 16, 16),
+        new THREE.MeshBasicMaterial({ color: '#fef08a' })
+      );
+      sunDisc.position.set(120, 145, -240);
+      c3.scene.add(sunDisc);
+      const cloudMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.72 });
+      for (let cl = 0; cl < 14; cl++) {
+        const cg = new THREE.Group();
+        const cw = 18 + (cl % 4) * 8;
+        const p1 = new THREE.Mesh(new THREE.SphereGeometry(cw * 0.45, 10, 8), cloudMat);
+        const p2 = new THREE.Mesh(new THREE.SphereGeometry(cw * 0.34, 10, 8), cloudMat); p2.position.set(cw * 0.4, -1.2, 2);
+        const p3 = new THREE.Mesh(new THREE.SphereGeometry(cw * 0.36, 10, 8), cloudMat); p3.position.set(-cw * 0.38, -1.0, -2);
+        cg.add(p1, p2, p3);
+        cg.scale.set(1.4, 0.38, 1.0);
+        cg.position.set(-220 + (cl * 47) % 440, 78 + (cl % 3) * 14, -220 + (cl * 83) % 440);
+        c3.scene.add(cg);
+      }
 
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(600, 600),
@@ -16642,12 +16728,15 @@
       ground.rotation.x = -Math.PI / 2; ground.position.y = -0.06; ground.receiveShadow = true;
       c3.scene.add(ground);
 
+      const maxAniso = c3.renderer.capabilities.getMaxAnisotropy ? Math.min(8, c3.renderer.capabilities.getMaxAnisotropy()) : 4;
       const roadTex = makeAsphaltRoadTexture();
+      roadTex.anisotropy = maxAniso;
       const roadMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.82 });
       const turnTex = new THREE.CanvasTexture(roadTex._srcCanvas);
       turnTex.wrapS = THREE.RepeatWrapping;
       turnTex.wrapT = THREE.RepeatWrapping;
       turnTex.repeat.set(1, 1);
+      turnTex.anisotropy = maxAniso;
       const turnRoadMat = new THREE.MeshStandardMaterial({ map: turnTex, roughness: 0.82 });
       const shoulderMat = new THREE.MeshStandardMaterial({ color: '#374151', roughness: 0.94 });
       const railMetalMat = new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.65, roughness: 0.32 });
@@ -17131,10 +17220,38 @@
       }
       updateCarEngineSound(c3.rpm, absKmh, isReal3DCarActive());
 
+      const targetPitch = (gas && c3.kmh > 5 && c3.kmh < spec.maxKmh - 10) ? 0.022 : ((brake && c3.kmh > 8) ? -0.032 : 0);
+      c3.pitchAng += (targetPitch - c3.pitchAng) * 0.14;
+      const cobbleBounce = absKmh > 10 ? Math.sin(c3.frame * 0.9) * Math.min(0.016, absKmh / 9000) : 0;
       if (c3.playerCar) {
-        c3.playerCar.position.set(c3.px, 0, c3.pz);
+        c3.playerCar.position.set(c3.px, cobbleBounce, c3.pz);
         c3.playerCar.rotation.y = c3.heading + c3.driftSlip;
-        c3.playerCar.rotation.z = c3.steerAng * Math.min(0.08, absKmh / 1600);
+        c3.playerCar.rotation.x = c3.pitchAng;
+        c3.playerCar.rotation.z = -c3.steerAng * Math.min(0.075, absKmh / 1450);
+      }
+      if (c3.sunLight) {
+        c3.sunLight.position.set(c3.px + 38, 65, c3.pz - 42);
+        c3.sunLight.target.position.set(c3.px, 0, c3.pz);
+        c3.sunLight.target.updateMatrixWorld();
+      }
+      // Persistent tire skid marks on hard braking or drifting
+      if ((isDrifting || (brake && c3.kmh > 65)) && c3.frame % 2 === 0) {
+        const sH = Math.sin(c3.heading + c3.driftSlip), cH = Math.cos(c3.heading + c3.driftSlip);
+        [-0.86, 0.86].forEach(sideOff => {
+          const sk = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.26, 0.95),
+            new THREE.MeshBasicMaterial({ color: '#090d16', transparent: true, opacity: 0.45, depthWrite: false })
+          );
+          sk.rotation.x = -Math.PI / 2;
+          sk.rotation.z = c3.heading + c3.driftSlip;
+          sk.position.set(c3.px + sH * 1.35 + cH * sideOff, 0.026, c3.pz + cH * 1.35 - sH * sideOff);
+          c3.scene.add(sk);
+          c3.skidMarks.push(sk);
+          if (c3.skidMarks.length > 140) {
+            const oldSk = c3.skidMarks.shift();
+            c3.scene.remove(oldSk);
+          }
+        });
       }
       if (c3.brakeLightMat) c3.brakeLightMat.color.set((brake && c3.kmh > 0) || handbrake ? '#ff2a2a' : '#991b1b');
       if (c3.steeringWheel) c3.steeringWheel.rotation.z = c3.steerAng * 1.05;
@@ -17202,9 +17319,17 @@
         c3.camera.position.set(c3.px - cosH * 0.3, 1.08, c3.pz + sinH * 0.3);
         c3.camera.lookAt(c3.px - sinH * 28, 0.95, c3.pz - cosH * 28);
       } else {
-        const camDist = 7.4 + (absKmh / 320) * 1.4;
-        c3.camera.position.set(c3.px + sinH * camDist, 3.2, c3.pz + cosH * camDist);
-        c3.camera.lookAt(c3.px - sinH * 10, 1.1, c3.pz - cosH * 10);
+        // Smooth spring-damped chase camera that naturally swings into Paris corners
+        const camDist = 7.2 + (absKmh / 320) * 1.6;
+        const desiredX = c3.px + sinH * camDist;
+        const desiredY = 3.05 + (absKmh / 320) * 0.25;
+        const desiredZ = c3.pz + cosH * camDist;
+        if (!c3.camX && !c3.camZ) { c3.camX = desiredX; c3.camY = desiredY; c3.camZ = desiredZ; }
+        c3.camX += (desiredX - c3.camX) * 0.16;
+        c3.camY += (desiredY - c3.camY) * 0.16;
+        c3.camZ += (desiredZ - c3.camZ) * 0.16;
+        c3.camera.position.set(c3.camX, c3.camY, c3.camZ);
+        c3.camera.lookAt(c3.px - sinH * 12, 1.12, c3.pz - cosH * 12);
       }
 
       if (c3.frame % 3 === 0) {
