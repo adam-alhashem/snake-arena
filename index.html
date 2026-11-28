@@ -738,10 +738,13 @@
       </div>
 
       <div class="p-4 sm:p-5 overflow-y-auto flex flex-col gap-4">
-        <!-- Add Custom Friend by Name -->
-        <div class="flex items-center gap-2">
-          <input id="friendNameInput" type="text" maxlength="18" placeholder="Type a player name to add..." class="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white" />
-          <button id="btnAddFriendSubmit" type="button" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black shadow-xs active:scale-95 transition-all cursor-pointer shrink-0">+ Add</button>
+        <!-- Search Players Who Played the Game -->
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <input id="friendNameInput" type="text" maxlength="24" placeholder="Search a player's name..." class="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none text-xs sm:text-sm font-bold text-slate-800 bg-slate-50 focus:bg-white" />
+            <button id="btnAddFriendSubmit" type="button" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-black shadow-xs active:scale-95 transition-all cursor-pointer shrink-0">Search</button>
+          </div>
+          <div id="friendSearchResults" class="hidden flex flex-col gap-1.5"></div>
         </div>
 
         <!-- Your Added Friends -->
@@ -5919,6 +5922,9 @@
             localStorage.setItem('snakeGuestPlayerCounter_v1', String(playerProfile.guestNum));
           }
         } catch (e) {}
+      }
+      if (playerProfile && playerProfile.name && typeof registerPlayedPlayer === 'function') {
+        registerPlayedPlayer(playerProfile.name, typeof avatarConfig !== 'undefined' ? avatarConfig : null);
       }
 
       bestAtRunStart = personalBestScore;
@@ -12193,6 +12199,7 @@
         }
         playerProfile = { name: nameVal, date: dateVal, gender: selectedGender };
         try { localStorage.setItem('snakePlayerProfile_v1', JSON.stringify(playerProfile)); } catch (e) {}
+        if (typeof registerPlayedPlayer === 'function') registerPlayedPlayer(nameVal, avatarConfig);
         updateLobbyProfileBadge();
         if (profileErrorMsg) profileErrorMsg.classList.add('hidden');
         if (profileSetupPage) profileSetupPage.classList.add('hidden');
@@ -13637,6 +13644,9 @@
     function openMiniGameModal(initialMode) {
       if (!miniGameModal) return;
       if (initialMode) miniGameMode = initialMode;
+      if (playerProfile && playerProfile.name && typeof registerPlayedPlayer === 'function') {
+        registerPlayedPlayer(playerProfile.name, typeof avatarConfig !== 'undefined' ? avatarConfig : null);
+      }
       reloadSavedHubGamesFromStorage();
       miniGameSessionEarned = 0;
       buildObbyStage(obbySavedStage || 1);
@@ -13818,7 +13828,43 @@
       });
     }
 
-    // --- ROBLOX-STYLE FRIENDS SYSTEM CONTROLLER ---
+    // --- ROBLOX-STYLE FRIENDS & PLAYER SEARCH SYSTEM ---
+    let registeredPlayers = (() => {
+      try {
+        const s = JSON.parse(localStorage.getItem('snakeRegisteredPlayers_v1') || 'null');
+        if (Array.isArray(s)) return s;
+      } catch (e) {}
+      return [];
+    })();
+
+    function registerPlayedPlayer(name, cfg) {
+      const clean = (name || '').trim().slice(0, 24);
+      if (!clean) return;
+      const existing = registeredPlayers.find(p => p.name.toLowerCase() === clean.toLowerCase());
+      if (existing) {
+        if (cfg) existing.cfg = Object.assign({}, cfg);
+        existing.lastPlayed = Date.now();
+      } else {
+        registeredPlayers.push({ name: clean, cfg: cfg ? Object.assign({}, cfg) : generateAvatarForFriendName(clean), lastPlayed: Date.now() });
+      }
+      try { localStorage.setItem('snakeRegisteredPlayers_v1', JSON.stringify(registeredPlayers)); } catch (e) {}
+    }
+
+    function getAllSearchablePlayers() {
+      const map = new Map();
+      // 1. Real players who have played this game on this platform
+      registeredPlayers.forEach(p => {
+        map.set(p.name.toLowerCase(), { name: p.name, cfg: p.cfg || generateAvatarForFriendName(p.name), tag: 'Played' });
+      });
+      // 2. Active players in the games
+      HUB_OTHER_PLAYERS.forEach(p => {
+        if (!map.has(p.name.toLowerCase())) {
+          map.set(p.name.toLowerCase(), { name: p.name, cfg: p.cfg, tag: 'Active Player' });
+        }
+      });
+      return Array.from(map.values());
+    }
+
     const friendsModal = document.getElementById('friendsModal');
     const btnHubFriends = document.getElementById('btnHubFriends');
     const btnHubAddFriendQuick = document.getElementById('btnHubAddFriendQuick');
@@ -13978,19 +14024,69 @@
         if (e.target === friendsModal) closeFriendsModal();
       });
     }
-    if (btnAddFriendSubmit) {
-      btnAddFriendSubmit.addEventListener('click', () => {
-        if (!friendNameInput) return;
-        addFriendByName(friendNameInput.value);
-        friendNameInput.value = '';
+    function renderFriendSearchResults() {
+      const resEl = document.getElementById('friendSearchResults');
+      if (!resEl || !friendNameInput) return;
+      const q = friendNameInput.value.trim().toLowerCase();
+      if (!q) {
+        resEl.innerHTML = '';
+        resEl.classList.add('hidden');
+        return;
+      }
+      resEl.classList.remove('hidden');
+      resEl.innerHTML = '';
+      const myNameLower = (playerProfile && playerProfile.name) ? playerProfile.name.trim().toLowerCase() : '';
+      const matches = getAllSearchablePlayers().filter(p => p.name.toLowerCase().includes(q) && p.name.toLowerCase() !== myNameLower);
+
+      if (matches.length === 0) {
+        const none = document.createElement('div');
+        none.className = 'p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-500 text-center';
+        none.textContent = `No player named "${friendNameInput.value.trim()}" has played yet.`;
+        resEl.appendChild(none);
+        return;
+      }
+
+      matches.slice(0, 6).forEach(p => {
+        const already = friendsList.some(f => f.name.toLowerCase() === p.name.toLowerCase());
+        const row = document.createElement('div');
+        row.className = 'p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between gap-2';
+        const info = document.createElement('div');
+        info.className = 'flex items-center gap-2 min-w-0';
+        const nm = document.createElement('span');
+        nm.className = 'text-xs font-black text-slate-900 truncate';
+        nm.textContent = p.name;
+        const tg = document.createElement('span');
+        tg.className = 'px-1.5 py-0.5 rounded-md bg-white border border-indigo-200 text-[10px] font-bold text-indigo-700 shrink-0';
+        tg.textContent = p.tag;
+        info.appendChild(nm);
+        info.appendChild(tg);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.disabled = already;
+        btn.className = already
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-[11px] font-black shrink-0'
+          : 'px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black cursor-pointer active:scale-95 transition-all shrink-0';
+        btn.textContent = already ? 'Added' : '+ Add';
+        if (!already) {
+          btn.addEventListener('click', () => {
+            addFriendByName(p.name);
+            renderFriendSearchResults();
+          });
+        }
+        row.appendChild(info);
+        row.appendChild(btn);
+        resEl.appendChild(row);
       });
     }
+
+    if (btnAddFriendSubmit) {
+      btnAddFriendSubmit.addEventListener('click', renderFriendSearchResults);
+    }
     if (friendNameInput) {
+      friendNameInput.addEventListener('input', renderFriendSearchResults);
       friendNameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          addFriendByName(friendNameInput.value);
-          friendNameInput.value = '';
-        }
+        if (e.key === 'Enter') renderFriendSearchResults();
       });
     }
     renderFriendsUI();
