@@ -22,10 +22,35 @@ from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_FILE = os.path.join(BASE_DIR, "index.html")
+PLAYERS_DB_FILE = os.path.join(BASE_DIR, "players_db.json")
 PORT = int(os.environ.get("PORT", "8080"))
 
 _index_cache = {"mtime": 0, "raw": b"", "gz": b""}
 _index_lock = threading.Lock()
+players_lock = threading.Lock()
+
+
+def load_players_db():
+    try:
+        if os.path.exists(PLAYERS_DB_FILE):
+            with open(PLAYERS_DB_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+    except Exception:
+        pass
+    return {}
+
+
+players_db = load_players_db()
+
+
+def save_players_db():
+    try:
+        with open(PLAYERS_DB_FILE, "w", encoding="utf-8") as f:
+            json.dump(players_db, f)
+    except Exception:
+        pass
 
 
 def get_index_payload(accept_gzip):
@@ -136,6 +161,7 @@ class GameServerHandler(BaseHTTPRequestHandler):
         self._cors_headers()
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Connection", "close")
         self.end_headers()
         self.wfile.write(body)
 
@@ -177,7 +203,18 @@ class GameServerHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/health":
-            self._send_json(200, {"ok": True, "rooms": len(rooms)})
+            self._send_json(200, {"ok": True, "rooms": len(rooms), "players": len(players_db)})
+            return
+
+        if path == "/api/players":
+            qs = parse_qs(parsed.query)
+            q = (qs.get("q", [""])[0] or "").strip().lower()
+            with players_lock:
+                items = list(players_db.values())
+            if q:
+                items = [p for p in items if q in p.get("name", "").lower()]
+            items.sort(key=lambda x: x.get("last_seen", 0), reverse=True)
+            self._send_json(200, {"players": items[:50]})
             return
 
         if path == "/api/events":
@@ -260,6 +297,23 @@ class GameServerHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         body = self._read_json()
+
+        if path == "/api/register_player":
+            name = (body.get("name") or "").strip()[:24]
+            avatar = body.get("avatar")
+            if not name:
+                self._send_json(400, {"error": "missing name"})
+                return
+            key = name.lower()
+            with players_lock:
+                players_db[key] = {
+                    "name": name,
+                    "avatar": avatar,
+                    "last_seen": time.time(),
+                }
+                save_players_db()
+            self._send_json(200, {"ok": True})
+            return
 
         if path == "/api/state":
             room_code = (body.get("room") or "ROOM1").strip().upper()[:16]

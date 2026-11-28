@@ -1309,8 +1309,15 @@
     <div class="relative flex-1 w-full min-h-0 bg-slate-950 overflow-hidden">
       <canvas id="miniGameCanvas" width="580" height="340" class="w-full h-full block cursor-pointer touch-none"></canvas>
 
-      <!-- Floating Bottom Bar: Tycoon Upgrade Pads + Controls Hint -->
+      <!-- Floating Bottom Bar: Touch Controls + Tycoon Upgrade Pads + Controls Hint -->
       <div class="pointer-events-none absolute bottom-3 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
+        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <button id="btnHubMoveLeft" type="button" class="w-12 h-12 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-95 text-white border border-white/20 text-lg font-black shadow-lg select-none cursor-pointer">←</button>
+            <button id="btnHubMoveRight" type="button" class="w-12 h-12 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-95 text-white border border-white/20 text-lg font-black shadow-lg select-none cursor-pointer">→</button>
+          </div>
+          <button id="btnHubJump" type="button" class="px-6 h-12 rounded-2xl bg-emerald-600/90 hover:bg-emerald-500 active:scale-95 text-white border border-emerald-300/40 text-sm font-black shadow-lg select-none cursor-pointer">JUMP</button>
+        </div>
         <div id="tycoonControlsBar" class="pointer-events-auto hidden w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/85 backdrop-blur-sm p-2 rounded-2xl border border-slate-700 shadow-xl">
           <button id="btnTycoonCollect" type="button" class="px-2.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Collect ($0)</button>
           <button id="btnTycoonDropper" type="button" class="px-2.5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Dropper ($50)</button>
@@ -12510,8 +12517,14 @@
 
     function updateTycoonButtonsUI() {
       if (!tycoonControlsBar) return;
-      if (miniGameMode === 'tycoon') tycoonControlsBar.classList.remove('hidden');
-      else tycoonControlsBar.classList.add('hidden');
+      const touchBar = document.getElementById('hubTouchControls');
+      if (miniGameMode === 'tycoon') {
+        tycoonControlsBar.classList.remove('hidden');
+        if (touchBar) touchBar.classList.add('hidden');
+      } else {
+        tycoonControlsBar.classList.add('hidden');
+        if (touchBar) touchBar.classList.remove('hidden');
+      }
       if (btnTycoonCollect) btnTycoonCollect.textContent = `Collect ($${Math.floor(tycoonState.bank).toLocaleString()})`;
       if (btnTycoonDropper) btnTycoonDropper.textContent = `Dropper Lv.${tycoonState.droppers} ($${getTycoonDropperCost()})`;
       if (btnTycoonSpeed) btnTycoonSpeed.textContent = `Speed Lv.${tycoonState.speedLv} ($${getTycoonSpeedCost()})`;
@@ -13918,14 +13931,44 @@
     function registerPlayedPlayer(name, cfg) {
       const clean = (name || '').trim().slice(0, 24);
       if (!clean) return;
+      const useCfg = cfg ? Object.assign({}, cfg) : generateAvatarForFriendName(clean);
       const existing = registeredPlayers.find(p => p.name.toLowerCase() === clean.toLowerCase());
       if (existing) {
-        if (cfg) existing.cfg = Object.assign({}, cfg);
+        existing.cfg = useCfg;
         existing.lastPlayed = Date.now();
       } else {
-        registeredPlayers.push({ name: clean, cfg: cfg ? Object.assign({}, cfg) : generateAvatarForFriendName(clean), lastPlayed: Date.now() });
+        registeredPlayers.push({ name: clean, cfg: useCfg, lastPlayed: Date.now() });
       }
       try { localStorage.setItem('snakeRegisteredPlayers_v1', JSON.stringify(registeredPlayers)); } catch (e) {}
+      if (window.location.protocol !== 'file:') {
+        fetch('/api/register_player', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: clean, avatar: useCfg })
+        }).catch(() => {});
+      }
+    }
+
+    function syncServerPlayersForFriends() {
+      if (window.location.protocol === 'file:') return;
+      fetch('/api/players')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data || !Array.isArray(data.players)) return;
+          data.players.forEach(p => {
+            if (!p || !p.name) return;
+            const ex = registeredPlayers.find(x => x.name.toLowerCase() === p.name.toLowerCase());
+            if (!ex) {
+              registeredPlayers.push({ name: p.name, cfg: p.avatar || generateAvatarForFriendName(p.name), lastPlayed: (p.last_seen || 0) * 1000 });
+            } else if (p.avatar) {
+              ex.cfg = p.avatar;
+            }
+          });
+          try { localStorage.setItem('snakeRegisteredPlayers_v1', JSON.stringify(registeredPlayers)); } catch (e) {}
+          renderFriendsUI();
+          if (typeof renderFriendSearchResults === 'function') renderFriendSearchResults();
+        })
+        .catch(() => {});
     }
 
     function getAllSearchablePlayers() {
@@ -14090,8 +14133,10 @@
 
     function openFriendsModal() {
       if (!friendsModal) return;
+      if (playerProfile && playerProfile.name) registerPlayedPlayer(playerProfile.name, avatarConfig);
       renderFriendsUI();
       friendsModal.classList.remove('hidden');
+      syncServerPlayersForFriends();
     }
     function closeFriendsModal() {
       if (friendsModal) friendsModal.classList.add('hidden');
@@ -14574,12 +14619,16 @@
             audioEl = document.createElement('audio');
             audioEl.autoplay = true;
             audioEl.playsInline = true;
+            audioEl.muted = false;
             audioEl.volume = 1.0;
-            if (remoteVoiceAudioContainer) remoteVoiceAudioContainer.appendChild(audioEl);
+            audioEl.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-999px;';
+            document.body.appendChild(audioEl);
             mpRemoteAudios[peerId] = audioEl;
           }
           audioEl.srcObject = stream;
-          audioEl.play().catch(() => {});
+          audioEl.play().catch(() => {
+            showVoiceToast('Tap anywhere on screen to enable friend voice audio!', 4000);
+          });
         };
         // Pre-add a bidirectional audio transceiver so both sides can talk & hear immediately
         try {
@@ -14609,7 +14658,7 @@
         if (audioTransceiver && audioTransceiver.sender) {
           audioTransceiver.direction = 'sendrecv';
           audioTransceiver.sender.replaceTrack(newTrack).catch(() => {});
-          if (mpMyId > peerId && pc.signalingState === 'stable') {
+          if (pc.signalingState === 'stable') {
             pc.createOffer({ offerToReceiveAudio: true })
               .then(offer => pc.setLocalDescription(offer).then(() => mpSendSignal(peerId, 'offer', offer)))
               .catch(() => {});
@@ -14805,8 +14854,40 @@
         else mpConnectRoom(onlineRoomInput ? onlineRoomInput.value : 'ROOM1');
       });
     }
+    // Unlock remote audio playback on any user click/tap (for Safari/Chrome autoplay policy)
+    document.addEventListener('pointerdown', () => {
+      Object.values(mpRemoteAudios).forEach(a => {
+        if (a && a.srcObject && a.paused) a.play().catch(() => {});
+      });
+    }, { passive: true });
+
+    // Bind on-screen Left / Right / Jump controls for Mega Obby & Disaster Survival
+    const bindHoldBtn = (id, keyName, onTap) => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      const down = (e) => { e.preventDefault(); miniKeys[keyName] = true; if (onTap) onTap(); };
+      const up = (e) => { e.preventDefault(); miniKeys[keyName] = false; };
+      b.addEventListener('pointerdown', down);
+      b.addEventListener('pointerup', up);
+      b.addEventListener('pointercancel', up);
+      b.addEventListener('pointerleave', up);
+    };
+    bindHoldBtn('btnHubMoveLeft', 'left');
+    bindHoldBtn('btnHubMoveRight', 'right');
+    bindHoldBtn('btnHubJump', 'jump', () => {
+      if (miniGameMode === 'survival' && survival.state !== 'playing') {
+        if (survival.state === 'over') {
+          survivalSavedRun = null;
+          try { localStorage.removeItem('snakeHubSurvivalSaved_v1'); } catch (e) {}
+          resetSurvival();
+        }
+        survival.state = 'playing';
+      }
+    });
+
     window.addEventListener('beforeunload', mpDisconnectRoom);
     updateOnlineRoomUI();
+    syncServerPlayersForFriends();
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
