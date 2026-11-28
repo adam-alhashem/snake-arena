@@ -414,6 +414,10 @@ class GameServerHandler(BaseHTTPRequestHandler):
                     "x": body.get("x", 0),
                     "y": body.get("y", 0),
                     "speaking": bool(body.get("speaking", False)),
+                    "segs": body.get("segs"),
+                    "skin": body.get("skin"),
+                    "score": body.get("score", 0),
+                    "alive": body.get("alive", True),
                 },
                 exclude_id=pid,
             )

@@ -8551,6 +8551,7 @@
           const pHead = snake[0];
           drawHead(pHead.x * GRID_SIZE + GRID_SIZE / 2, pHead.y * GRID_SIZE + GRID_SIZE / 2, dx, dy, pSkin);
           drawOrbPet();
+          if (typeof drawRemoteOnlineSnakes === 'function') drawRemoteOnlineSnakes();
 
           // Draw Spawn Protection Shield Bubble
           if (spawnShieldTimer >0) {
@@ -13749,6 +13750,7 @@
       }
       miniGameModal.classList.remove('hidden');
       updateMiniGameHUD();
+      if (typeof sendMyPresenceHeartbeat === 'function') sendMyPresenceHeartbeat(true);
       if (!miniGameRafId) miniGameRafId = requestAnimationFrame(miniGameLoop);
     }
 
@@ -13759,6 +13761,7 @@
         miniGameRafId = null;
       }
       reloadSavedHubGamesFromStorage();
+      if (typeof sendMyPresenceHeartbeat === 'function') sendMyPresenceHeartbeat(true);
       if (typeof updatePlatformHomeStats === 'function') updatePlatformHomeStats();
     }
 
@@ -14772,13 +14775,20 @@
       if (!mpConnected || !mpRoom) return;
       const cur = mpGetMyCurrentGameAndPos();
       const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'Player';
+      const payload = {
+        room: mpRoom, id: mpMyId, name: myName,
+        avatar: avatarConfig, game: cur.game, x: cur.x, y: cur.y, speaking: micActive
+      };
+      if (cur.game === 'snake' && Array.isArray(snake) && snake.length > 0) {
+        payload.segs = snake.slice(0, 48).map(s => [s.x, s.y]);
+        payload.skin = currentSkin;
+        payload.score = score || 0;
+        payload.alive = !!isPlayerAlive;
+      }
       fetch('/api/state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room: mpRoom, id: mpMyId, name: myName,
-          avatar: avatarConfig, game: cur.game, x: cur.x, y: cur.y, speaking: micActive
-        })
+        body: JSON.stringify(payload)
       }).catch(() => {});
     }
 
@@ -14939,15 +14949,75 @@
       };
 
       mpSendMyState();
-      mpStateTimer = setInterval(mpSendMyState, 75);
+      mpStateTimer = setInterval(mpSendMyState, 50);
+    }
+
+    function drawRemoteOnlineSnakes() {
+      if (!mpConnected || !ctx) return;
+      Object.values(mpRemotePlayers).forEach(p => {
+        if (p.game !== 'snake' || !p.alive || !Array.isArray(p.segs) || p.segs.length === 0) return;
+        const skinDef = (typeof SKINS !== 'undefined' && p.skin && SKINS[p.skin]) ? SKINS[p.skin] : null;
+        const bodyCol = (skinDef && skinDef.bodyColor) ? skinDef.bodyColor : '#38bdf8';
+        const innerCol = (skinDef && skinDef.innerColor) ? skinDef.innerColor : '#bae6fd';
+        // Draw body segments back to front
+        for (let i = p.segs.length - 1; i >= 0; i--) {
+          const sx = p.segs[i][0] * GRID_SIZE + GRID_SIZE / 2;
+          const sy = p.segs[i][1] * GRID_SIZE + GRID_SIZE / 2;
+          const r = i === 0 ? GRID_SIZE * 0.56 : GRID_SIZE * 0.48;
+          ctx.save();
+          ctx.fillStyle = bodyCol;
+          ctx.beginPath();
+          ctx.arc(sx, sy, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = innerCol;
+          ctx.globalAlpha = 0.45;
+          ctx.beginPath();
+          ctx.arc(sx, sy, r * 0.55, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          if (i === 0) {
+            // Eyes on head
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(sx - 3.5, sy - 2, 2.4, 0, Math.PI * 2);
+            ctx.arc(sx + 3.5, sy - 2, 2.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath();
+            ctx.arc(sx - 3.2, sy - 2, 1.2, 0, Math.PI * 2);
+            ctx.arc(sx + 3.8, sy - 2, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+            // Speaking glow ring
+            if (p.speaking) {
+              ctx.strokeStyle = '#34d399';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(sx, sy, r + 5 + Math.sin(Date.now() / 120) * 2, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+            // Player name tag above snake head
+            const label = p.name + (p.speaking ? ' (Mic)' : '');
+            ctx.font = '800 11px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            const tw = ctx.measureText(label).width + 10;
+            ctx.fillStyle = 'rgba(5, 150, 105, 0.92)';
+            ctx.beginPath();
+            ctx.roundRect(sx - tw / 2, sy - r - 20, tw, 15, 5);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(label, sx, sy - r - 9);
+          }
+          ctx.restore();
+        }
+      });
     }
 
     function drawRemoteOnlinePlayers(gameKey) {
       if (!mpConnected || !miniCtx) return;
       Object.values(mpRemotePlayers).forEach(p => {
         if (p.game !== gameKey) return;
-        p.drawX = p.drawX + ((p.x || 120) - p.drawX) * 0.3;
-        p.drawY = p.drawY + ((p.y || 240) - p.drawY) * 0.3;
+        p.drawX = p.drawX + ((p.x || 120) - p.drawX) * 0.42;
+        p.drawY = p.drawY + ((p.y || 240) - p.drawY) * 0.42;
         const px = gameKey === 'tycoon' ? Math.max(130, p.drawX + 80) : p.drawX;
         const py = p.drawY;
         if (p.speaking) {
@@ -15017,7 +15087,7 @@
       if ((platformHomePage && !platformHomePage.classList.contains('hidden')) || (friendsModal && !friendsModal.classList.contains('hidden'))) {
         syncServerPlayersForFriends();
       }
-    }, 5000);
+    }, 2000);
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
