@@ -12464,15 +12464,12 @@
     function awardMiniMoney(amount, x, y, color) {
       if (miniGameMode === 'obby') {
         obbyCoins += amount;
-        try { localStorage.setItem('snakeHubObbyCoins_v1', String(obbyCoins)); } catch (e) {}
         pushMiniPopup(x, y, `+${amount} Coins`, color || '#facc15');
       } else if (miniGameMode === 'tycoon') {
         tycoonState.cash = (tycoonState.cash || 0) + amount;
-        saveTycoonState();
         pushMiniPopup(x, y, `+$${amount}`, color || '#34d399');
       } else {
         survivalGems += amount;
-        try { localStorage.setItem('snakeHubSurvivalGems_v1', String(survivalGems)); } catch (e) {}
         pushMiniPopup(x, y, `+${amount} Gems`, color || '#38bdf8');
       }
       updateMiniGameHUD();
@@ -12933,11 +12930,8 @@
         awardMiniMoney(100, obby.finishX, obby.finishY - 14, '#4ade80');
         if (typeof playSFX === 'function') playSFX('powerup');
         const nextStage = obby.stage + 1;
-        obbySavedStage = nextStage;
-        try { localStorage.setItem('snakeHubObbySavedStage_v1', String(obbySavedStage)); } catch (e) {}
         if (nextStage > obbyBestStage) {
           obbyBestStage = nextStage;
-          try { localStorage.setItem('snakeHubObbyBest_v1', String(obbyBestStage)); } catch (e) {}
         }
         obby.bannerText = `STAGE ${obby.stage} CLEARED! +100 COINS`;
         obby.bannerTimer = 80;
@@ -13187,7 +13181,6 @@
           survival.seconds++;
           if (survival.seconds > survivalBestSec) {
             survivalBestSec = survival.seconds;
-            try { localStorage.setItem('snakeHubSurvivalBest_v1', String(survivalBestSec)); } catch (e) {}
           }
           awardMiniMoney(10, survival.x, survival.y - 38, '#34d399');
         }
@@ -13362,11 +13355,38 @@
       miniGameRafId = requestAnimationFrame(miniGameLoop);
     }
 
+    function reloadSavedHubGamesFromStorage() {
+      obbyBestStage = parseInt(localStorage.getItem('snakeHubObbyBest_v1') || '1', 10) || 1;
+      obbySavedStage = parseInt(localStorage.getItem('snakeHubObbySavedStage_v1') || '1', 10) || 1;
+      obbyCoins = parseInt(localStorage.getItem('snakeHubObbyCoins_v1') || '0', 10) || 0;
+      survivalBestSec = parseInt(localStorage.getItem('snakeHubSurvivalBest_v1') || '0', 10) || 0;
+      survivalGems = parseInt(localStorage.getItem('snakeHubSurvivalGems_v1') || '0', 10) || 0;
+      survivalSavedRun = (() => {
+        try {
+          const s = JSON.parse(localStorage.getItem('snakeHubSurvivalSaved_v1') || 'null');
+          if (s && typeof s === 'object' && s.seconds > 0 && s.lives > 0) return s;
+        } catch (e) {}
+        return null;
+      })();
+      tycoonState = (() => {
+        try {
+          const s = JSON.parse(localStorage.getItem('snakeHubTycoon_v1') || 'null');
+          if (s && typeof s === 'object') {
+            if (typeof s.cash !== 'number') s.cash = 0;
+            return s;
+          }
+        } catch (e) {}
+        return { droppers: 1, speedLv: 1, valueLv: 1, bank: 0, cash: 0, totalCollected: 0 };
+      })();
+      tycoonCubes = [];
+    }
+
     function openMiniGameModal(initialMode) {
       if (!miniGameModal) return;
       if (initialMode) miniGameMode = initialMode;
+      reloadSavedHubGamesFromStorage();
       miniGameSessionEarned = 0;
-      buildObbyStage(obbySavedStage || obby.stage || 1);
+      buildObbyStage(obbySavedStage || 1);
       resetSurvival();
       if (survivalSavedRun && survivalSavedRun.seconds > 0 && survivalSavedRun.lives > 0) {
         survival.seconds = survivalSavedRun.seconds;
@@ -13383,6 +13403,7 @@
         cancelAnimationFrame(miniGameRafId);
         miniGameRafId = null;
       }
+      reloadSavedHubGamesFromStorage();
       if (typeof updatePlatformHomeStats === 'function') updatePlatformHomeStats();
     }
 
@@ -13605,7 +13626,6 @@
         if (amt <= 0) return;
         tycoonState.bank = 0;
         tycoonState.totalCollected += amt;
-        saveTycoonState();
         awardMiniMoney(amt, 480, 175, '#4ade80');
         spawnMiniBurst(490, 200, '#4ade80', 14);
         if (typeof playSFX === 'function') playSFX('powerup');
@@ -13618,7 +13638,6 @@
         if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
         tycoonState.cash -= cost;
         tycoonState.droppers++;
-        saveTycoonState();
         spawnMiniBurst(180, 96, '#38bdf8', 14);
         if (typeof playSFX === 'function') playSFX('powerup');
         updateMiniGameHUD();
@@ -13630,7 +13649,6 @@
         if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
         tycoonState.cash -= cost;
         tycoonState.speedLv++;
-        saveTycoonState();
         spawnMiniBurst(260, 210, '#facc15', 14);
         if (typeof playSFX === 'function') playSFX('powerup');
         updateMiniGameHUD();
@@ -13642,7 +13660,6 @@
         if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
         tycoonState.cash -= cost;
         tycoonState.valueLv++;
-        saveTycoonState();
         spawnMiniBurst(346, 195, '#c084fc', 16);
         if (typeof playSFX === 'function') playSFX('powerup');
         updateMiniGameHUD();
