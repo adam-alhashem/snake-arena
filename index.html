@@ -279,9 +279,17 @@
   </div>
 
   <!-- Minimal In-Game Sound ON/OFF Button (Top-Right, only shown while playing) -->
+  <button id="btnInGameMic" type="button" title="Toggle Microphone ON/OFF" class="hidden fixed top-3 right-16 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
+    <svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <span>Mic: OFF</span>
+  </button>
   <button id="btnInGameSound" type="button" title="Toggle Sound ON/OFF" class="hidden fixed top-3 right-3 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer">
     ON
   </button>
+  <div id="voiceChatToast" class="hidden fixed top-14 left-1/2 -translate-x-1/2 z-[80] px-4 py-2 rounded-2xl bg-slate-900/90 text-white border border-emerald-400/50 shadow-xl text-xs font-extrabold flex items-center gap-2 pointer-events-none">
+    <span id="voiceChatDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0"></span>
+    <span id="voiceChatText">Mic ON — Speak to talk to players</span>
+  </div>
 
   <!-- ========================================================================= -->
   <!-- DEATH & SERVER SELECTION MODAL (Game NEVER stops, you choose where to play) -->
@@ -1268,6 +1276,10 @@
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">Best: <span id="miniGameBest" class="font-black text-amber-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black"><span id="miniGameCurrencyLabel">Coins</span>: <span id="miniGameMoney">0</span></span>
+        <button id="btnHubGameMic" type="button" title="Toggle Microphone ON/OFF" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5">
+          <svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Mic: OFF</span>
+        </button>
         <button id="btnMiniGameSave" type="button" class="px-3 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Save</button>
         <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Restart</button>
       </div>
@@ -7722,6 +7734,8 @@
       updateSkinLockUI();
       if (startChoicePage) startChoicePage.classList.add('hidden');
       if (btnInGameSound) btnInGameSound.classList.add('hidden');
+      const _micBtnHide = document.getElementById('btnInGameMic');
+      if (_micBtnHide) _micBtnHide.classList.add('hidden');
       if (welcomeBlankPage) welcomeBlankPage.classList.remove('hidden');
       startLobbyLivePreview();
     }
@@ -7766,6 +7780,8 @@
       }
       if (startChoicePage) startChoicePage.classList.add('hidden');
       if (btnInGameSound) btnInGameSound.classList.remove('hidden');
+      const _micBtnShow = document.getElementById('btnInGameMic');
+      if (_micBtnShow) _micBtnShow.classList.remove('hidden');
       initGame();
       if (pendingSpinStartArrows >0) {
         playerArrowAmmo = Math.min(MAX_PLAYER_ARROWS, playerArrowAmmo + pendingSpinStartArrows);
@@ -12968,6 +12984,23 @@
     function drawBlockyAvatar(cx, bottomY) {
       const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'You';
       drawCustomAvatarOn(miniCtx, cx, bottomY, 1, avatarConfig, myName);
+      if (typeof micActive !== 'undefined' && micActive && micLastSpoken && Date.now() < micLastSpokenUntil) {
+        miniCtx.save();
+        miniCtx.font = '800 9px system-ui, sans-serif';
+        miniCtx.textAlign = 'center';
+        const msg = micLastSpoken.slice(0, 34);
+        const bw = Math.min(180, miniCtx.measureText(msg).width + 14);
+        miniCtx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        miniCtx.strokeStyle = '#10b981';
+        miniCtx.lineWidth = 1.5;
+        miniCtx.beginPath();
+        miniCtx.roundRect(cx - bw / 2, bottomY - 72, bw, 16, 6);
+        miniCtx.fill();
+        miniCtx.stroke();
+        miniCtx.fillStyle = '#0f172a';
+        miniCtx.fillText(msg, cx, bottomY - 61);
+        miniCtx.restore();
+      }
     }
 
     function drawMiniEffects() {
@@ -14233,6 +14266,145 @@
       if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') miniKeys.right = false;
       if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') miniKeys.jump = false;
     });
+
+    // =========================================================================
+    // MICROPHONE / VOICE CHAT CONTROLLER (WORKS IN ALL 4 GAMES)
+    // =========================================================================
+    let micActive = false;
+    let micStream = null;
+    let micAudioCtx = null;
+    let micAnalyser = null;
+    let micMeterRaf = null;
+    let micSpeechRec = null;
+    let micLastSpoken = '';
+    let micLastSpokenUntil = 0;
+    let micToastTimer = null;
+
+    const btnInGameMic = document.getElementById('btnInGameMic');
+    const btnHubGameMic = document.getElementById('btnHubGameMic');
+    const voiceChatToast = document.getElementById('voiceChatToast');
+    const voiceChatText = document.getElementById('voiceChatText');
+    const voiceChatDot = document.getElementById('voiceChatDot');
+
+    function showVoiceToast(msg, durationMs) {
+      if (!voiceChatToast || !voiceChatText) return;
+      voiceChatText.textContent = msg;
+      voiceChatToast.classList.remove('hidden');
+      if (micToastTimer) clearTimeout(micToastTimer);
+      if (durationMs) {
+        micToastTimer = setTimeout(() => {
+          if (voiceChatToast) voiceChatToast.classList.add('hidden');
+        }, durationMs);
+      }
+    }
+
+    function updateMicButtonsUI() {
+      const micSvg = '<svg viewBox="0 0 20 20" class="w-3.5 h-3.5 shrink-0" fill="none"><rect x="7" y="2.5" width="6" height="9" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5M7.5 17.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+      const label = micActive ? '<span>Mic: ON</span>' : '<span>Mic: OFF</span>';
+      if (btnInGameMic) {
+        btnInGameMic.innerHTML = micSvg + label;
+        btnInGameMic.className = micActive
+          ? 'fixed top-3 right-16 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-400 shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5'
+          : 'fixed top-3 right-16 z-30 px-3 py-1.5 rounded-xl text-xs font-extrabold bg-white/90 hover:bg-white text-slate-800 border border-slate-300 shadow-md active:scale-95 transition-all cursor-pointer flex items-center gap-1.5';
+        if (btnInGameSound && btnInGameSound.classList.contains('hidden')) btnInGameMic.classList.add('hidden');
+      }
+      if (btnHubGameMic) {
+        btnHubGameMic.innerHTML = micSvg + label;
+        btnHubGameMic.className = micActive
+          ? 'px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5'
+          : 'px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer flex items-center gap-1.5';
+      }
+    }
+
+    function stopMicrophone() {
+      micActive = false;
+      if (micMeterRaf) { cancelAnimationFrame(micMeterRaf); micMeterRaf = null; }
+      if (micSpeechRec) { try { micSpeechRec.stop(); } catch (e) {} micSpeechRec = null; }
+      if (micStream) {
+        try { micStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        micStream = null;
+      }
+      if (micAudioCtx) { try { micAudioCtx.close(); } catch (e) {} micAudioCtx = null; }
+      micAnalyser = null;
+      updateMicButtonsUI();
+      showVoiceToast('Mic OFF', 1400);
+    }
+
+    async function toggleMicrophone() {
+      if (micActive) {
+        stopMicrophone();
+        return;
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showVoiceToast('Microphone not supported in this browser', 2600);
+        return;
+      }
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micActive = true;
+        updateMicButtonsUI();
+        const myName = (playerProfile && playerProfile.name) ? playerProfile.name : 'You';
+        showVoiceToast(`${myName}: Mic ON — Speak to talk!`, 2600);
+
+        try {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            micAudioCtx = new AC();
+            const src = micAudioCtx.createMediaStreamSource(micStream);
+            micAnalyser = micAudioCtx.createAnalyser();
+            micAnalyser.fftSize = 256;
+            src.connect(micAnalyser);
+            const data = new Uint8Array(micAnalyser.frequencyBinCount);
+            const tickMeter = () => {
+              if (!micActive || !micAnalyser) return;
+              micAnalyser.getByteFrequencyData(data);
+              let sum = 0;
+              for (let i = 0; i < data.length; i++) sum += data[i];
+              const avg = sum / data.length;
+              if (voiceChatDot) {
+                voiceChatDot.style.transform = avg > 18 ? 'scale(1.45)' : 'scale(1)';
+                voiceChatDot.style.backgroundColor = avg > 18 ? '#4ade80' : '#10b981';
+              }
+              micMeterRaf = requestAnimationFrame(tickMeter);
+            };
+            micMeterRaf = requestAnimationFrame(tickMeter);
+          }
+        } catch (e) {}
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SR) {
+          try {
+            micSpeechRec = new SR();
+            micSpeechRec.continuous = true;
+            micSpeechRec.interimResults = true;
+            micSpeechRec.lang = currentLang || 'en-US';
+            micSpeechRec.onresult = (ev) => {
+              const last = ev.results[ev.results.length - 1];
+              if (!last || !last[0]) return;
+              const spoken = (last[0].transcript || '').trim();
+              if (spoken) {
+                micLastSpoken = spoken;
+                micLastSpokenUntil = Date.now() + 4500;
+                const speaker = (playerProfile && playerProfile.name) ? playerProfile.name : 'You';
+                showVoiceToast(`${speaker}: "${spoken}"`, 4000);
+              }
+            };
+            micSpeechRec.onend = () => {
+              if (micActive && micSpeechRec) { try { micSpeechRec.start(); } catch (e) {} }
+            };
+            micSpeechRec.start();
+          } catch (e) {}
+        }
+      } catch (err) {
+        micActive = false;
+        updateMicButtonsUI();
+        showVoiceToast('Please allow microphone access in your browser', 3000);
+      }
+    }
+
+    if (btnInGameMic) btnInGameMic.addEventListener('click', (e) => { e.stopPropagation(); toggleMicrophone(); });
+    if (btnHubGameMic) btnHubGameMic.addEventListener('click', (e) => { e.stopPropagation(); toggleMicrophone(); });
+    updateMicButtonsUI();
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
