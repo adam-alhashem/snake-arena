@@ -14387,6 +14387,11 @@
 
     function showVoiceToast(msg, durationMs) {
       if (!voiceChatToast || !voiceChatText) return;
+      // Cancel top notifications while inside a room
+      if (typeof mpConnected !== 'undefined' && mpConnected) {
+        voiceChatToast.classList.add('hidden');
+        return;
+      }
       voiceChatText.textContent = msg;
       voiceChatToast.classList.remove('hidden');
       if (micToastTimer) clearTimeout(micToastTimer);
@@ -14752,6 +14757,7 @@
       const es = new EventSource(url);
       mpEventSource = es;
       mpConnected = true;
+      if (voiceChatToast) voiceChatToast.classList.add('hidden');
       updateOnlineRoomUI();
 
       es.addEventListener('blocked', (ev) => {
