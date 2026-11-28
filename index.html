@@ -15909,13 +15909,48 @@
         }
       });
 
-      // 3. Detailed 3D Arm Texture (Sleeves matching Shirt + Skin hands!)
+      // 3. Detailed 3D Arm Texture (Sleeves match every T-shirt design 1:1 + Skin hands!)
       const longSleeve = ['gamer_hoodie', 'ninja_suit', 'gold_armor', 'royal_tux', 'astronaut', 'flame_jacket', 'pirate_coat'].includes(shirtId);
+      const sleeveH = longSleeve ? 50 : 28;
       const armTex = make3DCanvasTex((c, w, h) => {
         c.fillStyle = skinCol;
         c.fillRect(0, 0, w, h);
         c.fillStyle = shirtObj.col;
-        c.fillRect(0, 0, w, longSleeve ? 50 : 26);
+        c.fillRect(0, 0, w, sleeveH);
+        if (shirtId === 'classic_green') {
+          c.fillStyle = '#bbf7d0'; c.fillRect(0, sleeveH - 7, w, 5);
+        } else if (shirtId === 'gamer_hoodie') {
+          c.fillStyle = '#312e81'; c.fillRect(0, sleeveH - 10, w, 10);
+          c.fillStyle = '#38bdf8'; c.fillRect(0, sleeveH - 14, w, 4);
+        } else if (shirtId === 'soccer_jersey') {
+          c.fillStyle = '#ffffff';
+          c.fillRect(10, 0, 12, sleeveH); c.fillRect(42, 0, 12, sleeveH);
+        } else if (shirtId === 'ninja_suit') {
+          c.fillStyle = '#ef4444'; c.fillRect(0, sleeveH - 11, w, 8);
+        } else if (shirtId === 'gold_armor') {
+          c.fillStyle = '#fef08a'; c.fillRect(0, 0, w, 18);
+          c.fillStyle = '#b45309'; c.fillRect(0, sleeveH - 8, w, 8);
+        } else if (shirtId === 'galaxy_tee') {
+          c.fillStyle = '#e879f9'; c.fillRect(10, 8, 8, 8); c.fillRect(42, 16, 7, 7);
+          c.fillStyle = '#38bdf8'; c.fillRect(28, 4, 6, 6);
+        } else if (shirtId === 'tiger_stripes') {
+          c.fillStyle = '#1f2937'; c.fillRect(0, 6, 36, 7); c.fillRect(28, 18, 36, 7);
+        } else if (shirtId === 'royal_tux') {
+          c.fillStyle = '#ffffff'; c.fillRect(0, sleeveH - 8, w, 8);
+        } else if (shirtId === 'astronaut') {
+          c.fillStyle = '#ef4444'; c.fillRect(0, 14, w, 7);
+          c.fillStyle = '#38bdf8'; c.fillRect(0, sleeveH - 10, w, 7);
+        } else if (shirtId === 'flame_jacket') {
+          c.fillStyle = '#f97316'; c.fillRect(0, sleeveH - 14, w, 14);
+          c.fillStyle = '#facc15'; c.fillRect(0, sleeveH - 6, w, 6);
+        } else if (shirtId === 'rainbow_tee') {
+          const rb = ['#ef4444', '#f97316', '#facc15', '#22c55e', '#3b82f6', '#a855f7'];
+          const bh = Math.ceil(sleeveH / rb.length);
+          rb.forEach((col, i) => { c.fillStyle = col; c.fillRect(0, i * bh, w, Math.min(bh, sleeveH - i * bh)); });
+        } else if (shirtId === 'pirate_coat') {
+          c.fillStyle = '#1e293b'; c.fillRect(0, sleeveH - 12, w, 12);
+          c.fillStyle = '#facc15'; c.fillRect(0, sleeveH - 12, w, 4);
+        }
       });
 
       // 4. Detailed 3D Face Texture (1:1 match with all 6 2D Faces!)
@@ -15962,10 +15997,11 @@
       const torsoMats = [matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtTex];
       const torso = new THREE.Mesh(new THREE.BoxGeometry(0.96, 1.02, 0.52), torsoMats);
       torso.position.set(0, 1.43, 0); torso.castShadow = true;
-      // Arms (with sleeves matching shirt!)
+      // Arms (shirt color on shoulder top, matching T-shirt sleeve pattern on sides, skin on hand bottom!)
       const armGeo = new THREE.BoxGeometry(0.34, 0.94, 0.36);
-      const lArm = new THREE.Mesh(armGeo, matArmTex); lArm.position.set(-0.68, 1.43, 0); lArm.castShadow = true;
-      const rArm = new THREE.Mesh(armGeo, matArmTex); rArm.position.set(0.68, 1.43, 0); rArm.castShadow = true;
+      const armMats = [matArmTex, matArmTex, matShirtSolid, matSkin, matArmTex, matArmTex];
+      const lArm = new THREE.Mesh(armGeo, armMats); lArm.position.set(-0.68, 1.43, 0); lArm.castShadow = true;
+      const rArm = new THREE.Mesh(armGeo, armMats); rArm.position.set(0.68, 1.43, 0); rArm.castShadow = true;
       // Head (face texture on -Z front face, skin on other 5 faces!)
       const headMats = [matSkin, matSkin, matSkin, matSkin, matSkin, matFace];
       const head = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.78, 0.78), headMats);
