@@ -249,7 +249,7 @@ class GameServerHandler(BaseHTTPRequestHandler):
                 self.send_header("Cache-Control", "no-cache")
                 self.send_header("Connection", "close")
                 self.end_headers()
-                msg = f"event: blocked\ndata: {json.dumps({'room': room_code, 'player': blocked_by, 'reason': f'You must add {blocked_by} as a friend first to join this room!'})}\n\n".encode("utf-8")
+                msg = f"event: blocked\ndata: {json.dumps({'room': room_code, 'player': blocked_by, 'reason': f'You must add {blocked_by} first to join this room!'})}\n\n".encode("utf-8")
                 try:
                     self.wfile.write(msg)
                     self.wfile.flush()
