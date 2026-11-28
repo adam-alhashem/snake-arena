@@ -1333,16 +1333,19 @@
 
       <!-- Floating Bottom Bar: Touch Controls + Tycoon Upgrade Pads + Controls Hint -->
       <div class="pointer-events-none absolute bottom-5 inset-x-3 sm:inset-x-6 flex flex-col items-center gap-2 z-10">
-        <div id="hubTouchControls" class="pointer-events-auto hidden w-full max-w-lg flex items-end justify-between gap-3 px-1">
-          <div class="flex flex-col items-center gap-1.5">
-            <button id="btnHubMoveUp" type="button" class="hidden w-12 h-12 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-lg font-black shadow-xl select-none touch-none cursor-pointer">↑</button>
-            <div class="flex items-center gap-2">
-              <button id="btnHubMoveLeft" type="button" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">←</button>
-              <button id="btnHubMoveDown" type="button" class="hidden w-12 h-12 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-lg font-black shadow-xl select-none touch-none cursor-pointer">↓</button>
-              <button id="btnHubMoveRight" type="button" class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-white border-2 border-white/25 text-xl font-black shadow-xl select-none touch-none cursor-pointer">→</button>
-            </div>
+        <div id="hubTouchControls" class="pointer-events-none hidden w-full flex items-end justify-between px-3 sm:px-6 pb-2">
+          <!-- Roblox-Style Analog Thumbstick (Bottom-Left) -->
+          <div id="robloxJoystickBase" class="pointer-events-auto relative w-28 h-28 rounded-full bg-slate-900/40 backdrop-blur-xs border-2 border-white/35 shadow-xl flex items-center justify-center select-none touch-none cursor-pointer">
+            <div class="w-16 h-16 rounded-full border border-white/15 pointer-events-none"></div>
+            <div id="robloxJoystickKnob" class="absolute w-12 h-12 rounded-full bg-white/85 border-2 border-slate-300 shadow-lg pointer-events-none transition-transform duration-75" style="transform: translate(0px, 0px);"></div>
           </div>
-          <button id="btnHubJump" type="button" class="px-7 h-14 rounded-2xl bg-emerald-600/95 hover:bg-emerald-500 active:scale-95 text-white border-2 border-emerald-300/50 text-base font-black shadow-xl select-none touch-none cursor-pointer">JUMP</button>
+
+          <!-- Roblox-Style Round Jump Button (Bottom-Right) -->
+          <button id="btnHubJump" type="button" aria-label="Jump" class="pointer-events-auto w-20 h-20 rounded-full bg-slate-900/45 hover:bg-slate-900/60 active:scale-90 backdrop-blur-xs border-2 border-white/40 text-white shadow-xl flex items-center justify-center select-none touch-none cursor-pointer transition-transform">
+            <svg viewBox="0 0 32 32" class="w-9 h-9" fill="none">
+              <path d="M16 7L7 17h6v8h6v-8h6L16 7z" fill="currentColor"/>
+            </svg>
+          </button>
         </div>
         <div id="tycoonControlsBar" class="pointer-events-auto hidden w-full max-w-2xl grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/85 backdrop-blur-sm p-2 rounded-2xl border border-slate-700 shadow-xl">
           <button id="btnTycoonCollect" type="button" class="px-2.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer">Collect ($0)</button>
@@ -12469,7 +12472,7 @@
     let miniGameMode = 'obby'; // 'obby' | 'tycoon' | 'survival'
     let miniGameRafId = null;
     let miniGameSessionEarned = 0;
-    let miniKeys = { left: false, right: false, up: false, down: false, jump: false };
+    let miniKeys = { left: false, right: false, up: false, down: false, jump: false, joyX: 0, joyY: 0 };
     let miniParticles = [];
     let miniPopups = [];
 
@@ -13195,7 +13198,8 @@
       });
 
       // Player physics
-      if (miniKeys.left) obby.vx = -3.8;
+      if (Math.abs(miniKeys.joyX || 0) > 0.12) obby.vx = miniKeys.joyX * 4.2;
+      else if (miniKeys.left) obby.vx = -3.8;
       else if (miniKeys.right) obby.vx = 3.8;
       else obby.vx *= 0.72;
 
@@ -13585,6 +13589,7 @@
 
       if (survival.state === 'playing') {
         survival.frame++;
+        if (Math.abs(miniKeys.joyX || 0) > 0.12) survival.x += miniKeys.joyX * 5.2;
         if (miniKeys.left) survival.x -= 4.8;
         if (miniKeys.right) survival.x += 4.8;
         survival.x = Math.max(16, Math.min(W - 16, survival.x));
@@ -15518,14 +15523,17 @@
         r3.scene.add(c);
       }
 
-      // Drag to rotate 3D camera around your Roblox avatar!
+      // Multi-touch safe 3D camera rotation (tracks its own pointerId separately from the thumbstick!)
+      r3.camPointerId = null;
       obby3DContainer.addEventListener('pointerdown', (e) => {
+        if (r3.camPointerId !== null) return;
+        r3.camPointerId = e.pointerId;
         r3.dragging = true;
         r3.lastX = e.clientX;
         r3.lastY = e.clientY;
       });
       window.addEventListener('pointermove', (e) => {
-        if (!r3.dragging) return;
+        if (!r3.dragging || e.pointerId !== r3.camPointerId) return;
         const dx = e.clientX - r3.lastX;
         const dy = e.clientY - r3.lastY;
         r3.lastX = e.clientX;
@@ -15533,7 +15541,14 @@
         r3.camYaw -= dx * 0.007;
         r3.camPitch = Math.max(0.12, Math.min(1.15, r3.camPitch + dy * 0.005));
       });
-      window.addEventListener('pointerup', () => { r3.dragging = false; });
+      const stopCamDrag = (e) => {
+        if (e.pointerId === r3.camPointerId) {
+          r3.dragging = false;
+          r3.camPointerId = null;
+        }
+      };
+      window.addEventListener('pointerup', stopCamDrag);
+      window.addEventListener('pointercancel', stopCamDrag);
 
       rebuild3DAvatarMesh();
       buildReal3DObbyStage(obby.stage || 1);
@@ -15560,9 +15575,9 @@
         }
       });
 
-      // 3D character movement relative to camera angle
-      let fwd = (miniKeys.up ? 1 : 0) - (miniKeys.down ? 1 : 0);
-      let strafe = (miniKeys.right ? 1 : 0) - (miniKeys.left ? 1 : 0);
+      // 3D character movement relative to camera angle (keyboard + 360 Roblox analog thumbstick!)
+      let fwd = (miniKeys.up ? 1 : 0) - (miniKeys.down ? 1 : 0) - (miniKeys.joyY || 0);
+      let strafe = (miniKeys.right ? 1 : 0) - (miniKeys.left ? 1 : 0) + (miniKeys.joyX || 0);
       const speed = 0.19;
       let moving = false;
       if (fwd !== 0 || strafe !== 0) {
@@ -15698,8 +15713,53 @@
       r3.renderer.render(r3.scene, r3.camera);
     }
 
-    bindHoldBtn('btnHubMoveUp', 'up');
-    bindHoldBtn('btnHubMoveDown', 'down');
+    // Roblox-Style Multi-Touch Analog Thumbstick Controller
+    const joyBase = document.getElementById('robloxJoystickBase');
+    const joyKnob = document.getElementById('robloxJoystickKnob');
+    if (joyBase && joyKnob) {
+      let joyPointerId = null;
+      const maxR = 36;
+      const updateJoyFromPoint = (clientX, clientY) => {
+        const rect = joyBase.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        let dx = clientX - cx;
+        let dy = clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist > maxR) {
+          dx = (dx / dist) * maxR;
+          dy = (dy / dist) * maxR;
+        }
+        joyKnob.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+        miniKeys.joyX = dx / maxR;
+        miniKeys.joyY = dy / maxR;
+      };
+      const resetJoy = () => {
+        joyPointerId = null;
+        joyKnob.style.transform = 'translate(0px, 0px)';
+        miniKeys.joyX = 0;
+        miniKeys.joyY = 0;
+      };
+      joyBase.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        joyPointerId = e.pointerId;
+        if (joyBase.setPointerCapture) { try { joyBase.setPointerCapture(e.pointerId); } catch (err) {} }
+        updateJoyFromPoint(e.clientX, e.clientY);
+      });
+      joyBase.addEventListener('pointermove', (e) => {
+        if (e.pointerId !== joyPointerId) return;
+        e.preventDefault();
+        e.stopPropagation();
+        updateJoyFromPoint(e.clientX, e.clientY);
+      });
+      joyBase.addEventListener('pointerup', (e) => {
+        if (e.pointerId === joyPointerId) { e.preventDefault(); resetJoy(); }
+      });
+      joyBase.addEventListener('pointercancel', (e) => {
+        if (e.pointerId === joyPointerId) resetJoy();
+      });
+    }
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
