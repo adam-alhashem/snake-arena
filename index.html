@@ -16508,6 +16508,7 @@
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
       tex.repeat.set(1, 22);
+      tex._srcCanvas = c;
       return tex;
     }
 
@@ -16643,10 +16644,30 @@
 
       const roadTex = makeAsphaltRoadTexture();
       const roadMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.82 });
-      const plainAsphaltMat = new THREE.MeshStandardMaterial({ color: '#1f2430', roughness: 0.84 });
-      const yellowLineMat = new THREE.MeshBasicMaterial({ color: '#facc15' });
-      const curbRedMat = new THREE.MeshStandardMaterial({ color: '#ef4444', roughness: 0.6 });
-      const curbWhiteMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.6 });
+      const turnTex = new THREE.CanvasTexture(roadTex._srcCanvas);
+      turnTex.wrapS = THREE.RepeatWrapping;
+      turnTex.wrapT = THREE.RepeatWrapping;
+      turnTex.repeat.set(1, 1);
+      const turnRoadMat = new THREE.MeshStandardMaterial({ map: turnTex, roughness: 0.82 });
+      const shoulderMat = new THREE.MeshStandardMaterial({ color: '#374151', roughness: 0.94 });
+      const railMetalMat = new THREE.MeshStandardMaterial({ color: '#cbd5e1', metalness: 0.65, roughness: 0.32 });
+      const railPostMat = new THREE.MeshStandardMaterial({ color: '#64748b', metalness: 0.5, roughness: 0.5 });
+
+      // Real-life yellow & black chevron curve warning sign texture
+      const chevCanvas = document.createElement('canvas');
+      chevCanvas.width = 128; chevCanvas.height = 128;
+      const cg = chevCanvas.getContext('2d');
+      cg.fillStyle = '#facc15';
+      cg.fillRect(0, 0, 128, 128);
+      cg.fillStyle = '#0f172a';
+      cg.beginPath();
+      cg.moveTo(28, 16); cg.lineTo(66, 16); cg.lineTo(106, 64); cg.lineTo(66, 112); cg.lineTo(28, 112); cg.lineTo(68, 64);
+      cg.closePath();
+      cg.fill();
+      cg.strokeStyle = '#0f172a';
+      cg.lineWidth = 6;
+      cg.strokeRect(4, 4, 120, 120);
+      const chevronMat = new THREE.MeshStandardMaterial({ map: new THREE.CanvasTexture(chevCanvas), roughness: 0.4 });
 
       const addRoadStrip = (x, z, w, len, rotY, yPos) => {
         const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), roadMat);
@@ -16657,22 +16678,74 @@
         c3.scene.add(m);
       };
 
-      // Smooth 90° Curved Corner Turns matching the exact road floor asphalt color (no circles, no red curbs!)
+      // Real-life 90° curved highway turn: exact same textured asphalt, dashed yellow center line, white edge lines, gravel shoulder, steel guardrail, and chevron signs
       const addCurvedTurn = (cx, cz, startAngle) => {
-        const innerR = 17, outerR = 31, midR = 24;
-        const turnMesh = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 32, 1, startAngle, Math.PI / 2), plainAsphaltMat);
-        turnMesh.rotation.x = -Math.PI / 2;
-        turnMesh.position.set(cx, 0.015, cz);
+        const innerR = 17, outerR = 31, segs = 36, vRepeats = 5;
+        const pos = [], norm = [], uv = [], idx = [];
+        for (let i = 0; i <= segs; i++) {
+          const t = i / segs;
+          const a = startAngle + t * (Math.PI / 2);
+          const ca = Math.cos(a), sa = Math.sin(a);
+          pos.push(cx + innerR * ca, 0.014, cz - innerR * sa);
+          norm.push(0, 1, 0);
+          uv.push(0, t * vRepeats);
+          pos.push(cx + outerR * ca, 0.014, cz - outerR * sa);
+          norm.push(0, 1, 0);
+          uv.push(1, t * vRepeats);
+          if (i < segs) {
+            const b = i * 2;
+            idx.push(b, b + 1, b + 3, b, b + 3, b + 2);
+          }
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        geo.setAttribute('normal', new THREE.Float32BufferAttribute(norm, 3));
+        geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        geo.setIndex(idx);
+        const turnMesh = new THREE.Mesh(geo, turnRoadMat);
         turnMesh.receiveShadow = true;
         c3.scene.add(turnMesh);
 
-        // Matching white outer/inner shoulder edge lines + curved yellow center line
-        const outEdge = new THREE.Mesh(new THREE.RingGeometry(outerR - 0.35, outerR, 32, 1, startAngle, Math.PI / 2), curbWhiteMat);
-        outEdge.rotation.x = -Math.PI / 2; outEdge.position.set(cx, 0.022, cz); c3.scene.add(outEdge);
-        const inEdge = new THREE.Mesh(new THREE.RingGeometry(innerR, innerR + 0.35, 32, 1, startAngle, Math.PI / 2), curbWhiteMat);
-        inEdge.rotation.x = -Math.PI / 2; inEdge.position.set(cx, 0.022, cz); c3.scene.add(inEdge);
-        const centerArc = new THREE.Mesh(new THREE.RingGeometry(midR - 0.22, midR + 0.22, 32, 1, startAngle, Math.PI / 2), yellowLineMat);
-        centerArc.rotation.x = -Math.PI / 2; centerArc.position.set(cx, 0.024, cz); c3.scene.add(centerArc);
+        // Subtle outer & inner gravel road shoulders blending into grass
+        const outShoulder = new THREE.Mesh(new THREE.RingGeometry(outerR, outerR + 1.5, 32, 1, startAngle, Math.PI / 2), shoulderMat);
+        outShoulder.rotation.x = -Math.PI / 2; outShoulder.position.set(cx, 0.005, cz); outShoulder.receiveShadow = true; c3.scene.add(outShoulder);
+        const inShoulder = new THREE.Mesh(new THREE.RingGeometry(innerR - 1.2, innerR, 32, 1, startAngle, Math.PI / 2), shoulderMat);
+        inShoulder.rotation.x = -Math.PI / 2; inShoulder.position.set(cx, 0.005, cz); inShoulder.receiveShadow = true; c3.scene.add(inShoulder);
+
+        // Real-life steel highway guardrail along the outer bend
+        const railR = outerR + 1.25;
+        const railSegs = 12;
+        for (let i = 0; i < railSegs; i++) {
+          const a1 = startAngle + (i / railSegs) * (Math.PI / 2);
+          const a2 = startAngle + ((i + 1) / railSegs) * (Math.PI / 2);
+          const x1 = cx + railR * Math.cos(a1), z1 = cz - railR * Math.sin(a1);
+          const x2 = cx + railR * Math.cos(a2), z2 = cz - railR * Math.sin(a2);
+          const dx = x2 - x1, dz = z2 - z1;
+          const segLen = Math.hypot(dx, dz) + 0.08;
+          const beam = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.34, segLen), railMetalMat);
+          beam.position.set((x1 + x2) / 2, 0.72, (z1 + z2) / 2);
+          beam.rotation.y = Math.atan2(dx, dz);
+          beam.castShadow = true;
+          c3.scene.add(beam);
+
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.9, 0.14), railPostMat);
+          post.position.set(x1, 0.45, z1);
+          c3.scene.add(post);
+        }
+
+        // Yellow & black chevron curve warning signs spaced along the outside of the turn
+        const signR = outerR + 2.35;
+        for (let s = 1; s <= 4; s++) {
+          const a = startAngle + (s / 5) * (Math.PI / 2);
+          const sx = cx + signR * Math.cos(a), sz = cz - signR * Math.sin(a);
+          const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 6), railPostMat);
+          pole.position.set(sx, 1.1, sz);
+          c3.scene.add(pole);
+          const board = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.15, 0.08), chevronMat);
+          board.position.set(sx, 2.05, sz);
+          board.lookAt(cx + (innerR + 7) * Math.cos(a - 0.18), 2.05, cz - (innerR + 7) * Math.sin(a - 0.18));
+          c3.scene.add(board);
+        }
       };
 
       // Outer Forza Circuit Straights (connect seamlessly into the 4 curved corners at radius 24!)
@@ -16859,9 +16932,15 @@
 
       const absKmh = Math.abs(c3.kmh);
       const dirSign = c3.kmh >= 0 ? 1 : -1;
-      const turnRate = absKmh < 2 ? 0 : Math.min(0.052, (0.02 + (absKmh / 260) * 0.025)) * (handbrake ? 1.55 : 1);
-      c3.steerAng += (steerInput - c3.steerAng) * 0.22;
+      // Real-life speed-sensitive steering: nimble at low/mid speed, steady & smooth at high speed
+      const lowRamp = Math.min(1, absKmh / 24);
+      const highDamp = Math.max(0.42, 1 - (absKmh / 420));
+      const turnRate = absKmh < 1.5 ? 0 : (0.044 * lowRamp * highDamp) * (handbrake ? 1.48 : 1);
+      c3.steerAng += (steerInput - c3.steerAng) * (absKmh > 120 ? 0.16 : 0.22);
       c3.heading += c3.steerAng * turnRate * dirSign;
+      if (absKmh > 40 && Math.abs(c3.steerAng) > 0.15) {
+        c3.kmh *= (1 - Math.abs(c3.steerAng) * 0.0028);
+      }
 
       const isDrifting = handbrake && absKmh > 55 && Math.abs(c3.steerAng) > 0.25;
       c3.driftSlip += ((isDrifting ? c3.steerAng * 0.42 : 0) - c3.driftSlip) * 0.14;
