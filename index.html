@@ -15958,8 +15958,8 @@
       const legGeo = new THREE.BoxGeometry(0.42, 0.92, 0.42);
       const lLeg = new THREE.Mesh(legGeo, matPantsTex); lLeg.position.set(-0.24, 0.46, 0); lLeg.castShadow = true;
       const rLeg = new THREE.Mesh(legGeo, matPantsTex); rLeg.position.set(0.24, 0.46, 0); rLeg.castShadow = true;
-      // Torso (front & back have full detailed shirt texture!)
-      const torsoMats = [matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtTex, matShirtTex];
+      // Torso (detailed T-shirt design on front -Z face only; solid shirt color on back +Z!)
+      const torsoMats = [matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtSolid, matShirtTex];
       const torso = new THREE.Mesh(new THREE.BoxGeometry(0.96, 1.02, 0.52), torsoMats);
       torso.position.set(0, 1.43, 0); torso.castShadow = true;
       // Arms (with sleeves matching shirt!)
