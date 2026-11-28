@@ -16687,16 +16687,9 @@
       addCurvedTurn(-86, -86, Math.PI / 2);    // North-West turn
       addCurvedTurn(-86, 86, Math.PI);         // South-West turn
 
-      // Central Cross Avenues + Clean Square Asphalt Intersections (no circles!)
-      addRoadStrip(0, 0, 14, 212, 0, 0.012);
-      addRoadStrip(0, 0, 14, 212, Math.PI / 2, 0.014);
-      [[0, 0], [0, -110], [0, 110], [-110, 0], [110, 0]].forEach(([ix, iz]) => {
-        const pad = new THREE.Mesh(new THREE.PlaneGeometry(14.1, 14.1), plainAsphaltMat);
-        pad.rotation.x = -Math.PI / 2;
-        pad.position.set(ix, 0.022, iz);
-        pad.receiveShadow = true;
-        c3.scene.add(pad);
-      });
+      // Central Cross Avenues meeting the outer circuit flush (no circles, no squares!)
+      addRoadStrip(0, 0, 14, 206, 0, 0.012);
+      addRoadStrip(0, 0, 14, 206, Math.PI / 2, 0.014);
 
       // Iconic Snow-Capped Mount Fuji towering in the North!
       const fujiGrp = new THREE.Group();
