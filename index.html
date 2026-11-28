@@ -534,9 +534,6 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
-        <div class="px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black">
-          $<span id="platformHomeMoney">0</span>
-        </div>
         <button id="btnHubEditProfile" type="button" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-extrabold active:scale-95 transition-all cursor-pointer">
           <span id="platformHomeProfileName">Player</span>
         </button>
@@ -550,7 +547,7 @@
     <div class="w-full max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-10 flex flex-col gap-6 flex-1">
       <div class="flex flex-col gap-1">
         <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Discover Games</h1>
-        <p class="text-xs sm:text-sm font-semibold text-slate-500">All 4 games share your profile and Money bank across the platform.</p>
+        <p class="text-xs sm:text-sm font-semibold text-slate-500">Pick any game to play — each game has its own separate progress and currency.</p>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -653,7 +650,7 @@
                 <h2 class="text-base font-black text-slate-900">Disaster Survival</h2>
                 <span id="hubStatSurvival" class="text-[11px] font-extrabold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg">Best: 0s</span>
               </div>
-              <p class="text-xs font-medium text-slate-500">Dodge falling meteors and jump over sweeping red lasers to survive and win Money.</p>
+              <p class="text-xs font-medium text-slate-500">Dodge falling meteors and jump over sweeping red lasers to survive and collect Gems.</p>
             </div>
             <button id="btnHubPlaySurvival" type="button" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">Play</button>
           </div>
@@ -1217,8 +1214,7 @@
       <div class="flex items-center gap-1.5 sm:gap-2 text-xs font-extrabold">
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200"><span id="miniGameScoreLabel">Stage</span>: <span id="miniGameScore" class="font-black text-indigo-400">1</span></span>
         <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-200">Best: <span id="miniGameBest" class="font-black text-amber-400">1</span></span>
-        <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 border border-emerald-400/40 text-emerald-300">+$<span id="miniGameEarned" class="font-black">0</span></span>
-        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black">$<span id="miniGameMoney">0</span></span>
+        <span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-black"><span id="miniGameCurrencyLabel">Coins</span>: <span id="miniGameMoney">0</span></span>
         <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-black active:scale-95 transition-all cursor-pointer">Restart</button>
       </div>
     </div>
@@ -12287,15 +12283,20 @@
     let miniParticles = [];
     let miniPopups = [];
 
-    // Persisted progress for each of the 3 games
+    // Completely separate persisted progress & currency for each of the 3 games
     let obbyBestStage = parseInt(localStorage.getItem('snakeHubObbyBest_v1') || '1', 10) || 1;
+    let obbyCoins = parseInt(localStorage.getItem('snakeHubObbyCoins_v1') || '0', 10) || 0;
     let survivalBestSec = parseInt(localStorage.getItem('snakeHubSurvivalBest_v1') || '0', 10) || 0;
+    let survivalGems = parseInt(localStorage.getItem('snakeHubSurvivalGems_v1') || '0', 10) || 0;
     let tycoonState = (() => {
       try {
         const s = JSON.parse(localStorage.getItem('snakeHubTycoon_v1') || 'null');
-        if (s && typeof s === 'object') return s;
+        if (s && typeof s === 'object') {
+          if (typeof s.cash !== 'number') s.cash = 0;
+          return s;
+        }
       } catch (e) {}
-      return { droppers: 1, speedLv: 1, valueLv: 1, bank: 0, totalCollected: 0 };
+      return { droppers: 1, speedLv: 1, valueLv: 1, bank: 0, cash: 0, totalCollected: 0 };
     })();
     function saveTycoonState() {
       try { localStorage.setItem('snakeHubTycoon_v1', JSON.stringify(tycoonState)); } catch (e) {}
@@ -12400,30 +12401,34 @@
     }
 
     function updateMiniGameHUD() {
+      const cLbl = document.getElementById('miniGameCurrencyLabel');
       const mEl = document.getElementById('miniGameMoney');
       const sLbl = document.getElementById('miniGameScoreLabel');
       const sEl = document.getElementById('miniGameScore');
       const bEl = document.getElementById('miniGameBest');
-      const eEl = document.getElementById('miniGameEarned');
       const hEl = document.getElementById('miniGameHint');
-      if (mEl) mEl.textContent = foodBank.toLocaleString();
-      if (eEl) eEl.textContent = miniGameSessionEarned.toLocaleString();
 
       if (miniGameMode === 'obby') {
+        if (cLbl) cLbl.textContent = 'Obby Coins';
+        if (mEl) mEl.textContent = obbyCoins.toLocaleString();
         if (sLbl) sLbl.textContent = 'Stage';
         if (sEl) sEl.textContent = String(obby.stage);
         if (bEl) bEl.textContent = String(obbyBestStage);
-        if (hEl) hEl.textContent = 'Move with A/D or Arrow Keys, jump with Space/W/Up! Reach the gold trophy (+$100/stage).';
+        if (hEl) hEl.textContent = 'Move with A/D or Arrow Keys, jump with Space/W/Up! Reach the gold trophy (+100 Coins/stage).';
       } else if (miniGameMode === 'tycoon') {
+        if (cLbl) cLbl.textContent = 'Tycoon Cash';
+        if (mEl) mEl.textContent = `$${Math.floor(tycoonState.cash || 0).toLocaleString()}`;
         if (sLbl) sLbl.textContent = 'Factory';
         if (sEl) sEl.textContent = `Lv.${tycoonState.droppers + tycoonState.speedLv + tycoonState.valueLv - 2}`;
         if (bEl) bEl.textContent = `$${tycoonState.totalCollected.toLocaleString()}`;
-        if (hEl) hEl.textContent = 'Buy Droppers, Speed & Value upgrades, then click Collect to send cash to Snake Arena!';
+        if (hEl) hEl.textContent = 'Collect Cash from your conveyor bank and buy Droppers, Speed & Value upgrades!';
       } else {
+        if (cLbl) cLbl.textContent = 'Survival Gems';
+        if (mEl) mEl.textContent = survivalGems.toLocaleString();
         if (sLbl) sLbl.textContent = 'Time';
         if (sEl) sEl.textContent = `${survival.seconds}s`;
         if (bEl) bEl.textContent = `${survivalBestSec}s`;
-        if (hEl) hEl.textContent = 'Move with A/D or Arrows, Space/Up to jump! Dodge meteors & lasers (+$10/sec, +$25/coin).';
+        if (hEl) hEl.textContent = 'Move with A/D or Arrows, Space/Up to jump! Dodge meteors & lasers (+10 Gems/sec, +25/gem).';
       }
 
       const titleEl = document.getElementById('miniGameActiveTitle');
@@ -12448,9 +12453,19 @@
     }
 
     function awardMiniMoney(amount, x, y, color) {
-      miniGameSessionEarned += amount;
-      addFoodBank(amount);
-      pushMiniPopup(x, y, `+$${amount}`, color || '#34d399');
+      if (miniGameMode === 'obby') {
+        obbyCoins += amount;
+        try { localStorage.setItem('snakeHubObbyCoins_v1', String(obbyCoins)); } catch (e) {}
+        pushMiniPopup(x, y, `+${amount} Coins`, color || '#facc15');
+      } else if (miniGameMode === 'tycoon') {
+        tycoonState.cash = (tycoonState.cash || 0) + amount;
+        saveTycoonState();
+        pushMiniPopup(x, y, `+$${amount}`, color || '#34d399');
+      } else {
+        survivalGems += amount;
+        try { localStorage.setItem('snakeHubSurvivalGems_v1', String(survivalGems)); } catch (e) {}
+        pushMiniPopup(x, y, `+${amount} Gems`, color || '#38bdf8');
+      }
       updateMiniGameHUD();
     }
 
@@ -12913,7 +12928,7 @@
           obbyBestStage = nextStage;
           try { localStorage.setItem('snakeHubObbyBest_v1', String(obbyBestStage)); } catch (e) {}
         }
-        obby.bannerText = `STAGE ${obby.stage} CLEARED! +$100`;
+        obby.bannerText = `STAGE ${obby.stage} CLEARED! +100 COINS`;
         obby.bannerTimer = 80;
         buildObbyStage(nextStage);
       }
@@ -13543,9 +13558,8 @@
     if (btnTycoonDropper) {
       btnTycoonDropper.addEventListener('click', () => {
         const cost = getTycoonDropperCost();
-        if (foodBank < cost) { pushMiniPopup(290, 150, `Need $${cost}`, '#f87171'); return; }
-        foodBank -= cost;
-        saveFoodBank();
+        if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
+        tycoonState.cash -= cost;
         tycoonState.droppers++;
         saveTycoonState();
         spawnMiniBurst(180, 96, '#38bdf8', 14);
@@ -13556,9 +13570,8 @@
     if (btnTycoonSpeed) {
       btnTycoonSpeed.addEventListener('click', () => {
         const cost = getTycoonSpeedCost();
-        if (foodBank < cost) { pushMiniPopup(290, 150, `Need $${cost}`, '#f87171'); return; }
-        foodBank -= cost;
-        saveFoodBank();
+        if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
+        tycoonState.cash -= cost;
         tycoonState.speedLv++;
         saveTycoonState();
         spawnMiniBurst(260, 210, '#facc15', 14);
@@ -13569,9 +13582,8 @@
     if (btnTycoonValue) {
       btnTycoonValue.addEventListener('click', () => {
         const cost = getTycoonValueCost();
-        if (foodBank < cost) { pushMiniPopup(290, 150, `Need $${cost}`, '#f87171'); return; }
-        foodBank -= cost;
-        saveFoodBank();
+        if ((tycoonState.cash || 0) < cost) { pushMiniPopup(290, 150, `Need $${cost} Cash`, '#f87171'); return; }
+        tycoonState.cash -= cost;
         tycoonState.valueLv++;
         saveTycoonState();
         spawnMiniBurst(346, 195, '#c084fc', 16);
