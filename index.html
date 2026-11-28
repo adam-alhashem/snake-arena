@@ -16657,31 +16657,22 @@
         c3.scene.add(m);
       };
 
-      // Smooth 90° Curved Corner Turns (RingGeometry asphalt + curved center line + curved racing curbs!)
+      // Smooth 90° Curved Corner Turns matching the exact road floor asphalt color (no circles, no red curbs!)
       const addCurvedTurn = (cx, cz, startAngle) => {
         const innerR = 17, outerR = 31, midR = 24;
-        const turnMesh = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 28, 1, startAngle, Math.PI / 2), plainAsphaltMat);
+        const turnMesh = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 32, 1, startAngle, Math.PI / 2), plainAsphaltMat);
         turnMesh.rotation.x = -Math.PI / 2;
         turnMesh.position.set(cx, 0.015, cz);
         turnMesh.receiveShadow = true;
         c3.scene.add(turnMesh);
 
-        // Curved yellow center lane line
-        const centerArc = new THREE.Mesh(new THREE.RingGeometry(midR - 0.25, midR + 0.25, 28, 1, startAngle, Math.PI / 2), yellowLineMat);
-        centerArc.rotation.x = -Math.PI / 2;
-        centerArc.position.set(cx, 0.025, cz);
-        c3.scene.add(centerArc);
-
-        // Curved Red & White Racing Curbs on outer & inner edges of every turn!
-        const segs = 10;
-        const stepA = (Math.PI / 2) / segs;
-        for (let k = 0; k < segs; k++) {
-          const matC = k % 2 === 0 ? curbRedMat : curbWhiteMat;
-          const outC = new THREE.Mesh(new THREE.RingGeometry(outerR, outerR + 1.1, 4, 1, startAngle + k * stepA, stepA), matC);
-          outC.rotation.x = -Math.PI / 2; outC.position.set(cx, 0.03, cz); c3.scene.add(outC);
-          const inC = new THREE.Mesh(new THREE.RingGeometry(innerR - 1.1, innerR, 4, 1, startAngle + k * stepA, stepA), matC);
-          inC.rotation.x = -Math.PI / 2; inC.position.set(cx, 0.03, cz); c3.scene.add(inC);
-        }
+        // Matching white outer/inner shoulder edge lines + curved yellow center line
+        const outEdge = new THREE.Mesh(new THREE.RingGeometry(outerR - 0.35, outerR, 32, 1, startAngle, Math.PI / 2), curbWhiteMat);
+        outEdge.rotation.x = -Math.PI / 2; outEdge.position.set(cx, 0.022, cz); c3.scene.add(outEdge);
+        const inEdge = new THREE.Mesh(new THREE.RingGeometry(innerR, innerR + 0.35, 32, 1, startAngle, Math.PI / 2), curbWhiteMat);
+        inEdge.rotation.x = -Math.PI / 2; inEdge.position.set(cx, 0.022, cz); c3.scene.add(inEdge);
+        const centerArc = new THREE.Mesh(new THREE.RingGeometry(midR - 0.22, midR + 0.22, 32, 1, startAngle, Math.PI / 2), yellowLineMat);
+        centerArc.rotation.x = -Math.PI / 2; centerArc.position.set(cx, 0.024, cz); c3.scene.add(centerArc);
       };
 
       // Outer Forza Circuit Straights (connect seamlessly into the 4 curved corners at radius 24!)
@@ -16696,11 +16687,11 @@
       addCurvedTurn(-86, -86, Math.PI / 2);    // North-West turn
       addCurvedTurn(-86, 86, Math.PI);         // South-West turn
 
-      // Central Cross Avenues + Clean Raised Intersection Pads (zero z-fighting!)
+      // Central Cross Avenues + Clean Square Asphalt Intersections (no circles!)
       addRoadStrip(0, 0, 14, 212, 0, 0.012);
       addRoadStrip(0, 0, 14, 212, Math.PI / 2, 0.014);
       [[0, 0], [0, -110], [0, 110], [-110, 0], [110, 0]].forEach(([ix, iz]) => {
-        const pad = new THREE.Mesh(new THREE.CircleGeometry(10.5, 24), plainAsphaltMat);
+        const pad = new THREE.Mesh(new THREE.PlaneGeometry(14.1, 14.1), plainAsphaltMat);
         pad.rotation.x = -Math.PI / 2;
         pad.position.set(ix, 0.022, iz);
         pad.receiveShadow = true;
