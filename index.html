@@ -14091,18 +14091,7 @@
         if (miniKeys.right) carGame.x += 5.6;
         carGame.x = Math.max(roadLeft + 22, Math.min(roadRight - 22, carGame.x));
 
-        // Spawn traffic cars
-        const spawnEvery = Math.max(22, 52 - Math.floor(carGame.dist / 60));
-        if (carGame.frame % spawnEvery === 1) {
-          const lane = Math.floor(Math.random() * 4);
-          const lx = roadLeft + lane * laneW + laneW / 2;
-          const tooClose = carGame.traffic.some(t => Math.abs(t.x - lx) < 25 && t.y < 85);
-          if (!tooClose) {
-            const cols = [['#3b82f6', '#bfdbfe'], ['#eab308', '#fef08a'], ['#a855f7', '#e9d5ff'], ['#f8fafc', '#cbd5e1'], ['#10b981', '#a7f3d0']];
-            const pick = cols[Math.floor(Math.random() * cols.length)];
-            carGame.traffic.push({ x: lx, y: -40, vy: 2.0 + Math.random() * 1.6, col: pick[0], acc: pick[1] });
-          }
-        }
+        // Other cars / AI players disabled for now (solo drive)
         // Spawn gold coins & nitro orbs
         if (carGame.frame % 68 === 25) {
           const lane = Math.floor(Math.random() * 4);
@@ -16824,13 +16813,7 @@
         }
       }
 
-      // Cruising AI Traffic Cars circling the outer Japan loop
-      const tCols = ['#3b82f6', '#eab308', '#a855f7', '#f8fafc', '#10b981', '#f97316'];
-      for (let i = 0; i < 8; i++) {
-        const built = build3DSupercarMesh(tCols[i % tCols.length], '#ffffff', false);
-        c3.scene.add(built.grp);
-        c3.traffic.push({ mesh: built.grp, angle: (i / 8) * Math.PI * 2, speed: 0.0045 + (i % 3) * 0.0012, radius: 110 });
-      }
+      // Other cars / AI players disabled for now (solo free-roam)
 
       // Spinning Gold Coins along the avenues
       const coinGeo = new THREE.CylinderGeometry(0.65, 0.65, 0.18, 16);
