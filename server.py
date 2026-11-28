@@ -347,11 +347,14 @@ class GameServerHandler(BaseHTTPRequestHandler):
             if not name:
                 self._send_json(400, {"ok": False, "message": "Please enter a name."})
                 return
-            key = name.lower()
             with players_lock:
-                prev = players_db.get(key)
-                if prev:
-                    prev_owner = prev.get("owner_id") or ""
+                exact_match = None
+                for entry in players_db.values():
+                    if entry.get("name") == name:
+                        exact_match = entry
+                        break
+                if exact_match:
+                    prev_owner = exact_match.get("owner_id") or ""
                     if not owner_id or prev_owner != owner_id:
                         self._send_json(409, {
                             "ok": False,
@@ -359,10 +362,10 @@ class GameServerHandler(BaseHTTPRequestHandler):
                             "message": "Someone else used this name, choose another one!",
                         })
                         return
-                players_db[key] = {
+                players_db[name] = {
                     "name": name,
                     "owner_id": owner_id,
-                    "avatar": avatar if avatar is not None else (prev.get("avatar") if prev else None),
+                    "avatar": avatar if avatar is not None else (exact_match.get("avatar") if exact_match else None),
                     "game": "hub",
                     "online": True,
                     "last_seen": time.time(),

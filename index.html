@@ -12355,11 +12355,10 @@
         }
 
         const myOwnerId = getProfileOwnerId();
-        const lowerName = nameVal.toLowerCase();
 
-        // Check local registered players list first
+        // Check local registered players list first (exact name match only!)
         if (typeof registeredPlayers !== 'undefined' && Array.isArray(registeredPlayers)) {
-          const localTaken = registeredPlayers.find(p => p.name && p.name.toLowerCase() === lowerName && p.ownerId !== myOwnerId);
+          const localTaken = registeredPlayers.find(p => p.name === nameVal && p.ownerId !== myOwnerId);
           if (localTaken) {
             if (profileErrorMsg) {
               profileErrorMsg.textContent = 'Someone else used this name, choose another one!';
