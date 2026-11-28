@@ -685,6 +685,19 @@
             <span id="welcomeFactoryLabel"class="text-[10px] font-bold text-amber-700">0 Ready • Lv. 1</span>
           </div>
         </button>
+
+        <button id="btnWelcomeMiniGame" type="button" class="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-indigo-50 via-violet-50 to-fuchsia-50 hover:from-indigo-100 hover:to-fuchsia-100 border-2 border-indigo-300 shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+          <svg viewBox="0 0 24 24" class="w-5 h-5 shrink-0" fill="none">
+            <rect x="2" y="6" width="20" height="12" rx="6" fill="#6366f1" stroke="#312e81" stroke-width="1.5"/>
+            <path d="M7.5 10V14M5.5 12H9.5" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15.5" cy="11" r="1.2" fill="#facc15"/>
+            <circle cx="18" cy="13" r="1.2" fill="#34d399"/>
+          </svg>
+          <div class="flex flex-col text-start leading-tight">
+            <span class="text-sm font-black text-slate-900">Mini Games</span>
+            <span id="welcomeMiniGameLabel" class="text-[10px] font-bold text-indigo-700">Flappy &amp; Catcher</span>
+          </div>
+        </button>
       </div>
 
       <!-- Floor Theme Picker on Main Page -->
@@ -1013,6 +1026,55 @@
           <div id="petsCollectionGrid"class="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <!-- Populated by renderPetsModal() -->
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MINI GAMES ARCADE MODAL (FLAPPY SNAKE + COIN CATCHER — WIN REAL MONEY!)   -->
+  <!-- ========================================================================= -->
+  <div id="miniGameModal" class="fixed inset-0 z-[72] bg-slate-900/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="w-full max-w-xl bg-white rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden flex flex-col">
+      <!-- Header -->
+      <div class="px-5 py-3.5 bg-gradient-to-r from-indigo-950 via-slate-900 to-violet-950 text-white flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <svg viewBox="0 0 24 24" class="w-6 h-6 shrink-0" fill="none">
+            <rect x="2" y="6" width="20" height="12" rx="6" fill="#818cf8" stroke="#e0e7ff" stroke-width="1.4"/>
+            <path d="M7.5 10V14M5.5 12H9.5" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15.5" cy="11" r="1.2" fill="#facc15"/>
+            <circle cx="18" cy="13" r="1.2" fill="#34d399"/>
+          </svg>
+          <div class="flex flex-col leading-tight">
+            <h2 class="text-base sm:text-lg font-black tracking-tight">Mini Games Arcade</h2>
+            <span class="text-[11px] font-semibold text-indigo-200">Win real Money for Snake Arena</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black">$<span id="miniGameMoney">0</span></span>
+          <button id="btnCloseMiniGame" type="button" class="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 text-white font-black text-base flex items-center justify-center cursor-pointer transition-all">×</button>
+        </div>
+      </div>
+
+      <!-- Game Tabs + Live Stats -->
+      <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5">
+          <button id="tabMiniFlappy" type="button" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all">Flappy Snake</button>
+          <button id="tabMiniCatcher" type="button" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold cursor-pointer transition-all">Coin Catcher</button>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-extrabold">
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800">Score: <span id="miniGameScore" class="font-black text-indigo-600">0</span></span>
+          <span class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-800">Best: <span id="miniGameBest" class="font-black text-amber-600">0</span></span>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700">+$<span id="miniGameEarned" class="font-black">0</span></span>
+        </div>
+      </div>
+
+      <!-- Canvas Stage -->
+      <div class="p-3 sm:p-4 bg-slate-100 flex flex-col items-center gap-2.5">
+        <canvas id="miniGameCanvas" width="520" height="330" class="w-full max-w-[520px] rounded-2xl border-2 border-slate-800 shadow-lg bg-slate-900 cursor-pointer touch-none"></canvas>
+        <div class="w-full max-w-[520px] flex items-center justify-between gap-2">
+          <span id="miniGameHint" class="text-[11px] font-bold text-slate-600">Click, tap, or press Space / Up Arrow to fly!</span>
+          <button id="btnMiniGameRestart" type="button" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black active:scale-95 transition-all cursor-pointer shrink-0">Restart</button>
         </div>
       </div>
     </div>
@@ -12002,6 +12064,551 @@
       currentSkin = 'blue_wolf';
       try { localStorage.setItem('snakeEquippedSkin', 'blue_wolf'); } catch (e) {}
     }
+
+    // =========================================================================
+    // MINI GAMES ARCADE (FLAPPY SNAKE + COIN CATCHER — EARNS REAL MONEY!)
+    // =========================================================================
+    const miniGameModal = document.getElementById('miniGameModal');
+    const btnWelcomeMiniGame = document.getElementById('btnWelcomeMiniGame');
+    const btnCloseMiniGame = document.getElementById('btnCloseMiniGame');
+    const tabMiniFlappy = document.getElementById('tabMiniFlappy');
+    const tabMiniCatcher = document.getElementById('tabMiniCatcher');
+    const btnMiniGameRestart = document.getElementById('btnMiniGameRestart');
+    const miniGameCanvas = document.getElementById('miniGameCanvas');
+    const miniCtx = miniGameCanvas ? miniGameCanvas.getContext('2d') : null;
+
+    let miniGameMode = 'flappy'; // 'flappy' | 'catcher'
+    let miniGameRafId = null;
+    let miniGameSessionEarned = 0;
+    let miniFlappyBest = parseInt(localStorage.getItem('snakeMiniFlappyBest_v1') || '0', 10) || 0;
+    let miniCatcherBest = parseInt(localStorage.getItem('snakeMiniCatcherBest_v1') || '0', 10) || 0;
+    let miniKeys = { left: false, right: false };
+
+    // Shared visual effects for mini-games
+    let miniParticles = [];
+    let miniPopups = [];
+
+    // Flappy Snake state
+    let flappy = { state: 'ready', y: 165, vy: 0, score: 0, pipes: [], frame: 0, trail: [] };
+    // Coin Catcher state
+    let catcher = { state: 'ready', x: 260, w: 78, score: 0, lives: 3, combo: 0, items: [], frame: 0 };
+
+    function updateMiniGameHUD() {
+      const mEl = document.getElementById('miniGameMoney');
+      const sEl = document.getElementById('miniGameScore');
+      const bEl = document.getElementById('miniGameBest');
+      const eEl = document.getElementById('miniGameEarned');
+      const hEl = document.getElementById('miniGameHint');
+      if (mEl) mEl.textContent = foodBank.toLocaleString();
+      if (sEl) sEl.textContent = (miniGameMode === 'flappy' ? flappy.score : catcher.score).toLocaleString();
+      if (bEl) bEl.textContent = (miniGameMode === 'flappy' ? miniFlappyBest : miniCatcherBest).toLocaleString();
+      if (eEl) eEl.textContent = miniGameSessionEarned.toLocaleString();
+      if (hEl) {
+        hEl.textContent = miniGameMode === 'flappy'
+          ? 'Click, tap, or press Space / Up Arrow to fly through pipes (+$10/pipe, +$25/coin)'
+          : 'Move mouse, drag, or use Left / Right arrows to catch coins & gems (dodge bombs!)';
+      }
+      if (tabMiniFlappy && tabMiniCatcher) {
+        const activeCls = 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-xs cursor-pointer transition-all';
+        const idleCls = 'px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-extrabold cursor-pointer transition-all';
+        tabMiniFlappy.className = miniGameMode === 'flappy' ? activeCls : idleCls;
+        tabMiniCatcher.className = miniGameMode === 'catcher' ? activeCls : idleCls;
+      }
+    }
+
+    function spawnMiniBurst(x, y, color, count) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 1.2 + Math.random() * 3.4;
+        miniParticles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 22 + Math.random() * 12, maxLife: 34, color, r: 2 + Math.random() * 2.5 });
+      }
+    }
+
+    function pushMiniPopup(x, y, text, color) {
+      miniPopups.push({ x, y, text, color, life: 36, maxLife: 36 });
+    }
+
+    function awardMiniMoney(amount, x, y, color) {
+      miniGameSessionEarned += amount;
+      addFoodBank(amount);
+      pushMiniPopup(x, y, `+$${amount}`, color || '#34d399');
+      updateMiniGameHUD();
+    }
+
+    function resetFlappy() {
+      flappy = { state: 'ready', y: 165, vy: 0, score: 0, pipes: [], frame: 0, trail: [] };
+      miniParticles = [];
+      miniPopups = [];
+      updateMiniGameHUD();
+    }
+
+    function resetCatcher() {
+      catcher = { state: 'ready', x: 260, w: 78, score: 0, lives: 3, combo: 0, items: [], frame: 0 };
+      miniParticles = [];
+      miniPopups = [];
+      updateMiniGameHUD();
+    }
+
+    function flappyFlap() {
+      if (flappy.state === 'over') {
+        resetFlappy();
+        flappy.state = 'playing';
+        flappy.vy = -5.6;
+        if (typeof playSFX === 'function') playSFX('eat');
+        return;
+      }
+      if (flappy.state === 'ready') flappy.state = 'playing';
+      flappy.vy = -5.6;
+      spawnMiniBurst(118, flappy.y + 4, '#4ade80', 5);
+      if (typeof playSFX === 'function') playSFX('eat');
+    }
+
+    function drawMiniEffects() {
+      for (let i = miniParticles.length - 1; i >= 0; i--) {
+        const p = miniParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.08;
+        p.life--;
+        if (p.life <= 0) { miniParticles.splice(i, 1); continue; }
+        miniCtx.save();
+        miniCtx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        miniCtx.fillStyle = p.color;
+        miniCtx.beginPath();
+        miniCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        miniCtx.fill();
+        miniCtx.restore();
+      }
+      for (let i = miniPopups.length - 1; i >= 0; i--) {
+        const t = miniPopups[i];
+        t.y -= 1.0;
+        t.life--;
+        if (t.life <= 0) { miniPopups.splice(i, 1); continue; }
+        miniCtx.save();
+        miniCtx.globalAlpha = Math.max(0, t.life / t.maxLife);
+        miniCtx.font = '900 13px system-ui, sans-serif';
+        miniCtx.textAlign = 'center';
+        miniCtx.fillStyle = t.color;
+        miniCtx.fillText(t.text, t.x, t.y);
+        miniCtx.restore();
+      }
+    }
+
+    function stepAndDrawFlappy(W, H) {
+      // Night sky gradient
+      const bg = miniCtx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0f172a');
+      bg.addColorStop(1, '#1e293b');
+      miniCtx.fillStyle = bg;
+      miniCtx.fillRect(0, 0, W, H);
+
+      // Subtle moving stars
+      miniCtx.fillStyle = 'rgba(255,255,255,0.22)';
+      for (let s = 0; s < 18; s++) {
+        const sx = ((s * 67 - flappy.frame * 0.6) % W + W) % W;
+        const sy = (s * 41) % (H - 40) + 12;
+        miniCtx.fillRect(sx, sy, 2, 2);
+      }
+
+      const sx = 128;
+      if (flappy.state === 'playing') {
+        flappy.frame++;
+        flappy.vy += 0.28;
+        flappy.y += flappy.vy;
+        flappy.trail.unshift({ x: sx, y: flappy.y });
+        if (flappy.trail.length > 12) flappy.trail.pop();
+        for (let i = 0; i < flappy.trail.length; i++) flappy.trail[i].x -= 2.8;
+
+        // Spawn pipes every 92 frames
+        if (flappy.frame % 92 === 1) {
+          const gapH = 104;
+          const topH = 44 + Math.random() * (H - gapH - 108);
+          flappy.pipes.push({
+            x: W + 24,
+            w: 44,
+            topH,
+            gapH,
+            passed: false,
+            coinY: topH + gapH / 2 + (Math.random() - 0.5) * 34,
+            coinTaken: false
+          });
+        }
+
+        // Update pipes & collisions
+        for (let i = flappy.pipes.length - 1; i >= 0; i--) {
+          const p = flappy.pipes[i];
+          p.x -= 2.9;
+          if (!p.passed && p.x + p.w < sx) {
+            p.passed = true;
+            flappy.score++;
+            if (flappy.score > miniFlappyBest) {
+              miniFlappyBest = flappy.score;
+              try { localStorage.setItem('snakeMiniFlappyBest_v1', String(miniFlappyBest)); } catch (e) {}
+            }
+            awardMiniMoney(10, sx, flappy.y - 18, '#34d399');
+            if (typeof playSFX === 'function') playSFX('eat');
+          }
+          // Coin pickup
+          if (!p.coinTaken && Math.hypot((p.x + p.w / 2) - sx, p.coinY - flappy.y) < 22) {
+            p.coinTaken = true;
+            spawnMiniBurst(p.x + p.w / 2, p.coinY, '#facc15', 10);
+            awardMiniMoney(25, p.x + p.w / 2, p.coinY - 12, '#facc15');
+            if (typeof playSFX === 'function') playSFX('powerup');
+          }
+          // Pipe hit check
+          const hitX = sx + 10 > p.x && sx - 10 < p.x + p.w;
+          const hitY = flappy.y - 10 < p.topH || flappy.y + 10 > p.topH + p.gapH;
+          if (hitX && hitY) {
+            flappy.state = 'over';
+            spawnMiniBurst(sx, flappy.y, '#ef4444', 18);
+            if (typeof playSFX === 'function') playSFX('gameover');
+          }
+          if (p.x + p.w < -20) flappy.pipes.splice(i, 1);
+        }
+
+        // Floor / ceiling hit
+        if (flappy.y < 12 || flappy.y > H - 28) {
+          flappy.state = 'over';
+          spawnMiniBurst(sx, Math.max(14, Math.min(H - 28, flappy.y)), '#ef4444', 18);
+          if (typeof playSFX === 'function') playSFX('gameover');
+        }
+      } else if (flappy.state === 'ready') {
+        flappy.frame++;
+        flappy.y = H / 2 + Math.sin(flappy.frame / 14) * 10;
+      }
+
+      // Draw pipes & coins
+      flappy.pipes.forEach(p => {
+        miniCtx.fillStyle = '#10b981';
+        miniCtx.strokeStyle = '#064e3b';
+        miniCtx.lineWidth = 2;
+        miniCtx.fillRect(p.x, 0, p.w, p.topH);
+        miniCtx.strokeRect(p.x, 0, p.w, p.topH);
+        miniCtx.fillStyle = '#34d399';
+        miniCtx.fillRect(p.x - 4, p.topH - 12, p.w + 8, 12);
+
+        const botY = p.topH + p.gapH;
+        miniCtx.fillStyle = '#10b981';
+        miniCtx.fillRect(p.x, botY, p.w, H - botY - 16);
+        miniCtx.strokeRect(p.x, botY, p.w, H - botY - 16);
+        miniCtx.fillStyle = '#34d399';
+        miniCtx.fillRect(p.x - 4, botY, p.w + 8, 12);
+
+        if (!p.coinTaken) {
+          miniCtx.save();
+          miniCtx.shadowColor = '#facc15';
+          miniCtx.shadowBlur = 10;
+          miniCtx.fillStyle = '#facc15';
+          miniCtx.beginPath();
+          miniCtx.arc(p.x + p.w / 2, p.coinY, 8, 0, Math.PI * 2);
+          miniCtx.fill();
+          miniCtx.fillStyle = '#fef08a';
+          miniCtx.beginPath();
+          miniCtx.arc(p.x + p.w / 2 - 2, p.coinY - 2, 3, 0, Math.PI * 2);
+          miniCtx.fill();
+          miniCtx.restore();
+        }
+      });
+
+      // Ground bar
+      miniCtx.fillStyle = '#065f46';
+      miniCtx.fillRect(0, H - 16, W, 16);
+
+      // Draw snake trail
+      for (let i = flappy.trail.length - 1; i >= 0; i--) {
+        const seg = flappy.trail[i];
+        const r = Math.max(4, 10 - i * 0.5);
+        miniCtx.fillStyle = i % 2 === 0 ? '#22c55e' : '#16a34a';
+        miniCtx.beginPath();
+        miniCtx.arc(seg.x, seg.y, r, 0, Math.PI * 2);
+        miniCtx.fill();
+      }
+
+      // Draw snake head + cute crown
+      miniCtx.save();
+      miniCtx.translate(sx, flappy.y);
+      miniCtx.fillStyle = '#22c55e';
+      miniCtx.strokeStyle = '#052e16';
+      miniCtx.lineWidth = 2;
+      miniCtx.beginPath();
+      miniCtx.arc(0, 0, 12, 0, Math.PI * 2);
+      miniCtx.fill();
+      miniCtx.stroke();
+      // Eye
+      miniCtx.fillStyle = '#ffffff';
+      miniCtx.beginPath();
+      miniCtx.arc(4, -3, 3.6, 0, Math.PI * 2);
+      miniCtx.fill();
+      miniCtx.fillStyle = '#0f172a';
+      miniCtx.beginPath();
+      miniCtx.arc(5, -3, 1.8, 0, Math.PI * 2);
+      miniCtx.fill();
+      // Mini gold crown
+      miniCtx.fillStyle = '#facc15';
+      miniCtx.beginPath();
+      miniCtx.moveTo(-6, -11); miniCtx.lineTo(-3, -17); miniCtx.lineTo(0, -13); miniCtx.lineTo(3, -17); miniCtx.lineTo(6, -11);
+      miniCtx.closePath();
+      miniCtx.fill();
+      miniCtx.restore();
+
+      drawMiniEffects();
+
+      // Overlay messages
+      if (flappy.state === 'ready' || flappy.state === 'over') {
+        miniCtx.fillStyle = 'rgba(15, 23, 42, 0.58)';
+        miniCtx.fillRect(0, 0, W, H);
+        miniCtx.fillStyle = '#ffffff';
+        miniCtx.textAlign = 'center';
+        miniCtx.font = '900 24px system-ui, sans-serif';
+        miniCtx.fillText(flappy.state === 'ready' ? 'FLAPPY SNAKE' : `GAME OVER • SCORE ${flappy.score}`, W / 2, H / 2 - 12);
+        miniCtx.fillStyle = '#a7f3d0';
+        miniCtx.font = '700 13px system-ui, sans-serif';
+        miniCtx.fillText(flappy.state === 'ready' ? 'Tap, click, or press Space to start flying!' : 'Tap, click, or press Space to play again', W / 2, H / 2 + 16);
+      }
+    }
+
+    function stepAndDrawCatcher(W, H) {
+      const bg = miniCtx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0f172a');
+      bg.addColorStop(1, '#1e1b4b');
+      miniCtx.fillStyle = bg;
+      miniCtx.fillRect(0, 0, W, H);
+
+      if (catcher.state === 'playing') {
+        catcher.frame++;
+        if (miniKeys.left) catcher.x -= 6.5;
+        if (miniKeys.right) catcher.x += 6.5;
+        catcher.x = Math.max(catcher.w / 2 + 6, Math.min(W - catcher.w / 2 - 6, catcher.x));
+
+        const spawnEvery = Math.max(22, 42 - Math.floor(catcher.score / 5));
+        if (catcher.frame % spawnEvery === 1) {
+          const r = Math.random();
+          const type = r < 0.24 ? 'bomb' : r < 0.42 ? 'gem' : 'coin';
+          catcher.items.push({
+            x: 24 + Math.random() * (W - 48),
+            y: -16,
+            vy: 2.5 + Math.random() * 1.8 + Math.min(2.5, catcher.score * 0.05),
+            type
+          });
+        }
+
+        const basketY = H - 34;
+        for (let i = catcher.items.length - 1; i >= 0; i--) {
+          const it = catcher.items[i];
+          it.y += it.vy;
+          // Catch check
+          if (it.y + 10 >= basketY - 8 && it.y - 10 <= basketY + 14 && Math.abs(it.x - catcher.x) <= catcher.w / 2 + 8) {
+            catcher.items.splice(i, 1);
+            if (it.type === 'bomb') {
+              catcher.lives--;
+              catcher.combo = 0;
+              spawnMiniBurst(it.x, basketY, '#ef4444', 16);
+              pushMiniPopup(it.x, basketY - 16, 'BOOM!', '#f87171');
+              if (typeof playSFX === 'function') playSFX('gameover');
+              if (catcher.lives <= 0) catcher.state = 'over';
+            } else {
+              const pts = it.type === 'gem' ? 3 : 1;
+              const money = it.type === 'gem' ? 25 : 10;
+              catcher.score += pts;
+              catcher.combo++;
+              if (catcher.score > miniCatcherBest) {
+                miniCatcherBest = catcher.score;
+                try { localStorage.setItem('snakeMiniCatcherBest_v1', String(miniCatcherBest)); } catch (e) {}
+              }
+              spawnMiniBurst(it.x, basketY, it.type === 'gem' ? '#38bdf8' : '#facc15', 10);
+              awardMiniMoney(money, it.x, basketY - 16, it.type === 'gem' ? '#38bdf8' : '#facc15');
+              if (typeof playSFX === 'function') playSFX(it.type === 'gem' ? 'powerup' : 'eat');
+            }
+            updateMiniGameHUD();
+            continue;
+          }
+          if (it.y > H + 20) catcher.items.splice(i, 1);
+        }
+      }
+
+      // Draw falling items
+      catcher.items.forEach(it => {
+        miniCtx.save();
+        miniCtx.translate(it.x, it.y);
+        if (it.type === 'coin') {
+          miniCtx.shadowColor = '#facc15';
+          miniCtx.shadowBlur = 10;
+          miniCtx.fillStyle = '#facc15';
+          miniCtx.beginPath();
+          miniCtx.arc(0, 0, 10, 0, Math.PI * 2);
+          miniCtx.fill();
+          miniCtx.fillStyle = '#92400e';
+          miniCtx.font = '900 11px system-ui, sans-serif';
+          miniCtx.textAlign = 'center';
+          miniCtx.textBaseline = 'middle';
+          miniCtx.fillText('$', 0, 1);
+        } else if (it.type === 'gem') {
+          miniCtx.shadowColor = '#38bdf8';
+          miniCtx.shadowBlur = 12;
+          miniCtx.fillStyle = '#38bdf8';
+          miniCtx.beginPath();
+          miniCtx.moveTo(0, -11); miniCtx.lineTo(10, 0); miniCtx.lineTo(0, 11); miniCtx.lineTo(-10, 0);
+          miniCtx.closePath();
+          miniCtx.fill();
+          miniCtx.fillStyle = '#e0f2fe';
+          miniCtx.beginPath();
+          miniCtx.moveTo(0, -6); miniCtx.lineTo(4, 0); miniCtx.lineTo(0, 4); miniCtx.lineTo(-4, 0);
+          miniCtx.closePath();
+          miniCtx.fill();
+        } else {
+          miniCtx.shadowColor = '#ef4444';
+          miniCtx.shadowBlur = 10;
+          miniCtx.fillStyle = '#1f2937';
+          miniCtx.strokeStyle = '#ef4444';
+          miniCtx.lineWidth = 2;
+          miniCtx.beginPath();
+          miniCtx.arc(0, 1, 10, 0, Math.PI * 2);
+          miniCtx.fill();
+          miniCtx.stroke();
+          miniCtx.fillStyle = '#f97316';
+          miniCtx.beginPath();
+          miniCtx.arc(0, -11, 3.2, 0, Math.PI * 2);
+          miniCtx.fill();
+        }
+        miniCtx.restore();
+      });
+
+      // Draw basket
+      const by = H - 34;
+      miniCtx.save();
+      miniCtx.translate(catcher.x, by);
+      miniCtx.fillStyle = '#f59e0b';
+      miniCtx.strokeStyle = '#fef08a';
+      miniCtx.lineWidth = 2;
+      miniCtx.beginPath();
+      miniCtx.roundRect(-catcher.w / 2, -9, catcher.w, 18, 9);
+      miniCtx.fill();
+      miniCtx.stroke();
+      miniCtx.restore();
+
+      // Draw lives indicator (top-left)
+      for (let i = 0; i < 3; i++) {
+        miniCtx.fillStyle = i < catcher.lives ? '#ef4444' : 'rgba(255,255,255,0.18)';
+        miniCtx.beginPath();
+        miniCtx.arc(20 + i * 18, 20, 6, 0, Math.PI * 2);
+        miniCtx.fill();
+      }
+
+      drawMiniEffects();
+
+      if (catcher.state === 'ready' || catcher.state === 'over') {
+        miniCtx.fillStyle = 'rgba(15, 23, 42, 0.58)';
+        miniCtx.fillRect(0, 0, W, H);
+        miniCtx.fillStyle = '#ffffff';
+        miniCtx.textAlign = 'center';
+        miniCtx.font = '900 24px system-ui, sans-serif';
+        miniCtx.fillText(catcher.state === 'ready' ? 'COIN CATCHER' : `GAME OVER • SCORE ${catcher.score}`, W / 2, H / 2 - 12);
+        miniCtx.fillStyle = '#fde68a';
+        miniCtx.font = '700 13px system-ui, sans-serif';
+        miniCtx.fillText(catcher.state === 'ready' ? 'Click or tap to start catching coins & gems!' : 'Click or tap to play again', W / 2, H / 2 + 16);
+      }
+    }
+
+    function miniGameLoop() {
+      if (!miniGameModal || miniGameModal.classList.contains('hidden') || !miniCtx) {
+        miniGameRafId = null;
+        return;
+      }
+      const W = miniGameCanvas.width;
+      const H = miniGameCanvas.height;
+      if (miniGameMode === 'flappy') stepAndDrawFlappy(W, H);
+      else stepAndDrawCatcher(W, H);
+      miniGameRafId = requestAnimationFrame(miniGameLoop);
+    }
+
+    function openMiniGameModal() {
+      if (!miniGameModal) return;
+      miniGameSessionEarned = 0;
+      resetFlappy();
+      resetCatcher();
+      miniGameModal.classList.remove('hidden');
+      updateMiniGameHUD();
+      if (!miniGameRafId) miniGameRafId = requestAnimationFrame(miniGameLoop);
+    }
+
+    function closeMiniGameModal() {
+      if (miniGameModal) miniGameModal.classList.add('hidden');
+      if (miniGameRafId) {
+        cancelAnimationFrame(miniGameRafId);
+        miniGameRafId = null;
+      }
+    }
+
+    if (btnWelcomeMiniGame) btnWelcomeMiniGame.addEventListener('click', openMiniGameModal);
+    if (btnCloseMiniGame) btnCloseMiniGame.addEventListener('click', closeMiniGameModal);
+    if (miniGameModal) {
+      miniGameModal.addEventListener('click', (e) => {
+        if (e.target === miniGameModal) closeMiniGameModal();
+      });
+    }
+    if (tabMiniFlappy) {
+      tabMiniFlappy.addEventListener('click', () => {
+        miniGameMode = 'flappy';
+        resetFlappy();
+        updateMiniGameHUD();
+      });
+    }
+    if (tabMiniCatcher) {
+      tabMiniCatcher.addEventListener('click', () => {
+        miniGameMode = 'catcher';
+        resetCatcher();
+        updateMiniGameHUD();
+      });
+    }
+    if (btnMiniGameRestart) {
+      btnMiniGameRestart.addEventListener('click', () => {
+        if (miniGameMode === 'flappy') resetFlappy();
+        else resetCatcher();
+      });
+    }
+    if (miniGameCanvas) {
+      const moveCatcherToClientX = (clientX) => {
+        const rect = miniGameCanvas.getBoundingClientRect();
+        const scaleX = miniGameCanvas.width / rect.width;
+        catcher.x = Math.max(catcher.w / 2 + 6, Math.min(miniGameCanvas.width - catcher.w / 2 - 6, (clientX - rect.left) * scaleX));
+      };
+      miniGameCanvas.addEventListener('pointerdown', (e) => {
+        if (miniGameMode === 'flappy') {
+          flappyFlap();
+        } else {
+          moveCatcherToClientX(e.clientX);
+          if (catcher.state !== 'playing') {
+            resetCatcher();
+            catcher.state = 'playing';
+          }
+        }
+      });
+      miniGameCanvas.addEventListener('pointermove', (e) => {
+        if (miniGameMode === 'catcher' && catcher.state === 'playing') {
+          moveCatcherToClientX(e.clientX);
+        }
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (!miniGameModal || miniGameModal.classList.contains('hidden')) return;
+      if (e.key === 'Escape') { closeMiniGameModal(); return; }
+      if (miniGameMode === 'flappy' && (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W')) {
+        e.preventDefault();
+        flappyFlap();
+      } else if (miniGameMode === 'catcher') {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') miniKeys.left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') miniKeys.right = true;
+        if (e.code === 'Space' && catcher.state !== 'playing') {
+          e.preventDefault();
+          resetCatcher();
+          catcher.state = 'playing';
+        }
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') miniKeys.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') miniKeys.right = false;
+    });
 
     // Initialize rewards, language, sound & 60 FPS render loop on load
     initRewardsUI();
