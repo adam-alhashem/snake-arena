@@ -719,32 +719,33 @@
           </div>
         </div>
 
-        <!-- Game Card 5: Turbo Racing (Car Game) -->
-        <div class="bg-white rounded-3xl border-2 border-slate-200 hover:border-orange-400 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col">
-          <div class="h-40 bg-gradient-to-br from-slate-900 via-orange-950 to-slate-950 flex items-center justify-center relative p-4">
-            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-orange-500/40 border border-orange-300/60 text-orange-100 text-[10px] font-black uppercase tracking-wide">Real 3D Racing</span>
+        <!-- Game Card 5: Paris Racing (Car Game) -->
+        <div class="bg-white rounded-3xl border-2 border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col">
+          <div class="h-40 bg-gradient-to-br from-sky-900 via-indigo-950 to-slate-950 flex items-center justify-center relative p-4">
+            <span class="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-blue-500/40 border border-blue-200/60 text-blue-100 text-[10px] font-black uppercase tracking-wide">Paris 3D</span>
             <svg viewBox="0 0 120 84" class="w-28 h-20 drop-shadow-lg">
-              <!-- Highway Perspective -->
-              <polygon points="36,10 84,10 112,80 8,80" fill="#334155"/>
-              <line x1="60" y1="12" x2="60" y2="78" stroke="#facc15" stroke-width="2.5" stroke-dasharray="7 6"/>
-              <!-- Sleek Red Sports Car -->
-              <rect x="46" y="34" width="28" height="38" rx="7" fill="#ef4444" stroke="#fca5a5" stroke-width="1.5"/>
-              <rect x="50" y="42" width="20" height="12" rx="3" fill="#bae6fd"/>
-              <rect x="48" y="66" width="24" height="4" rx="1.5" fill="#991b1b"/>
-              <rect x="49" y="32" width="6" height="4" rx="1" fill="#fef08a"/>
-              <rect x="65" y="32" width="6" height="4" rx="1" fill="#fef08a"/>
-              <!-- Nitro Flames -->
-              <polygon points="52,72 55,82 58,72" fill="#38bdf8"/>
-              <polygon points="62,72 65,82 68,72" fill="#38bdf8"/>
+              <!-- Eiffel Tower Silhouette -->
+              <polygon points="60,3 56,22 64,22" fill="#d6b88d"/>
+              <polygon points="56,22 50,38 70,38 64,22" fill="#b08d57"/>
+              <path d="M50,38 L44,48 L52,48 Q60,39 68,48 L76,48 L70,38 Z" fill="#8c6d46"/>
+              <!-- Parisian Cobblestone Boulevard -->
+              <polygon points="34,44 86,44 114,82 6,82" fill="#475569"/>
+              <line x1="60" y1="46" x2="60" y2="80" stroke="#f8fafc" stroke-width="2" stroke-dasharray="6 5"/>
+              <!-- Red Sports Car -->
+              <rect x="46" y="46" width="28" height="32" rx="7" fill="#ef4444" stroke="#fca5a5" stroke-width="1.5"/>
+              <rect x="50" y="53" width="20" height="10" rx="3" fill="#bae6fd"/>
+              <rect x="48" y="72" width="24" height="4" rx="1.5" fill="#991b1b"/>
+              <rect x="49" y="44" width="6" height="4" rx="1" fill="#fef08a"/>
+              <rect x="65" y="44" width="6" height="4" rx="1" fill="#fef08a"/>
             </svg>
           </div>
           <div class="p-4 flex flex-col gap-3 flex-1">
             <div class="flex flex-col gap-1 flex-1">
               <div class="flex items-center justify-between gap-2">
-                <h2 class="text-base font-black text-slate-900">Turbo Racing</h2>
-                <span id="hubStatCar" class="text-[11px] font-extrabold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-lg">Best: 0m</span>
+                <h2 class="text-base font-black text-slate-900">Paris Racing</h2>
+                <span id="hubStatCar" class="text-[11px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg">Best: 0m</span>
               </div>
-              <p class="text-xs font-medium text-slate-500">Speed down a 4-lane highway, dodge traffic, grab gold coins, and fire Nitro Boost.</p>
+              <p class="text-xs font-medium text-slate-500">Drive through the streets of Paris past the Eiffel Tower, Arc de Triomphe, Louvre, and Champs-Elysees.</p>
             </div>
             <button id="btnHubPlayCar" type="button" class="w-full py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-black shadow-sm active:scale-95 transition-all cursor-pointer">Play</button>
           </div>
@@ -12802,7 +12803,7 @@
       if (titleEl) {
         titleEl.textContent = miniGameMode === 'obby' ? 'Mega Obby'
           : miniGameMode === 'tycoon' ? 'Money Tycoon'
-          : miniGameMode === 'car' ? 'Turbo Racing'
+          : miniGameMode === 'car' ? 'Paris Racing'
           : 'Disaster Survival';
       }
       updateTycoonButtonsUI();
@@ -14189,10 +14190,10 @@
         miniCtx.fillStyle = '#ffffff';
         miniCtx.textAlign = 'center';
         miniCtx.font = '900 24px system-ui, sans-serif';
-        miniCtx.fillText(carGame.state === 'ready' ? 'TURBO RACING' : `RACE OVER • ${Math.floor(carGame.dist)}m`, W / 2, H / 2 - 12);
+        miniCtx.fillText(carGame.state === 'ready' ? 'PARIS RACING' : `RACE OVER • ${Math.floor(carGame.dist)}m`, W / 2, H / 2 - 12);
         miniCtx.fillStyle = '#fed7aa';
         miniCtx.font = '700 13px system-ui, sans-serif';
-        miniCtx.fillText('Click, tap, or press Space to hit the highway!', W / 2, H / 2 + 16);
+        miniCtx.fillText('Click, tap, or press Space to drive through Paris!', W / 2, H / 2 + 16);
       }
     }
 
@@ -14521,7 +14522,7 @@
         return { label: 'Playing Disaster Survival', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
       }
       if (pr.game === 'car') {
-        return { label: 'Playing Turbo Racing', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
+        return { label: 'Playing Paris Racing', dotCls: 'bg-emerald-500 animate-pulse', chipCls: 'bg-emerald-50 border-emerald-300 text-emerald-900' };
       }
       return { label: 'In Lobby', dotCls: 'bg-sky-500', chipCls: 'bg-sky-50 border-sky-300 text-sky-900' };
     }
@@ -15795,7 +15796,7 @@
       } else if (useCar3D) {
         initReal3DCar();
         const hEl = document.getElementById('miniGameHint');
-        if (hEl) hEl.textContent = '3D Turbo Racing: W / Up for Gas, S / Down for Brake, A / D or Arrows to Steer, C for Camera!';
+        if (hEl) hEl.textContent = 'Paris 3D Driving: W / Up for Gas, S / Down for Brake, A / D or Arrows to Steer, C for Camera!';
       }
     }
 
@@ -16792,8 +16793,82 @@
       const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.55, 14, 6), eiffelIron); antenna.position.y = 130;
       const beacon = new THREE.Mesh(new THREE.SphereGeometry(1.6, 10, 10), eiffelGlow); beacon.position.y = 137;
       eiffelGrp.add(deck1, midShaft, deck2, topSpire, deck3, antenna, beacon);
-      eiffelGrp.position.set(0, 0, -210);
+      eiffelGrp.position.set(0, 0, -155);
       c3.scene.add(eiffelGrp);
+
+      // The Louvre Glass Pyramid in the North-East Paris Courtyard!
+      const louvrePyr = new THREE.Mesh(
+        new THREE.ConeGeometry(16, 11.5, 4),
+        new THREE.MeshStandardMaterial({ color: '#93c5fd', metalness: 0.82, roughness: 0.12, transparent: true, opacity: 0.78 })
+      );
+      louvrePyr.position.set(55, 5.75, -55);
+      louvrePyr.rotation.y = Math.PI / 4;
+      c3.scene.add(louvrePyr);
+      const louvreBase = new THREE.Mesh(
+        new THREE.BoxGeometry(26, 0.5, 26),
+        new THREE.MeshStandardMaterial({ color: '#38bdf8', roughness: 0.15, metalness: 0.6 })
+      );
+      louvreBase.position.set(55, 0.25, -55);
+      c3.scene.add(louvreBase);
+
+      // River Seine flowing along the West side of Paris with stone embankment!
+      const seineWater = new THREE.Mesh(
+        new THREE.PlaneGeometry(36, 460),
+        new THREE.MeshStandardMaterial({ color: '#1d4ed8', roughness: 0.22, metalness: 0.5 })
+      );
+      seineWater.rotation.x = -Math.PI / 2;
+      seineWater.position.set(-178, -0.01, 0);
+      c3.scene.add(seineWater);
+      const seineWall = new THREE.Mesh(
+        new THREE.BoxGeometry(2.2, 1.4, 460),
+        new THREE.MeshStandardMaterial({ color: '#d6c7ad', roughness: 0.8 })
+      );
+      seineWall.position.set(-159, 0.7, 0);
+      c3.scene.add(seineWall);
+
+      // French Tricolore Flags & Blue-and-White Paris Street Signs!
+      const addFrenchFlag = (fx, fz) => {
+        const fg = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 8.5, 6), new THREE.MeshStandardMaterial({ color: '#e2e8f0', metalness: 0.7 }));
+        pole.position.y = 4.25;
+        const fBlue = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.6, 0.06), new THREE.MeshBasicMaterial({ color: '#1d4ed8' })); fBlue.position.set(0.5, 7.6, 0);
+        const fWhite = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.6, 0.06), new THREE.MeshBasicMaterial({ color: '#ffffff' })); fWhite.position.set(1.4, 7.6, 0);
+        const fRed = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.6, 0.06), new THREE.MeshBasicMaterial({ color: '#dc2626' })); fRed.position.set(2.3, 7.6, 0);
+        fg.add(pole, fBlue, fWhite, fRed);
+        fg.position.set(fx, 0, fz);
+        c3.scene.add(fg);
+      };
+      addFrenchFlag(-12.5, 56); addFrenchFlag(12.5, 56);
+      addFrenchFlag(-12.5, -56); addFrenchFlag(12.5, -56);
+
+      const addParisStreetSign = (sx, sz, label, rotY) => {
+        const sc = document.createElement('canvas');
+        sc.width = 256; sc.height = 96;
+        const sg = sc.getContext('2d');
+        sg.fillStyle = '#1e3a8a';
+        sg.fillRect(0, 0, 256, 96);
+        sg.strokeStyle = '#ffffff';
+        sg.lineWidth = 6;
+        sg.strokeRect(6, 6, 244, 84);
+        sg.fillStyle = '#ffffff';
+        sg.font = '900 22px system-ui, sans-serif';
+        sg.textAlign = 'center';
+        sg.textBaseline = 'middle';
+        sg.fillText(label, 128, 48);
+        const sgGrp = new THREE.Group();
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 3.6, 6), new THREE.MeshStandardMaterial({ color: '#1e293b' }));
+        pole.position.y = 1.8;
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.25, 0.1), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sc) }));
+        plate.position.y = 3.4;
+        sgGrp.add(pole, plate);
+        sgGrp.position.set(sx, 0, sz);
+        sgGrp.rotation.y = rotY || 0;
+        c3.scene.add(sgGrp);
+      };
+      addParisStreetSign(9.5, 11.5, 'CHAMPS-ELYSEES', 0);
+      addParisStreetSign(-9.5, -11.5, 'RUE DE RIVOLI', Math.PI);
+      addParisStreetSign(11.5, -9.5, 'AVENUE FOCH', Math.PI / 2);
+      addParisStreetSign(-11.5, 9.5, 'PLACE CONCORDE', -Math.PI / 2);
 
       // Grand Limestone Arc de Triomphe Arches you can drive right under!
       const stoneMat = new THREE.MeshStandardMaterial({ color: '#e7dcc6', roughness: 0.72 });
@@ -17036,7 +17111,7 @@
       carGame.dist = c3.dist;
       if (Math.floor(c3.dist) > carBestDist) carBestDist = Math.floor(c3.dist);
 
-      if (isDrifting && c3.frame % 10 === 0) addFH6Skill('FORZA DRIFT', 120);
+      if (isDrifting && c3.frame % 10 === 0) addFH6Skill('PARIS DRIFT', 120);
       else if (c3.kmh > 220 && c3.frame % 25 === 0) addFH6Skill('HIGH SPEED', 150);
       if (c3.skillTimer > 0) {
         c3.skillTimer--;
