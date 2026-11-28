@@ -1358,13 +1358,7 @@
             <div id="car3DRpmBar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all" style="width:15%"></div>
           </div>
         </div>
-        <!-- Nitro Bar -->
-        <div class="w-40 flex items-center gap-1.5">
-          <span class="text-[9px] font-black text-sky-300 uppercase">NOS</span>
-          <div class="flex-1 h-1.5 rounded-full bg-white/15 overflow-hidden">
-            <div id="car3DNitroBar" class="h-full bg-gradient-to-r from-sky-400 to-cyan-300 transition-all" style="width:100%"></div>
-          </div>
-        </div>
+
         <div id="car3DLivesRow" class="flex items-center gap-1 mt-0.5"></div>
       </div>
 
@@ -12781,7 +12775,7 @@
         if (sLbl) sLbl.textContent = 'Distance';
         if (sEl) sEl.textContent = `${Math.floor(carGame.dist)}m`;
         if (bEl) bEl.textContent = `${carBestDist}m`;
-        if (hEl) hEl.textContent = 'Steer with A/D or Arrows, hold Space / Jump for Nitro Boost! Dodge traffic & grab coins.';
+        if (hEl) hEl.textContent = 'Steer with A/D or Arrows to dodge traffic & grab coins!';
       } else {
         if (cLbl) cLbl.textContent = 'Survival Gems';
         if (mEl) mEl.textContent = survivalGems.toLocaleString();
@@ -14064,7 +14058,7 @@
       }
       miniCtx.setLineDash([]);
 
-      const boosting = carGame.state === 'playing' && (miniKeys.jump || miniKeys.up) && carGame.nitro > 2;
+      const boosting = false;
       if (carGame.state === 'playing') {
         carGame.frame++;
         if (carGame.invuln > 0) carGame.invuln--;
@@ -14099,7 +14093,7 @@
         // Spawn gold coins & nitro orbs
         if (carGame.frame % 68 === 25) {
           const lane = Math.floor(Math.random() * 4);
-          const isNitro = Math.random() < 0.28;
+          const isNitro = false;
           carGame.pickups.push({ x: roadLeft + lane * laneW + laneW / 2, y: -20, type: isNitro ? 'nitro' : 'coin' });
         }
 
@@ -14184,10 +14178,7 @@
         miniCtx.fillStyle = i < carGame.lives ? '#ef4444' : 'rgba(255,255,255,0.25)';
         miniCtx.beginPath(); miniCtx.arc(22 + i * 18, 62, 6, 0, Math.PI * 2); miniCtx.fill();
       }
-      miniCtx.fillStyle = 'rgba(15,23,42,0.75)';
-      miniCtx.beginPath(); miniCtx.roundRect(14, 76, 82, 12, 6); miniCtx.fill();
-      miniCtx.fillStyle = boosting ? '#38bdf8' : '#0ea5e9';
-      miniCtx.beginPath(); miniCtx.roundRect(16, 78, Math.max(0, 78 * (carGame.nitro / 100)), 8, 4); miniCtx.fill();
+
       miniCtx.fillStyle = '#ffffff';
       miniCtx.font = '900 11px system-ui, sans-serif';
       miniCtx.textAlign = 'left';
@@ -15807,7 +15798,7 @@
       } else if (useCar3D) {
         initReal3DCar();
         const hEl = document.getElementById('miniGameHint');
-        if (hEl) hEl.textContent = '3D Turbo Racing: Steer with A/D or Arrows, hold W / Up / Space for Nitro Boost!';
+        if (hEl) hEl.textContent = '3D Turbo Racing: W / Up for Gas, S / Down for Brake, A / D or Arrows to Steer, C for Camera!';
       }
     }
 
@@ -16736,24 +16727,18 @@
       c3.frame++;
       if (c3.invuln > 0) c3.invuln--;
 
-      // REAL-LIFE DRIVING PHYSICS: Gas (W / Up), Brake (S / Down), Nitro Turbo (Space / Jump)!
+      // REAL-LIFE DRIVING PHYSICS: Gas (W / Up) & Brake (S / Down), no arcade Nitro boost!
       const gas = miniKeys.up;
       const brake = miniKeys.down;
-      const nitroOn = miniKeys.jump && c3.nitro > 2;
+      const nitroOn = false;
 
-      if (nitroOn) {
-        c3.kmh = Math.min(340, c3.kmh + 2.4);
-        c3.nitro = Math.max(0, c3.nitro - 0.65);
-      } else if (gas) {
+      if (gas) {
         const accel = Math.max(0.45, 1.55 - (c3.kmh / 320));
-        c3.kmh = Math.min(265, c3.kmh + accel);
-        c3.nitro = Math.min(100, c3.nitro + 0.14);
+        c3.kmh = Math.min(280, c3.kmh + accel);
       } else if (brake) {
         c3.kmh = Math.max(0, c3.kmh - 3.4);
       } else {
-        // Natural aerodynamic drag & coasting (gentle cruise above 70 km/h on mobile if no keyboard gas)
         c3.kmh = Math.max(0, c3.kmh - 0.45);
-        c3.nitro = Math.min(100, c3.nitro + 0.12);
       }
 
       // 6-Speed Automatic Transmission & realistic RPM curve!
@@ -16821,7 +16806,7 @@
       }
       if (c3.kmh > 20 && c3.frame % 68 === 20) {
         const lx = c3.laneXs[Math.floor(Math.random() * c3.laneXs.length)];
-        const isNitro = Math.random() < 0.3;
+        const isNitro = false;
         const mesh = isNitro
           ? new THREE.Mesh(new THREE.OctahedronGeometry(0.55, 0), new THREE.MeshStandardMaterial({ color: '#38bdf8', emissive: '#0284c7', emissiveIntensity: 0.7 }))
           : new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.16, 16), new THREE.MeshStandardMaterial({ color: '#facc15', metalness: 0.7, roughness: 0.2 }));
