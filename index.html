@@ -12930,18 +12930,11 @@
       };
     }
 
-    function getActiveRosterForHubGame(maxCount) {
-      const partyFriends = friendsList.filter(f => f.inParty !== false).map(f => ({
+    function getActiveRosterForHubGame() {
+      // No AI bots — only real players you added to your party
+      return friendsList.filter(f => f.inParty !== false).map(f => ({
         name: f.name, cfg: f.cfg || generateAvatarForFriendName(f.name), isFriend: true
       }));
-      const roster = [...partyFriends];
-      for (const p of HUB_OTHER_PLAYERS) {
-        if (roster.length >= maxCount) break;
-        if (!roster.some(r => r.name.toLowerCase() === p.name.toLowerCase())) {
-          roster.push({ name: p.name, cfg: p.cfg, isFriend: false });
-        }
-      }
-      return roster.slice(0, Math.max(maxCount, partyFriends.length));
     }
 
     let obbyBots = [];
@@ -13149,7 +13142,7 @@
       miniCtx.restore();
 
       // Update & draw other players racing through the Obby alongside you!
-      if (!obbyBots.length) initHubBotsForObby();
+      
       obbyBots.forEach(bot => {
         const nextPlat = obby.platforms[Math.min(bot.platIdx + 1, obby.platforms.length - 1)];
         const curPlat = obby.platforms[Math.min(bot.platIdx, obby.platforms.length - 1)];
@@ -13322,7 +13315,7 @@
       }
 
       // Update & draw other players exploring the factory floor with you!
-      if (!tycoonBots.length) initHubBotsForTycoon();
+      
       tycoonBots.forEach(bot => {
         bot.x += bot.dir * bot.speed;
         if (bot.x < 120) bot.dir = 1;
@@ -13520,7 +13513,7 @@
       }
 
       // Update & draw other players dodging meteors and jumping over lasers with you!
-      if (!survivalBots.length) initHubBotsForSurvival();
+      
       survivalBots.forEach(bot => {
         if (!bot.alive) {
           bot.respawnTimer--;
@@ -13851,18 +13844,12 @@
     }
 
     function getAllSearchablePlayers() {
-      const map = new Map();
-      // 1. Real players who have played this game on this platform
-      registeredPlayers.forEach(p => {
-        map.set(p.name.toLowerCase(), { name: p.name, cfg: p.cfg || generateAvatarForFriendName(p.name), tag: 'Played' });
-      });
-      // 2. Active players in the games
-      HUB_OTHER_PLAYERS.forEach(p => {
-        if (!map.has(p.name.toLowerCase())) {
-          map.set(p.name.toLowerCase(), { name: p.name, cfg: p.cfg, tag: 'Active Player' });
-        }
-      });
-      return Array.from(map.values());
+      // Only real players who have actually played (no fake bots)
+      return registeredPlayers.map(p => ({
+        name: p.name,
+        cfg: p.cfg || generateAvatarForFriendName(p.name),
+        tag: 'Played'
+      }));
     }
 
     const friendsModal = document.getElementById('friendsModal');
@@ -13983,27 +13970,36 @@
 
       if (sugEl) {
         sugEl.innerHTML = '';
-        HUB_OTHER_PLAYERS.forEach(p => {
-          const added = friendsList.some(f => f.name.toLowerCase() === p.name.toLowerCase());
-          const card = document.createElement('button');
-          card.type = 'button';
-          card.disabled = added;
-          card.className = `p-2.5 rounded-xl border text-left flex items-center justify-between gap-2 transition-all ${
-            added ? 'bg-emerald-50 border-emerald-200 text-emerald-700 cursor-default' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 cursor-pointer active:scale-95'
-          }`;
-          const nm = document.createElement('span');
-          nm.className = 'text-xs font-black truncate';
-          nm.textContent = p.name;
-          const act = document.createElement('span');
-          act.className = `text-[10px] font-black px-2 py-0.5 rounded-lg ${added ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`;
-          act.textContent = added ? 'Added' : '+ Add';
-          card.appendChild(nm);
-          card.appendChild(act);
-          if (!added) {
-            card.addEventListener('click', () => addFriendByName(p.name));
-          }
-          sugEl.appendChild(card);
-        });
+        const myNameLower = (playerProfile && playerProfile.name) ? playerProfile.name.trim().toLowerCase() : '';
+        const realOthers = registeredPlayers.filter(p => p.name.toLowerCase() !== myNameLower);
+        if (realOthers.length === 0) {
+          const none = document.createElement('div');
+          none.className = 'col-span-2 p-3 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs font-bold text-slate-400';
+          none.textContent = 'No other players have played yet. When another player plays, they will appear here and in search.';
+          sugEl.appendChild(none);
+        } else {
+          realOthers.forEach(p => {
+            const added = friendsList.some(f => f.name.toLowerCase() === p.name.toLowerCase());
+            const card = document.createElement('button');
+            card.type = 'button';
+            card.disabled = added;
+            card.className = `p-2.5 rounded-xl border text-left flex items-center justify-between gap-2 transition-all ${
+              added ? 'bg-emerald-50 border-emerald-200 text-emerald-700 cursor-default' : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 cursor-pointer active:scale-95'
+            }`;
+            const nm = document.createElement('span');
+            nm.className = 'text-xs font-black truncate';
+            nm.textContent = p.name;
+            const act = document.createElement('span');
+            act.className = `text-[10px] font-black px-2 py-0.5 rounded-lg ${added ? 'bg-emerald-600 text-white' : 'bg-indigo-600 text-white'}`;
+            act.textContent = added ? 'Added' : '+ Add';
+            card.appendChild(nm);
+            card.appendChild(act);
+            if (!added) {
+              card.addEventListener('click', () => addFriendByName(p.name));
+            }
+            sugEl.appendChild(card);
+          });
+        }
       }
     }
 
