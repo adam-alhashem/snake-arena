@@ -7725,6 +7725,9 @@
       if (sTycoon && typeof tycoonState !== 'undefined') sTycoon.textContent = `$${(tycoonState.totalCollected || 0).toLocaleString()} Earned`;
       if (sSurv && typeof survivalBestSec !== 'undefined') sSurv.textContent = `Best: ${survivalBestSec}s`;
       if (typeof renderFriendsUI === 'function') renderFriendsUI();
+      if (typeof updateOnlineRoomUI === 'function') updateOnlineRoomUI();
+      if (!hasRealProfile() && typeof mpDisconnectRoom === 'function' && mpConnected) mpDisconnectRoom();
+      if (!hasRealProfile() && typeof stopMicrophone === 'function' && micActive) stopMicrophone();
     }
 
     function showPlatformHomePage() {
@@ -14386,9 +14389,17 @@
       showVoiceToast('Mic OFF', 1400);
     }
 
+    function hasRealProfile() {
+      return !!(playerProfile && playerProfile.name && playerProfile.date && playerProfile.gender && !playerProfile.isGuest);
+    }
+
     async function toggleMicrophone() {
       if (micActive) {
         stopMicrophone();
+        return;
+      }
+      if (!hasRealProfile()) {
+        showVoiceToast('Make a profile first to use Microphone & Voice Chat!', 3200);
         return;
       }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -14489,20 +14500,28 @@
           ? 'w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 animate-pulse'
           : 'w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0';
       }
+      const canOnline = hasRealProfile();
       if (btnOnlineRoomToggle) {
-        btnOnlineRoomToggle.textContent = mpConnected ? 'Leave Room' : 'Join Room';
-        btnOnlineRoomToggle.className = mpConnected
-          ? 'px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer'
-          : 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer';
+        if (!canOnline) {
+          btnOnlineRoomToggle.textContent = 'Make Profile First';
+          btnOnlineRoomToggle.className = 'px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer';
+        } else {
+          btnOnlineRoomToggle.textContent = mpConnected ? 'Leave Room' : 'Join Room';
+          btnOnlineRoomToggle.className = mpConnected
+            ? 'px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer'
+            : 'px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-xs active:scale-95 transition-all cursor-pointer';
+        }
       }
       if (onlineRoomStatus) {
-        if (mpConnected) {
+        if (!canOnline) {
+          onlineRoomStatus.textContent = 'Multiplayer & Voice Chat require a Profile — click Make Profile First!';
+        } else if (mpConnected) {
           const names = Object.values(mpRemotePlayers).map(p => p.name);
           onlineRoomStatus.textContent = peerCount > 0
             ? `Live in ${mpRoom} (${peerCount + 1} Players): You, ${names.join(', ')}`
-            : `Live in ${mpRoom} (1 Player) — open another tab/device and join ${mpRoom}!`;
+            : `Live in ${mpRoom} (1 Player) — share this link & join ${mpRoom} on another device!`;
         } else {
-          onlineRoomStatus.textContent = 'Join the same Room Code on 2 tabs or devices to play & talk live';
+          onlineRoomStatus.textContent = 'Join the same Room Code with a friend to play & talk live';
         }
       }
     }
@@ -14532,9 +14551,17 @@
       let pc = mpPeerConns[peerId];
       if (!pc) {
         pc = new RTCPeerConnection({
-          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
         });
         mpPeerConns[peerId] = pc;
+        try {
+          if (typeof pc.addTransceiver === 'function' && !(micActive && micStream)) {
+            pc.addTransceiver('audio', { direction: 'recvonly' });
+          }
+        } catch (e) {}
 
         pc.onicecandidate = (ev) => {
           if (ev.candidate) mpSendSignal(peerId, 'ice', ev.candidate);
@@ -14638,6 +14665,11 @@
     }
 
     function mpConnectRoom(roomCode) {
+      if (!hasRealProfile()) {
+        showVoiceToast('Make a profile first to play & talk with other players!', 3200);
+        showProfileSetupPage();
+        return;
+      }
       if (window.location.protocol === 'file:') {
         showVoiceToast('Open http://localhost:8080 (via server.py) for live multiplayer & voice!', 4000);
         if (onlineRoomStatus) onlineRoomStatus.textContent = 'Run python3 server.py and open http://localhost:8080 to connect!';
@@ -14753,6 +14785,11 @@
 
     if (btnOnlineRoomToggle) {
       btnOnlineRoomToggle.addEventListener('click', () => {
+        if (!hasRealProfile()) {
+          showVoiceToast('Make a profile first to play & talk with other players!', 3200);
+          showProfileSetupPage();
+          return;
+        }
         if (mpConnected) mpDisconnectRoom();
         else mpConnectRoom(onlineRoomInput ? onlineRoomInput.value : 'ROOM1');
       });
