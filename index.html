@@ -12108,138 +12108,7 @@
       });
     }
 
-    // --- AVATAR CUSTOMIZER MODAL CONTROLLER ---
-    const avatarModal = document.getElementById('avatarModal');
-    const btnOpenAvatarCustomizer = document.getElementById('btnOpenAvatarCustomizer');
-    const btnCloseAvatarModal = document.getElementById('btnCloseAvatarModal');
-    const btnAvatarDone = document.getElementById('btnAvatarDone');
-    const btnAvatarRandom = document.getElementById('btnAvatarRandom');
-    let avatarPreviewRafId = null;
 
-    function startAvatarPreviewLoop() {
-      if (avatarPreviewRafId) return;
-      const ac = document.getElementById('avatarPreviewCanvas');
-      if (!ac) return;
-      const actx = ac.getContext('2d');
-      if (!actx) return;
-      function frame() {
-        if (!avatarModal || avatarModal.classList.contains('hidden')) {
-          avatarPreviewRafId = null;
-          return;
-        }
-        const w = ac.width, h = ac.height;
-        const bg = actx.createLinearGradient(0, 0, 0, h);
-        bg.addColorStop(0, '#0f172a');
-        bg.addColorStop(1, '#1e293b');
-        actx.fillStyle = bg;
-        actx.fillRect(0, 0, w, h);
-        // Glowing floor pedestal
-        actx.fillStyle = 'rgba(52, 211, 153, 0.22)';
-        actx.beginPath();
-        actx.ellipse(w / 2, h - 32, 54, 14, 0, 0, Math.PI * 2);
-        actx.fill();
-        const bob = Math.sin(Date.now() / 260) * 4;
-        drawCustomAvatarOn(actx, w / 2, h - 36 + bob, 3.6);
-        avatarPreviewRafId = requestAnimationFrame(frame);
-      }
-      avatarPreviewRafId = requestAnimationFrame(frame);
-    }
-
-    let avatarActiveTab = 'shirt'; // 'shirt' | 'pants' | 'hat' | 'face' | 'skin'
-    const AVATAR_TABS = [
-      { id: 'shirt', label: `T-Shirts (${AVATAR_SHIRTS.length})` },
-      { id: 'pants', label: `Pants (${AVATAR_PANTS.length})` },
-      { id: 'hat',   label: `Hats (${AVATAR_HATS.length})` },
-      { id: 'face',  label: `Faces (${AVATAR_FACES.length})` },
-      { id: 'skin',  label: `Skin (${AVATAR_SKINS.length})` }
-    ];
-
-    function renderAvatarPickers() {
-      const tabsEl = document.getElementById('avatarCategoryTabs');
-      const gridEl = document.getElementById('avatarItemsGrid');
-      if (tabsEl) {
-        tabsEl.innerHTML = '';
-        AVATAR_TABS.forEach(t => {
-          const active = avatarActiveTab === t.id;
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = `px-2.5 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
-            active ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-          }`;
-          b.textContent = t.label;
-          b.addEventListener('click', () => {
-            avatarActiveTab = t.id;
-            renderAvatarPickers();
-          });
-          tabsEl.appendChild(b);
-        });
-      }
-      if (!gridEl) return;
-      gridEl.innerHTML = '';
-      const list = avatarActiveTab === 'shirt' ? AVATAR_SHIRTS
-        : avatarActiveTab === 'pants' ? AVATAR_PANTS
-        : avatarActiveTab === 'hat' ? AVATAR_HATS
-        : avatarActiveTab === 'face' ? AVATAR_FACES
-        : AVATAR_SKINS;
-
-      list.forEach(item => {
-        const isSel = avatarConfig[avatarActiveTab] === item.id;
-        const card = document.createElement('button');
-        card.type = 'button';
-        card.className = `p-2.5 rounded-2xl border-2 text-left flex items-center gap-2 transition-all cursor-pointer active:scale-95 ${
-          isSel ? 'border-emerald-500 bg-emerald-50 text-slate-900 shadow-xs ring-2 ring-emerald-200' : 'border-slate-200 bg-white hover:border-slate-400 text-slate-800'
-        }`;
-        if (item.col) {
-          const dot = document.createElement('span');
-          dot.className = 'w-6 h-6 rounded-lg shrink-0 border border-slate-300 shadow-2xs';
-          dot.style.background = item.accent ? `linear-gradient(135deg, ${item.col} 55%, ${item.accent} 55%)` : item.col;
-          card.appendChild(dot);
-        }
-        const lbl = document.createElement('span');
-        lbl.className = 'text-xs font-extrabold leading-tight truncate';
-        lbl.textContent = item.label;
-        card.appendChild(lbl);
-        card.addEventListener('click', () => {
-          avatarConfig[avatarActiveTab] = item.id;
-          saveAvatarConfig();
-          renderAvatarPickers();
-          if (typeof playSFX === 'function') playSFX('eat');
-        });
-        gridEl.appendChild(card);
-      });
-    }
-
-    function openAvatarModal() {
-      if (!avatarModal) return;
-      renderAvatarPickers();
-      avatarModal.classList.remove('hidden');
-      startAvatarPreviewLoop();
-    }
-    function closeAvatarModal() {
-      if (avatarModal) avatarModal.classList.add('hidden');
-      if (avatarPreviewRafId) { cancelAnimationFrame(avatarPreviewRafId); avatarPreviewRafId = null; }
-    }
-
-    if (btnOpenAvatarCustomizer) btnOpenAvatarCustomizer.addEventListener('click', openAvatarModal);
-    if (btnCloseAvatarModal) btnCloseAvatarModal.addEventListener('click', closeAvatarModal);
-    if (btnAvatarDone) btnAvatarDone.addEventListener('click', closeAvatarModal);
-    if (avatarModal) {
-      avatarModal.addEventListener('click', (e) => {
-        if (e.target === avatarModal) closeAvatarModal();
-      });
-    }
-    if (btnAvatarRandom) {
-      btnAvatarRandom.addEventListener('click', () => {
-        avatarConfig.skin = AVATAR_SKINS[Math.floor(Math.random() * AVATAR_SKINS.length)].id;
-        avatarConfig.shirt = AVATAR_SHIRTS[Math.floor(Math.random() * AVATAR_SHIRTS.length)].id;
-        avatarConfig.pants = AVATAR_PANTS[Math.floor(Math.random() * AVATAR_PANTS.length)].id;
-        avatarConfig.hat = AVATAR_HATS[Math.floor(Math.random() * AVATAR_HATS.length)].id;
-        avatarConfig.face = AVATAR_FACES[Math.floor(Math.random() * AVATAR_FACES.length)].id;
-        saveAvatarConfig();
-        renderAvatarPickers();
-        if (typeof playSFX === 'function') playSFX('powerup');
-      });
-    }
 
     const btnPrepBattleRoyale = document.getElementById('btnPrepBattleRoyale');
     function updateBattleRoyaleBtnUI() {
@@ -13508,6 +13377,139 @@
         try { localStorage.removeItem('snakePlayerProfile_v1'); } catch (err) {}
         updateLobbyProfileBadge();
         showLanguageMapPage();
+      });
+    }
+
+    // --- AVATAR CUSTOMIZER MODAL CONTROLLER ---
+    const avatarModal = document.getElementById('avatarModal');
+    const btnOpenAvatarCustomizer = document.getElementById('btnOpenAvatarCustomizer');
+    const btnCloseAvatarModal = document.getElementById('btnCloseAvatarModal');
+    const btnAvatarDone = document.getElementById('btnAvatarDone');
+    const btnAvatarRandom = document.getElementById('btnAvatarRandom');
+    let avatarPreviewRafId = null;
+
+    function startAvatarPreviewLoop() {
+      if (avatarPreviewRafId) return;
+      const ac = document.getElementById('avatarPreviewCanvas');
+      if (!ac) return;
+      const actx = ac.getContext('2d');
+      if (!actx) return;
+      function frame() {
+        if (!avatarModal || avatarModal.classList.contains('hidden')) {
+          avatarPreviewRafId = null;
+          return;
+        }
+        const w = ac.width, h = ac.height;
+        const bg = actx.createLinearGradient(0, 0, 0, h);
+        bg.addColorStop(0, '#0f172a');
+        bg.addColorStop(1, '#1e293b');
+        actx.fillStyle = bg;
+        actx.fillRect(0, 0, w, h);
+        // Glowing floor pedestal
+        actx.fillStyle = 'rgba(52, 211, 153, 0.22)';
+        actx.beginPath();
+        actx.ellipse(w / 2, h - 32, 54, 14, 0, 0, Math.PI * 2);
+        actx.fill();
+        const bob = Math.sin(Date.now() / 260) * 4;
+        drawCustomAvatarOn(actx, w / 2, h - 36 + bob, 3.6);
+        avatarPreviewRafId = requestAnimationFrame(frame);
+      }
+      avatarPreviewRafId = requestAnimationFrame(frame);
+    }
+
+    let avatarActiveTab = 'shirt'; // 'shirt' | 'pants' | 'hat' | 'face' | 'skin'
+    const AVATAR_TABS = [
+      { id: 'shirt', label: `T-Shirts (${AVATAR_SHIRTS.length})` },
+      { id: 'pants', label: `Pants (${AVATAR_PANTS.length})` },
+      { id: 'hat',   label: `Hats (${AVATAR_HATS.length})` },
+      { id: 'face',  label: `Faces (${AVATAR_FACES.length})` },
+      { id: 'skin',  label: `Skin (${AVATAR_SKINS.length})` }
+    ];
+
+    function renderAvatarPickers() {
+      const tabsEl = document.getElementById('avatarCategoryTabs');
+      const gridEl = document.getElementById('avatarItemsGrid');
+      if (tabsEl) {
+        tabsEl.innerHTML = '';
+        AVATAR_TABS.forEach(t => {
+          const active = avatarActiveTab === t.id;
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = `px-2.5 py-1.5 rounded-xl text-xs font-black border transition-all cursor-pointer ${
+            active ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+          }`;
+          b.textContent = t.label;
+          b.addEventListener('click', () => {
+            avatarActiveTab = t.id;
+            renderAvatarPickers();
+          });
+          tabsEl.appendChild(b);
+        });
+      }
+      if (!gridEl) return;
+      gridEl.innerHTML = '';
+      const list = avatarActiveTab === 'shirt' ? AVATAR_SHIRTS
+        : avatarActiveTab === 'pants' ? AVATAR_PANTS
+        : avatarActiveTab === 'hat' ? AVATAR_HATS
+        : avatarActiveTab === 'face' ? AVATAR_FACES
+        : AVATAR_SKINS;
+
+      list.forEach(item => {
+        const isSel = avatarConfig[avatarActiveTab] === item.id;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `p-2.5 rounded-2xl border-2 text-left flex items-center gap-2 transition-all cursor-pointer active:scale-95 ${
+          isSel ? 'border-emerald-500 bg-emerald-50 text-slate-900 shadow-xs ring-2 ring-emerald-200' : 'border-slate-200 bg-white hover:border-slate-400 text-slate-800'
+        }`;
+        if (item.col) {
+          const dot = document.createElement('span');
+          dot.className = 'w-6 h-6 rounded-lg shrink-0 border border-slate-300 shadow-2xs';
+          dot.style.background = item.accent ? `linear-gradient(135deg, ${item.col} 55%, ${item.accent} 55%)` : item.col;
+          card.appendChild(dot);
+        }
+        const lbl = document.createElement('span');
+        lbl.className = 'text-xs font-extrabold leading-tight truncate';
+        lbl.textContent = item.label;
+        card.appendChild(lbl);
+        card.addEventListener('click', () => {
+          avatarConfig[avatarActiveTab] = item.id;
+          saveAvatarConfig();
+          renderAvatarPickers();
+          if (typeof playSFX === 'function') playSFX('eat');
+        });
+        gridEl.appendChild(card);
+      });
+    }
+
+    function openAvatarModal() {
+      if (!avatarModal) return;
+      renderAvatarPickers();
+      avatarModal.classList.remove('hidden');
+      startAvatarPreviewLoop();
+    }
+    function closeAvatarModal() {
+      if (avatarModal) avatarModal.classList.add('hidden');
+      if (avatarPreviewRafId) { cancelAnimationFrame(avatarPreviewRafId); avatarPreviewRafId = null; }
+    }
+
+    if (btnOpenAvatarCustomizer) btnOpenAvatarCustomizer.addEventListener('click', openAvatarModal);
+    if (btnCloseAvatarModal) btnCloseAvatarModal.addEventListener('click', closeAvatarModal);
+    if (btnAvatarDone) btnAvatarDone.addEventListener('click', closeAvatarModal);
+    if (avatarModal) {
+      avatarModal.addEventListener('click', (e) => {
+        if (e.target === avatarModal) closeAvatarModal();
+      });
+    }
+    if (btnAvatarRandom) {
+      btnAvatarRandom.addEventListener('click', () => {
+        avatarConfig.skin = AVATAR_SKINS[Math.floor(Math.random() * AVATAR_SKINS.length)].id;
+        avatarConfig.shirt = AVATAR_SHIRTS[Math.floor(Math.random() * AVATAR_SHIRTS.length)].id;
+        avatarConfig.pants = AVATAR_PANTS[Math.floor(Math.random() * AVATAR_PANTS.length)].id;
+        avatarConfig.hat = AVATAR_HATS[Math.floor(Math.random() * AVATAR_HATS.length)].id;
+        avatarConfig.face = AVATAR_FACES[Math.floor(Math.random() * AVATAR_FACES.length)].id;
+        saveAvatarConfig();
+        renderAvatarPickers();
+        if (typeof playSFX === 'function') playSFX('powerup');
       });
     }
     if (btnCloseMiniGame) btnCloseMiniGame.addEventListener('click', closeMiniGameModal);
