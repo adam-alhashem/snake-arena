@@ -16643,20 +16643,69 @@
 
       const roadTex = makeAsphaltRoadTexture();
       const roadMat = new THREE.MeshStandardMaterial({ map: roadTex, roughness: 0.82 });
-      const addRoadStrip = (x, z, w, len, rotY) => {
+      const plainAsphaltMat = new THREE.MeshStandardMaterial({ color: '#1f2430', roughness: 0.84 });
+      const yellowLineMat = new THREE.MeshBasicMaterial({ color: '#facc15' });
+      const curbRedMat = new THREE.MeshStandardMaterial({ color: '#ef4444', roughness: 0.6 });
+      const curbWhiteMat = new THREE.MeshStandardMaterial({ color: '#f8fafc', roughness: 0.6 });
+
+      const addRoadStrip = (x, z, w, len, rotY, yPos) => {
         const m = new THREE.Mesh(new THREE.PlaneGeometry(w, len), roadMat);
         m.rotation.x = -Math.PI / 2;
         m.rotation.z = rotY || 0;
-        m.position.set(x, 0.01, z);
+        m.position.set(x, yPos || 0.01, z);
         m.receiveShadow = true;
         c3.scene.add(m);
       };
-      addRoadStrip(0, 0, 14, 240, 0);
-      addRoadStrip(0, 0, 14, 240, Math.PI / 2);
-      addRoadStrip(-110, 0, 14, 234, 0);
-      addRoadStrip(110, 0, 14, 234, 0);
-      addRoadStrip(0, -110, 14, 234, Math.PI / 2);
-      addRoadStrip(0, 110, 14, 234, Math.PI / 2);
+
+      // Smooth 90° Curved Corner Turns (RingGeometry asphalt + curved center line + curved racing curbs!)
+      const addCurvedTurn = (cx, cz, startAngle) => {
+        const innerR = 17, outerR = 31, midR = 24;
+        const turnMesh = new THREE.Mesh(new THREE.RingGeometry(innerR, outerR, 28, 1, startAngle, Math.PI / 2), plainAsphaltMat);
+        turnMesh.rotation.x = -Math.PI / 2;
+        turnMesh.position.set(cx, 0.015, cz);
+        turnMesh.receiveShadow = true;
+        c3.scene.add(turnMesh);
+
+        // Curved yellow center lane line
+        const centerArc = new THREE.Mesh(new THREE.RingGeometry(midR - 0.25, midR + 0.25, 28, 1, startAngle, Math.PI / 2), yellowLineMat);
+        centerArc.rotation.x = -Math.PI / 2;
+        centerArc.position.set(cx, 0.025, cz);
+        c3.scene.add(centerArc);
+
+        // Curved Red & White Racing Curbs on outer & inner edges of every turn!
+        const segs = 10;
+        const stepA = (Math.PI / 2) / segs;
+        for (let k = 0; k < segs; k++) {
+          const matC = k % 2 === 0 ? curbRedMat : curbWhiteMat;
+          const outC = new THREE.Mesh(new THREE.RingGeometry(outerR, outerR + 1.1, 4, 1, startAngle + k * stepA, stepA), matC);
+          outC.rotation.x = -Math.PI / 2; outC.position.set(cx, 0.03, cz); c3.scene.add(outC);
+          const inC = new THREE.Mesh(new THREE.RingGeometry(innerR - 1.1, innerR, 4, 1, startAngle + k * stepA, stepA), matC);
+          inC.rotation.x = -Math.PI / 2; inC.position.set(cx, 0.03, cz); c3.scene.add(inC);
+        }
+      };
+
+      // Outer Forza Circuit Straights (connect seamlessly into the 4 curved corners at radius 24!)
+      addRoadStrip(-110, 0, 14, 172, 0, 0.01);
+      addRoadStrip(110, 0, 14, 172, 0, 0.01);
+      addRoadStrip(0, -110, 14, 172, Math.PI / 2, 0.01);
+      addRoadStrip(0, 110, 14, 172, Math.PI / 2, 0.01);
+
+      // 4 Smooth Sweeping 90° Curved Turns!
+      addCurvedTurn(86, 86, -Math.PI / 2);     // South-East turn
+      addCurvedTurn(86, -86, 0);               // North-East turn
+      addCurvedTurn(-86, -86, Math.PI / 2);    // North-West turn
+      addCurvedTurn(-86, 86, Math.PI);         // South-West turn
+
+      // Central Cross Avenues + Clean Raised Intersection Pads (zero z-fighting!)
+      addRoadStrip(0, 0, 14, 212, 0, 0.012);
+      addRoadStrip(0, 0, 14, 212, Math.PI / 2, 0.014);
+      [[0, 0], [0, -110], [0, 110], [-110, 0], [110, 0]].forEach(([ix, iz]) => {
+        const pad = new THREE.Mesh(new THREE.CircleGeometry(10.5, 24), plainAsphaltMat);
+        pad.rotation.x = -Math.PI / 2;
+        pad.position.set(ix, 0.022, iz);
+        pad.receiveShadow = true;
+        c3.scene.add(pad);
+      });
 
       // Iconic Snow-Capped Mount Fuji towering in the North!
       const fujiGrp = new THREE.Group();
@@ -16775,7 +16824,7 @@
       mctx.fillRect(0, 0, w, h);
       mctx.strokeStyle = '#64748b';
       mctx.lineWidth = 4;
-      mctx.strokeRect(cx - 110 * sc, cy - 110 * sc, 220 * sc, 220 * sc);
+      mctx.beginPath(); mctx.roundRect(cx - 110 * sc, cy - 110 * sc, 220 * sc, 220 * sc, 24 * sc); mctx.stroke();
       mctx.beginPath();
       mctx.moveTo(cx, cy - 110 * sc); mctx.lineTo(cx, cy + 110 * sc);
       mctx.moveTo(cx - 110 * sc, cy); mctx.lineTo(cx + 110 * sc, cy);
